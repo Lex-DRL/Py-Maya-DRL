@@ -1,0 +1,25 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Surround Sphere v0.1
+	
+	This script creates polygonal surround sphere (aka light dome).
+	
+*/
+
+global proc DRL_surrSphere() {
+	polySphere -r 150 -sx 20 -sy 20 -ax 0 1 0 -cuv 1 -ch 1;
+	objectMoveCommand;
+	
+	pickWalk -d down;
+	string $sel [] = `ls -sl -s`;
+	ToggleBackfaceGeometry;
+	
+	for ($obj in $sel) {
+		polyNormal -normalMode 0 -userNormalMode 0 -ch 1 $obj;
+		setAttr ($obj + ".castsShadows") 0;
+		setAttr ($obj + ".receiveShadows") 0;
+		setAttr ($obj + ".doubleSided") 0;
+		setAttr ($obj + ".miFinalGatherReceive") 0;
+	}
+	select -r $sel;
+	pickWalk -d up;
+}

@@ -1,0 +1,84 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Script Pack v2011-02-01
+	
+	Author: DRL (drl.message@gmail.com).
+	
+	Created for and tested under:
+		Maya 2008 sp1.
+	
+	Description:
+		This script pack contains the following scripts:
+		- DRL Input Box v1.2
+		- DRL Array Tools v1.1
+		- DRL String Tools v1.1
+		- DRL File Tools v1.2
+		- DRL Command Tools v1.8
+		- DRL Progress Window v1.0
+		- DRL whatIs v1.2.1
+		- DRL Displacement to Poly v2.0
+		- DRL Time Range v0.1
+		- DRL About v1.0
+		- DRL Rig Sphere v0.2
+		- DRL Surround Sphere v0.1
+		- DRL Save No Inc v0.1
+		- DRL Cast-Receive v0.2
+		- DRL ls v0.1
+		- DRL Load Ref v0.1
+		- DRL Memorize v0.1
+		- DRL Edge Loop v0.1
+	
+	Installation:
+		0. Some of the scripts from the pack can be installed separately
+			(without installing entire pack). See installation instructions
+			in specific script if you wish to install just it.
+		1. Copy this script file and entire "DRL" folder
+			into one of the following folders:
+			- <mayaPrefs>/scripts (for all Maya versions),
+			- <mayaPrefs>/maya<Version>/scripts (for specific version),
+			- <mayaPrefs>/maya20XX/scripts (for Maya versions starting from 2008).
+			If you don't know where your <mayaPrefs> folder is, it is
+			<MyDocuments>/maya (for Windows).
+		2. Add the following line:
+				source "DRL.mel";
+			into userSetup.mel located at the same folder from the above list.
+			If You don't have userSetup.mel file yet, first create one.
+		3. If you don't need some of the scripts from this pack, just
+			comment out corresponding "source ..." line (add "//" without
+			quotes at the beginning of the line) below in this file.
+			Note: some of the other scripts may need it for proper work.
+			So before commenting some script out check all the used scripts
+			for "DEPENDENCIES" section.
+	
+	Usage:
+		Each script from the pack contains several functions/procs
+		grouped by their purpose. See each script for description/usage
+		instructions on specific procedure.
+	
+	P.S.:
+		Sorry for my broken english. ;)
+		It's not my native language.
+		and I don't use any electronic translators.
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+// Bug fixes
+
+// GUI improvements
+source "DRL_inputBox.mel";
+
+// Usability improvements
+source "DRL_memorize.mel";
+
+// Scripts for work with different types of variables:
+source "DRL_arrayTools.mel";
+source "DRL_stringTools.mel";
+
+source "DRL_fileTools.mel";
+
+// Scripts useful for programming / coding own GUIs
+source "DRL_commandTools.mel";
+source "DRL_whatIs.mel";
+
+// Added features
+source "DRL_dispToPoly.mel";

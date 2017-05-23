@@ -1,0 +1,250 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL About v1.0
+	
+	Author: Lex aka DRL (drl.message@gmail.com)
+	
+	DEPENDENCIES:
+		<None>
+		(all additional procedures that are called from this script are
+		also inside this script).
+	
+	Description:
+		This script creates an "About" window for the other scripts with GUI.
+		The function returns the name of created window.
+	
+	
+	Usage:
+		DRL_about (
+			(string)$windowName, // Created window's system name will be this string
+			(string)$windowTitle, // Text that will displayed at window's titleBar
+			(string$scriptName, // The text that will be displayed as the header
+			(string)$url, // If not empty, there will be field "URL" with this text
+			(string)$authorName, // Self-explaining :)
+			(string)$authorMail, // There will be "E-mail" field with this text. If this argument has value "<none>", the field won't be created.
+			(string)$scrDesc, // Main text that will be displayed in scrollable textfield as the script's description
+			(int)$width, // width of the main "disription" area
+			(int)$height, // height of the same thing
+			(string)$button, // Text that will be displayed at the button closing the window
+			(int)$buttonHeight, // self-explaining. If less than 10, then the default value is used
+			(int)$spacing // Defines spacing between the widow elements
+		);
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+global proc string DRL_about(string $wndName, string $wndTitle, string $scrName, string $url, string $authorName, string $authorMail, string $scrDesc, int $fldWdth, int $fldHght, string $btnTitle, int $btnHeight, int $wndSpacing) {
+	string
+		$window = $wndName,
+		$title = $wndTitle,
+		$author = $authorName,
+		$email = $authorMail,
+		$btn = $btnTitle,
+		$first = "",
+		$prev = "";
+	int
+		$width = $fldWdth,
+		$height = $fldHght,
+		$btnH = $btnHeight,
+		$space = $wndSpacing,
+		$labelWdth = 80;
+	
+	// Remove all undesired chars from window name
+	while (`match "[^a-zA-Z_0-9]+" $window` != "")
+		$window = `substitute "[^a-zA-Z_0-9]+" $window ""`;
+	
+	// Set the default text values if empty ...
+	if ($window == "") $window = "DRL_about_window";
+	if ($title == "") $title = "About";
+	if ($author=="") $author = "Lex aka DRL";
+	if ($email != "<none>") {
+		if ($email == "") $email = "drl.message@gmail.com";
+		if ($url != "") $email = $email + " (please email me ONLY IF you haven't get response at the above URL for 3 days)";
+	}
+	if ($btn=="") $btn = "OK";
+	// ... and the numeric settings also
+	if ($width < 100) $width = 100;
+	if ($height < 100) $height = 100;
+	if ($btnH < 10) $btnH = 26;
+	if ($space < 0) $space = 4;
+	
+	//
+	// Create window  -----------------------------------------------------------
+	//
+	if (`window -ex $window`) deleteUI $window;
+	$window = `window
+		-t $title
+		-mxb 0
+		-mnb 0
+		-w $labelWdth
+		-rtf 1
+		-s 0
+		$window`;
+	setUITemplate -pushTemplate DefaultTemplate;
+	formLayout form;
+	
+	// Write script name if specified
+	if ($scrName != "") {
+		text
+			-l $scrName
+			-al center
+			-fn boldLabelFont
+			-w $labelWdth
+			script;
+		formLayout -e
+			-attachForm script top   ($space*2)
+			-attachForm script left  ($space*3)
+			-attachForm script right ($space*3)
+			($window+"|form");
+		$first = "script";
+		$prev = "script";
+	}
+	
+	//
+	// Create main fields  ------------------------------------------------------
+	//
+	// Create URL field
+	if ($url != "") {
+		textFieldGrp
+			-l "Script URL:"
+			-ann "This is the place where you can download this script, discuss it, leave a bugreports or ask a questions about it."
+			-tx $url
+			-ed 0
+			-cw 1 $labelWdth
+			-w $labelWdth
+			-adj 2
+			url;
+		if ($first != "") {
+			formLayout -e
+				-attachControl         url top   ($space*2) $prev
+				-attachOppositeControl url left  0          $first
+				-attachOppositeControl url right 0          $first
+				($window+"|form");
+		} else {
+			formLayout -e
+				-attachForm url top   ($space*2)
+				-attachForm url left  ($space*3)
+				-attachForm url right ($space*3)
+				($window+"|form");
+			$first = "url";
+		}
+		$prev = "url";
+	}
+	
+	// Create Autor field
+	textFieldGrp
+		-l "Author:"
+		-tx $author
+		-ed 0
+		-cw 1 $labelWdth
+		-w $width
+		-adj 2
+		author;
+	if ($first != "") {
+		formLayout -e
+			-attachControl         author top   $space $prev
+			-attachOppositeControl author left  0      $first
+			-attachOppositeControl author right 0      $first
+			($window+"|form");
+		if ($prev == "script")
+			formLayout -e
+				-attachControl       author top   ($space*2) $prev
+				($window+"|form");
+	} else {
+		formLayout -e
+			-attachForm author top   ($space*2)
+			-attachForm author left  ($space*3)
+			-attachForm author right ($space*3)
+			($window+"|form");
+		$first = "author";
+	}
+	$prev = "author";
+	
+	// Create E-mail field
+	if ($email != "<none>") {
+		textFieldGrp
+			-l "Author's e-mail:"
+			-ann "Please respect my time and use this email only if you can't contact me at the script web page."
+			-tx $email
+			-ed 0
+			-cw 1 $labelWdth
+			-w $labelWdth
+			-adj 2
+			email;
+		formLayout -e
+			-attachControl         email top   $space $prev
+			-attachOppositeControl email left  0      $first
+			-attachOppositeControl email right 0      $first
+			($window+"|form");
+		$prev = "email";
+	}
+	
+	//
+	// Create description block if not empty  -----------------------------------
+	//
+	if ($scrDesc != "") {
+		
+		// Create separator
+		separator sep;
+		formLayout -e
+			-attachControl         sep top   $space $prev
+			-attachOppositeControl sep left  0      $first
+			-attachOppositeControl sep right 0      $first
+			($window+"|form");
+		$prev = "sep";
+		
+		// Create the label
+		text
+			-l "Description:"
+			-al center
+			-w 10
+			descLbl;
+		formLayout -e
+			-attachControl         descLbl top   $space $prev
+			-attachOppositeControl descLbl left  0      $first
+			-attachOppositeControl descLbl right 0      $first
+			($window+"|form");
+		$prev = "descLbl";
+		
+		// Create the field itself
+		scrollField
+			-w $labelWdth
+			-h $height
+			-tx $scrDesc
+			-ww 1
+			-ed 0
+			desc;
+		formLayout -e
+			-attachControl         desc top   $space $prev
+			-attachOppositeControl desc left  0      $first
+			-attachOppositeControl desc right 0      $first
+			($window+"|form");
+		$prev = "desc";
+	}
+	
+	//
+	// Create the button  -------------------------------------------------------
+	//
+	button
+		-l $btn
+		-h $btnH
+		-rs 1
+		-c ("deleteUI "+$window)
+		btn;
+	formLayout -e
+		-attachNone     btn top
+		-attachPosition btn left   $space 33
+		-attachPosition btn right  $space 67
+		-attachForm     btn bottom $space
+		($window+"|form");
+	// .. And attach scrollfield to it
+	if ($scrDesc != "") {
+		formLayout -e
+			-attachControl  $prev bottom $space btn
+			($window+"|form");
+	}
+	
+	// Finishing the task
+	setUITemplate -popTemplate;
+	showWindow;
+	return $window;
+}

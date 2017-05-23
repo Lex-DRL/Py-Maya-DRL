@@ -1,0 +1,120 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Progress Window v1.0
+	
+	This function creates a progress window and returns it's system name.
+	
+	Usage:
+		DRL_progressWindow (
+			$name (string) - created window will be named "prWnd_<name>".
+			$title (string) - window's title.
+			$tlb (boolean) - whether the window is toolbox-style or not.
+			$width (int) - window's width.
+			$height (int) - progressbars' height.
+			$space (int) - spacing from window border to controls
+					and between controls.
+			$count (int) - number of created text-progressbar pairs.
+			$lables[] (string) - array of labels for text controls.
+					If some array atems are empty, labels will be empty too.
+			$ann[] (string) - array of annotations for text controls.
+		);
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+global proc string DRL_progressWindow(string $name, string $title, int $tlb, int $width, int $height, int $space, int $count, string $lbl[], string $ann[]) {
+	
+	string $window;
+
+	if ($count < 1) {
+		error "There has to be at least 1 progressbar!";
+	} else if (`size $name`<1 || `gmatch $name "*[!a-zA-Z_0-9]*"`) {
+		error "Wrong name for window!";
+	} else if ($width < 1) {
+		error "Window width has to be a positive integer!";
+	} else if ($height < 1) {
+		error "Progressbar height has to be a positive integer!";
+	} else if ($space < 0) {
+		error "Spacing has to be a positive integer or zero!";
+	} else {
+		int $sizeLbl, $sizeAnn;
+		
+		$sizeLbl = `size $lbl`;
+		$sizeAnn = `size $ann`;
+		if ($count != $sizeLbl || $count != $sizeAnn)
+			warning "Count of progressbars and specifed strings of text don't match.";
+		
+		int $i;
+		string $obj, $obj1, $objPre;
+		$window = "prWnd_" + $name;
+		
+		if (`window -ex $window`) deleteUI $window;
+		$window = `window
+			-mxb 0
+			-mnb 0
+			-w 10
+			-h 5
+			-title $title
+			$window`;
+		if ($tlb == 1) window -e -tlb 1 $window;
+		window -e -rtf 1 $window;
+		
+		setUITemplate -pushTemplate DefaultTemplate;
+		
+		formLayout form;
+		
+		for ($i=1; $i<=$count; $i++) {
+			$obj = "txt" + $i;
+			text -w $width $obj;
+			if ($i <= $sizeLbl)
+				text -e -l $lbl[$i-1] $obj;
+			if ($i <= $sizeAnn)
+				text -e -ann $ann[$i-1] $obj;
+			
+			if ($i==1) {
+				formLayout -e
+					-attachForm            $obj top    $space
+					-attachForm            $obj left   $space
+					-attachForm            $obj right  $space
+					($window + "|form");
+				$obj1 = $obj;
+			} else {
+				formLayout -e
+					-attachControl         $obj top    $space $objPre
+					-attachOppositeControl $obj left   0      $obj1
+					-attachOppositeControl $obj right  0      $obj1
+					($window + "|form");
+			}
+			
+			$objPre = $obj;
+			$obj = "prB" + $i;
+			
+			progressBar
+				-w $width
+				-h $height
+				-min 0
+				-max 100
+				$obj;
+			
+			formLayout -e
+				-attachControl         $obj top    $space $objPre
+				-attachOppositeControl $obj left   0      $obj1
+				-attachOppositeControl $obj right  0      $obj1
+				($window + "|form");
+			$objPre = $obj;
+		}
+		
+		separator -vis 0 -h 1 -hr 1 end;
+		formLayout -e
+			-attachControl         end top    $space $objPre
+			-attachOppositeControl end left   0      $obj1
+			-attachOppositeControl end right  0      $obj1
+			($window + "|form");
+		
+		setUITemplate -popTemplate;
+		
+		showWindow $window;
+		
+		window -e -w $width $window;
+	}
+	return $window;
+}

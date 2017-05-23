@@ -1,0 +1,46 @@
+global proc DRL_ThunderLoad() {
+	string $RNs[] = `ls -rf`;
+	
+	for ($rn in $RNs) {
+		string $file = `referenceQuery -f -shn -wcn $rn`;
+		string $path = `referenceQuery -f -wcn $file`;
+		
+		string $tmp = $file;
+		while (`match "[^0-9]+" $tmp` != "") // вырезаем всё кроме цифр и сохраняем в темп
+			$tmp = `substitute "[^0-9]+" $tmp ""`;
+		
+		if ($file == ("Thunder" + $tmp + ".ma")) { // Если референс - молния
+			int $num = (int)$tmp;
+			int $is = ! `file -rfn $rn -q -deferReference`; // загружено ли
+			int $must = 0; // должно ли быть загружено
+			float $frame = `currentTime -q`;
+			
+			// Проверяем, нужно ли загружать:
+			if (
+//			($frame >= 1 && $frame <= 14 && $num == 1) ||
+//			($frame >= 12 && $frame <= 25 && $num == 2) ||
+//			((($frame >= 89 && $frame <= 102) || ($frame >= 384 && $frame <= 396)) && $num == 3) ||
+			($frame >= 177 && $frame <= 381 && $num == 4) ||
+			($frame >= 419 && $frame <= 601 && $num == 5) ||
+			($frame >= 617 && $frame <= 631 && $num == 6) ||
+			($frame >= 627 && $frame <= 641 && $num == 7) ||
+			($frame >= 639 && $frame <= 961 && $num == 8) ||
+			($frame >= 969 && $frame <= 981 && $num == 9) ||
+			($frame >= 989 && $frame <= 1001 && $num == 10) ||
+			($frame >= 1009 && $frame <= 1021 && $num == 11) ||
+//			($frame >= 1054 && $frame <= 1066 && $num == 12) ||
+//			($frame >= 1079 && $frame <= 1091 && $num == 13) ||
+			($frame >= 1099 && $frame <= 1121 && ($num == 14 || $num == 15))
+			)
+				$must = 1;
+			
+			if (! $is && $must) { // Если не загружено, а должно быть:
+				if ((! `filetest -d $path`) && `filetest -r $path` && `filetest -s $path`)
+					file -f -loadReference $rn $path; // Загружаем
+				else error "File doesn't exist, is empty or unaccessable.\n";
+			} else if ($is && ! $must) { // Если наоборот - загружено, а не должно
+				file -f -unloadReference $rn $path; // Выгружаем
+			}
+		}
+	}
+}

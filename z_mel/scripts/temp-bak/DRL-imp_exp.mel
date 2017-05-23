@@ -1,0 +1,27 @@
+string $folder = "E:/1-Projects/Maya/z-Slasher/Scenes/Zbrush/Lighting/forBake/";
+DRL_lodProxy {} $folder {} "" 1;
+
+string $res[] = DRL_expOBJ_forBake(
+	{}, // objects
+	$folder, // path to export
+	0, // whether to temove the file and replace it with folder if it has the same path as above
+	"", // prefix
+	"", // postfix
+	0, // remove digits from the name at the end
+	0, // replace underscores with dashes
+	0, // soften normals
+	0 // triangulate
+);
+
+string $res[] = DRL_FBXExport(
+	$folder, // path to export
+	0 // convert underscores to dashes
+);
+
+string $res[] = DRL_lodProxy(
+	{}, // load all files
+	$folder, // path,
+	{}, //amount
+	"", // namespace
+	0 // group proxies
+);

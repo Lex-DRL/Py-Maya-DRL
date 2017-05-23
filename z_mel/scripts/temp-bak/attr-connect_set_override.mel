@@ -1,0 +1,9 @@
+disconnectAttr motion.outValue ("Thunder_SG" + $i + ".miMaterialShader");
+
+editRenderLayerAdjustment ("Thunder_SG" + $i + ".miMaterialShader");
+connectAttr -f ($fix + ".rotate") ($obj + ".rotate");
+
+
+
+setAttr ($obj + ".translateX") ($i * .75);
+setAttr -e -keyable 1 |IT_Cam|IT_Cam_Sphere2.frame;

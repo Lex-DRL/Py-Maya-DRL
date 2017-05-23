@@ -1,0 +1,36 @@
+// DRL: based on: http://ewertb.soundlinker.com/mel/mel.078.php
+
+global proc string whereIs( string $procName )
+{
+	string $where = "";
+
+	if ( `exists $procName` )
+	{
+		// Use the whatIs command to determine the location.
+		string $result = eval(
+			`format -stringArg $procName "whatIs \"^1s\""`
+		);
+
+		// Parse the human-readable form.
+		string $tokens[];
+		int $numTokens = `tokenize $result " " $tokens`;
+
+		// Make sure this is a MEL script and not an internal command.
+		if ( $tokens[0] == "Mel" )
+		{
+			// Concatenate path if it contains spaces.
+			for ( $i = 4; $i < $numTokens; $i++ )
+			{
+				$where = $where + $tokens[$i];
+
+				if ( $i < $numTokens )
+				{
+					$where = $where + " ";
+				}
+			}
+			$where = substituteAllString($where, "\\", "/");
+		}
+	}
+
+	return $where;
+}

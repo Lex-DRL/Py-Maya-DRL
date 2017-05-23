@@ -1,0 +1,834 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Displacement to Poly v2.0.1
+	http://www.creativecrash.com/maya/downloads/scripts-plugins/dynamics/c/drl-animated-displacement-to-poly
+	
+	Please post all your comments / bugreports / feature requests etc at the above webpage.
+
+	Author: Lex aka DRL (drl.message@gmail.com)
+	
+	>>> !!! DEPENDENCIES !!! <<<
+		This script requires that following scripts are also sourced:
+		- DRL Time Range
+		- DRL Progress UI
+		- DRL About
+	
+	>>> !!! LIMITATIONS !!! <<<
+		- The script currently doesn't work correctly with objects that have
+			multiple shapes. I thought this is not so important feature because
+			common use for this script is creating actual moving geometry
+			from ocean plane. And since implementing this feature requires me
+			to overwrite main function almost completely, I'm not going to add it.
+			If really need it by some reason please post about it at the script's
+			webpage displayed above.
+		- The script currently doesn't support abortion during the process.
+			The reason is the same: to implement this feature I need to seriously
+			modify the main function.
+		- During the process the script flushes undo queue. So you won't be able
+			to use "Edit > Undo" to the scene state that was before execution.
+			If it won't flush undo, Maya will need a TREMENDOUS amount of memory
+			'cause Maya will keep all the converted displacement states in the memory.
+			And since all the results of this script are easily deleted by selecting
+			created object's node and pressing "delete" (and then deleting actual
+			cache files), I don't think this is huge disadvantage.
+			I've added a popup window to remind you about it.
+	
+	This script converts  a surface with animated displacement
+	to animated polygonal mesh.
+	It contains the following functions:
+	
+	
+	>>> DRL_dispToPoly <<<
+		Description:
+			This function creates main GUI for conversion.
+			It returns the system name of created window.
+			there are also some service functions required for this one.
+		Usage:
+			Just source this script and execute this command:
+			DRL_dispToPoly;
+			In the window that opens specify desired options, select one or more
+			objects for conversion and press "Convert" button.
+			More help is in "About" menu item.
+	
+	>>> DRL_dispToCache <<<
+		Description:
+			The main function that actually does all the conversion job in the
+			"Animated Cache Mode".
+			It is called by previous one, but you can use it in your own scripts by
+			directly calling it with desired arguments.
+		Usage:
+			See this function's description below for arguments explaination.
+	
+	>>> DRL_dispConvert <<<
+		Description:
+			Actually it was just a service function for previous one. But I liked
+			what it does so much that even added into GUI as "Static Polygons" mode.
+			You also can call to it since, like previous one, it doesn't bounded
+			to GUI in any way.
+		Usage:
+			See this function's description below for arguments explaination.
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+
+global proc string[] DRL_dispToCache(int $mode, int $timeMode, float $start, float $end, float $step, string $path, int $floats, string $postfix, string $objs[]) {
+/*
+Usage:
+	DRL_dispToCache(
+		(int) $mode, // 1/2 Whether to create new cache or append to previously created with this script.
+		(int) $timeMode, // Time range mode:
+			// 0 - use start and end from following two variables
+			// 1 - from Render Settings
+			// 2 - from Time Slider
+		(float) $start, // Makes sense if $timeMode = 0. Specifies start frame.
+		(float) $end, // Makes sense if $timeMode = 0. Specifies start frame.
+		(float) $step, // Specifies the step at which caches will be created.
+		(string) $path, // The full path to the folder where cache files will be stored.
+		(int) $floats, // If $floats = 1, all the caches will be less accurate, but cache will be half the size.
+		(string) $postfix, // All the converted objects will be named as <SourceObject>_<postfix>. Cache files will have the same names. All non-alphanumeric chars will be replaced with underscores. If postfix is empty then it will be "Disp".
+		{string array} // if not empty then objects with the names specified here will be used for conversion. Otherwise currently selected objects will be converted.
+		);
+
+The function returns string array at the following format:
+	[0] - Errorcode
+		"" = no errors
+		1 = No cacheable objects selected
+		2 = Range's start is bigger that the end
+		3 = Step is negative or zero
+		4 = Path var is empty
+		5 = Cancelled by user after popup warning
+	[1]-... - full paths to all the created cache file descriptors ("xml" files).
+*/
+	string $src[], $res[]={""}, $resObj[], $sel[], $args[];
+	string $obj;
+	float $time[];
+	float $srcTime, $i, $frame, $frames;
+	int $j, $k=1, $size, $progress;
+	$srcTime = `currentTime -q`;
+	
+	if (`size $objs` > 0) $src = $objs;
+	else $src = `ls -sl -o`;
+	
+	$time = `DRL_timeRange $timeMode $start $end`;
+	
+	$size = `size $src`;
+	$frames = $time[1] - $time[0] + 1;
+	
+	if ($size < 1) {
+		error "You need to select objects for caching first.";
+		$res[0] = 1;
+	} else if ($frames < 1) {
+		error "Incorrect time range specified.";
+		$res[0] = 2;
+	} else if ($step <= 0) {
+		error "Step has to be positive.";
+		$res[0] = 3;
+	} else if ($path == "") {
+		error "You must define the path for cache.";
+		$res[0] = 4;
+	} else {
+		
+		$window = `confirmDialog
+			-t "Warning!"
+			-m "After the script is executed, the undo queue is cleared.\nThis means you won't be able to use Edit > Undo.\nSo it is strongly recommended that you save your scene first to prevent data loss.\nYou can press \"Esc\" key or click \"Cancel\" to stop the task now."
+			-ma left
+			-b "Continue"
+			-b "Save Scene"
+			-b "Save Scene as"
+			-b "Cancel"
+			-db "Save Scene"
+			-cb "Cancel"
+			-ds "Cancel"`;
+		
+		if ($window=="Cancel"){
+			warning "Cancelled by user.";
+			$res[0] = 5;
+		} else {
+			if ($window=="Save Scene") SaveScene;
+			else if ($window=="Save Scene as") SaveSceneAs;
+			
+			// Create progress window
+			waitCursor -st 1;
+			$window = `DRL_progressWindow "dispToCache" "Conversion Progress" 1 500 15 4 2 {"",""} { "Overall conversion progress.", "Conversion progress for current object."}`;
+			
+			if ($time[1]-$time[0] >= $step || $mode == 2) source "doImportCacheArgList.mel";
+			
+			for ($j=0; $j<$size; $j++) {
+				// Display current object's name in progress window
+				text -e -l ("Converting " + shortNameOf($src[$j]) + " ...") ($window+"|form|txt1");
+				
+				// And flush current object's progress
+				text -e -l ("Completed frame: 0 of " + $frames + " (0%)") ($window+"|form|txt2");
+				progressBar -e -pr 0 ($window+"|form|prB2");
+				
+				if (`size $src[$j]` < 1) warning "Object's name is empty. Step skipped.";
+				
+				else {
+					// In "Add" mode, generate full path to the cache "xml" file:
+					if ($mode == 2) {
+						string $newPostfix = $postfix;
+						
+						while (`match "[^a-zA-Z_0-9]+" $newPostfix` != "")
+							$newPostfix = `substitute "[^a-zA-Z_0-9]+" $newPostfix "_"`;
+						if ($newPostfix == "") $newPostfix = "Disp";
+						
+						$res[$k] = $path;
+						if (`substring $path (size($path)) (size($path))` != "\/") $res[$k] = $path+"\/";
+						
+						$res[$k] = $res[$k] + shortNameOf($src[$j]) + "_" + $newPostfix + ".xml";
+					}
+					
+					for ($i=$time[0]; $i<=$time[1]; $i=$i+$step) {
+						
+						if ($i>$time[0]) {
+							select -r $obj;
+							Delete;
+						}
+						
+						currentTime $i;
+						$obj = `DRL_dispConvert $src[$j] $postfix`;
+						
+						if ($i==$time[0] && $mode != 2) {
+							$args[0] = 0; // Time range mode - manual
+							$args[1] = $i;
+							$args[2] = $i;
+							$args[3] = "OneFilePerFrame";
+							$args[4] = 0; // Don't refresh during caching operation
+							$args[5] = $path;
+							$args[6] = 0; // Don't create cache per geometry
+							$args[7] = `shortNameOf($obj)`;
+							$args[8] = 0; // Don't use the name as prefix
+							$args[9] = "add"; // We're going to create new cache
+							$args[10] = 1; // Force to overwrite existing files
+							$args[11] = $step;
+							$args[12] = 1; // We won't skip executed frames
+							$args[13] = 0; // Just need to fill argument. Something about replace.
+							if ($floats==1) $args[14] = 1;
+							else $args[14] = 0;
+							
+							$sel = `doCreateGeometryCache 4 $args`;
+							$res[$k] = $sel[0];
+						} else {
+							importCacheFile $res[$k] "xml";
+							$sel = `pickWalk -d down`;
+							cacheFile -appendFrame -points $sel[0] -startTime $i -endTime $i -simulationRate $step -sampleMultiplier 1 -noBackup;
+						}
+						
+						flushUndo;
+						
+						// Calculate current frame progress
+						$frame = $i - $time[0] + 1;
+						$progress = floor( (100*$frame/$frames) + 0.5 );
+						// And update window accordingly
+						text -e -l ("Completed frame: " + $frame + " of " + $frames + " (" + $progress + "%)") ($window+"|form|txt2");
+						progressBar -e -pr $progress ($window+"|form|prB2");
+					}
+					
+					select -r $obj;
+					deleteHistoryAheadOfGeomCache;
+					$resObj[$k-1] = $obj;
+					$k++;
+				}
+				
+				// Update overall progress
+				progressBar -e -pr (100*(($j+1)/$size)) ($window+"|form|prB1");
+			}
+			
+			select -r $resObj;
+			currentTime $srcTime;
+			flushUndo;
+			
+			deleteUI $window;
+			waitCursor -st 0;
+		}
+	}
+	
+	return $res;
+}
+
+
+global proc string DRL_dispConvert(string $src, string $postfix) {
+/*
+Usage:
+	DRL_dispConvert(
+		(string)$objectName, // The name of object being converted
+		(string)$postfix // Resulting displacement will be named by the same ruleas in in previous function
+	);
+	The function returns the name of created object and empty string if conversion wasn't successfull.
+*/
+	if (`objExists $src`) {
+		string $sel[];
+		string $obj, $newPostfix;
+		
+		select -r $src;
+		
+		// Convert current object's disp at current frame to polys
+		$sel = `displacementToPoly`; // sel contains disp name
+		setupNewMesh;
+		$obj = $sel[0];
+		
+		$newPostfix = $postfix;
+		while (`match "[^a-zA-Z_0-9]+" $newPostfix` != "")
+			$newPostfix = `substitute "[^a-zA-Z_0-9]+" $newPostfix "_"`;
+		
+		if ($newPostfix == "") $newPostfix = "Disp";
+		
+		// Rename created disp
+		$obj = `rename $obj (shortNameOf($src) + "_" + $newPostfix)`;
+		$sel = `pickWalk -d down`;
+		rename $sel[0] (shortNameOf($src) + "_" + $newPostfix + "Shape");
+		
+		select -r $obj;
+		return $obj;
+	} else {
+		error ("Object \"" + $src + "\" not found.");
+		return "";
+	}
+}
+
+
+// ==========  Main GUI  ======================================================
+
+
+global proc string DRL_dispToPoly() {
+	
+	int $space=4, $height=26;
+	
+	string $window = "DRL_dispToPoly_optionWindow";
+	
+	waitCursor -st 1;
+	if (`window -ex $window`) deleteUI $window;
+	$window = `window
+		-title "DRL Displacement to Poly v2.0.1"
+		-mb 1
+		-mxb 0
+		-rtf 1
+		$window`;
+	setUITemplate -pushTemplate DefaultTemplate;
+	
+	DRL_dispToPoly_menus $window;
+	
+	formLayout form;
+	
+	textFieldGrp
+		-l "Name Postfix:"
+		-ann "Created displacement will be named as source object's name plus this text."
+		-tx ""
+		postfix;
+	
+	radioButtonGrp
+		-l "Conversion mode:"
+		-ann "Select whether you want to convert an animated displacement to the cache or just to the static model at the current frame."
+		-nrb 2
+		-l1 "Animated Cache"
+		-on1 ("tabLayout -e -sti 1 " + $window + "|form|tabs")
+		-l2 "Static Polygons"
+		-on2 ("tabLayout -e -sti 2 " + $window + "|form|tabs")
+		mode;
+	
+	separator sep;
+	
+	tabLayout -tv 0 tabs;
+		
+		columnLayout -adj 1 cache;
+			radioButtonGrp
+				-l "Cache operation mode:"
+				-ann "Select whether to create a new caches for selected objects or to append to caches previously created with this script."
+				-nrb 2
+				-l1 "Create"
+				-l2 "Append"
+				mode;
+			
+			// Cache directory
+			rowLayout
+				-nc 3
+				-cw3 400 5 20
+				-adj 1
+				-cal 1 "both"
+				-cal 2 "both"
+				-cal 3 "left"
+				-ct3 "both" "both" "left"
+				dir;
+				textFieldGrp
+					-l "Cache Directory"
+				-ann "Specify the path to the folder where cache files will be stored."
+					-tx ""
+					-adj 2
+					fld;
+				separator -w 2 -style "none" sep;
+				symbolButton
+					-ann "Open the browser to specify the folder."
+					-image "navButtonBrowse.xpm"
+					-c ("DRL_dispToPoly_browser "+$window)
+					btn;
+				setParent ..;
+			
+			radioButtonGrp
+				-l "Store points as"
+				-ann "If points stored as floats, the cache is less accurate but the files are half the size."
+				-nrb 2
+				-l1 "Double"
+				-l2 "Float"
+				dblFlt;
+			
+			separator sep;
+			
+			radioButtonGrp
+				-l "Cache Time Range"
+				-l1 "Render Settings"
+				-onc ("floatFieldGrp -e -en 0 "+$window+"|form|tabs|cache|time")
+				timeMode1;
+			radioButtonGrp
+				-l ""
+				-l1 "Time Slider"
+				-scl timeMode1
+				-onc ("floatFieldGrp -e -en 0 "+$window+"|form|tabs|cache|time")
+				timeMode2;
+			radioButtonGrp
+				-l ""
+				-l1 "Start/End"
+				-scl timeMode1
+				-onc ("floatFieldGrp -e -en 1 "+$window+"|form|tabs|cache|time")
+				timeMode3;
+			
+			floatFieldGrp
+				-l "Start/End"
+				-nf 2
+				-v1 1
+				-v2 10
+				time;
+			
+			floatFieldGrp
+				-l "Save every"
+				-ann "Specify the step at which cache will be executed and written to disk."
+				-extraLabel "frame(s)"
+				-nf 1
+				-v1 1
+				step;
+			
+			setParent ..;
+		
+		columnLayout static;
+			setParent ($window+"|form");
+	
+	tabLayout -e -sti 1 tabs;
+	
+	button
+		-l "Convert"
+		-h $height
+		-ann "Convert displacement to polygons for selected objects and close the window."
+		-c ("DRL_dispToPoly_saveSet "+$window+";DRL_dispToPoly_go "+$window+";")
+		convert;
+	button
+		-l "Apply"
+		-h $height
+		-ann "Convert displacement to polygons for selected objects and leave the window opened."
+		-c ("DRL_dispToPoly_saveSet "+$window+";DRL_dispToPoly_exec "+$window+";")
+		apply;
+	button
+		-l "Close"
+		-h $height
+		-ann "Close the window without executing conversion or saving settings."
+		-c ("deleteUI " + $window)
+		close;
+	
+	formLayout -e
+		-attachForm            postfix top    $space
+		-attachForm            postfix left   $space
+		-attachForm            postfix right  $space
+		-attachControl         mode    top    $space     postfix
+		-attachOppositeControl mode    left   0          postfix
+		-attachOppositeControl mode    right  0          postfix
+		-attachControl         sep     top    $space     mode
+		-attachOppositeControl sep     left   0          postfix
+		-attachOppositeControl sep     right  0          postfix
+		
+		-attachControl         tabs    top    $space     sep
+		-attachOppositeControl tabs    left   0          postfix
+		-attachOppositeControl tabs    right  0          postfix
+		-attachControl         tabs    bottom $space     convert
+		
+		-attachNone            convert top
+		-attachOppositeControl convert left   0          postfix
+		-attachPosition        convert right  ($space/2) 33
+		-attachForm            convert bottom $space
+		-attachNone            apply   top
+		-attachPosition        apply   left   ($space/2) 33
+		-attachPosition        apply   right  ($space/2) 67
+		-attachForm            apply   bottom $space
+		-attachNone            close   top
+		-attachPosition        close   left   ($space/2) 67
+		-attachOppositeControl close   right  $space     postfix
+		-attachForm            close   bottom $space
+		($window+"|form");
+	
+	setUITemplate -popTemplate;
+	
+	DRL_dispToPoly_getSet $window;
+	
+	showWindow $window;
+	waitCursor -st 0;
+	return $window;
+}
+
+
+global proc DRL_dispToPoly_menus(string $window) {
+	setParent $window;
+	
+	menu -l "Edit" edMn;
+		
+		menuItem
+			-l "Save Settings"
+			-c ("DRL_dispToPoly_saveSet "+$window)
+			save;
+		menuItem
+			-l "Reset Settings"
+			-c ("DRL_dispToPoly_reSet "+$window)
+			reset;
+	
+		setParent $window;
+	
+	menu -l "Help" hlpMn;
+		menuItem
+			-l "About"
+			-c "DRL_dispToPoly_about"
+			about;
+			
+		setParent $window;
+}
+
+
+// ==========  GUI Commands  ==================================================
+
+
+global proc DRL_dispToPoly_go(string $window) {
+	int $err;
+	$err = `DRL_dispToPoly_exec $window`;
+	if (!$err) deleteUI $window;
+}
+
+global proc int DRL_dispToPoly_exec(string $window) {
+	int $mode, $cacheMode, $float=0, $timeMode=0, $err=0;
+	float $start, $end, $step;
+	string $sel[];
+	string $postfix, $path, $obj;
+	
+	// Get current common settings
+	$mode = `radioButtonGrp -q -sl ($window+"|form|mode")`;
+	$postfix = `textFieldGrp -q -tx ($window+"|form|postfix")`;
+	
+	// Get current caching settings
+	$path = `textFieldGrp -q -tx ($window+"|form|tabs|cache|dir|fld")`;
+	$cacheMode = `radioButtonGrp -q -sl ($window+"|form|tabs|cache|mode")`;
+	
+	if (`radioButtonGrp -q -sl ($window+"|form|tabs|cache|dblFlt")` == 2) $float = 1;
+	
+	if (`radioButtonGrp -q -sl ($window+"|form|tabs|cache|timeMode1")`) $timeMode = 1;
+	else if (`radioButtonGrp -q -sl ($window+"|form|tabs|cache|timeMode2")`) $timeMode = 2;
+	
+	$start = `floatFieldGrp -q -v1 ($window+"|form|tabs|cache|time")`;
+	$end = `floatFieldGrp -q -v2 ($window+"|form|tabs|cache|time")`;
+	$step = `floatFieldGrp -q -v1 ($window+"|form|tabs|cache|step")`;
+	
+	if ($mode == 1) {
+		$sel = `DRL_dispToCache $cacheMode $timeMode $start $end $step $path $float $postfix {}`;
+		if ($sel[0] != "") $err=1;
+	} else {
+		$sel = `ls -sl -o`;
+		for ($obj in $sel) DRL_dispConvert $obj $postfix;
+	}
+	
+	return $err;
+}
+
+
+global proc string DRL_dispToPoly_about() {
+	string $window;
+	string $url = "http:\/\/www.creativecrash.com\/maya\/downloads\/scripts-plugins\/dynamics\/c\/drl-animated-displacement-to-poly";
+	
+	$txt = "Please post all your comments \/ bugreports \/ feature requests etc at the webpage specified above.\n\n";
+	$txt += "This script extends Maya's default \"Convert > Displacement to Polygons\" function.\n\n";
+	$txt += "It has 2 main modes:\n";
+	$txt += "\n   > Static Polygons\n";
+	$txt += "In this mode the script simply allows you to better name your converted displacement. It automatically renames generated displacement (transform as well as shape node) so it's easier to keep everything in order.\n";
+	$txt += "You have only one option in this mode - \"Name Postfix\". The created polygonal mesh will be named as <Source Object>_<postfix>. If you leave this field empty, the default \"Disp\" postfix will be used.\n";
+	$txt += "\n   > Animated Cache\n";
+	$txt += "In this mode the script allows you to convert your animated displacement to also animated polygonal shape.\n";
+	$txt += "Most of other similar scripts use BlendShape to create an animation and therefore slow your computer down extremely. Unlike them, this script creates animation by sequentually calculating a cache for each specified frame and so it is MUCH faster and more stable than the others.\n";
+	$txt += "\nUsage:\n";
+	$txt += "1. Select \"Animated Cache\" mode.\n";
+	$txt += "2. Specify name postfix the same as in \"Static Polygons\" mode.\n";
+	$txt += "3. Define all the other parameters as in standard \"Create Cache Options\" window.\n";
+	$txt += "\n>>> !!! LIMITATIONS !!! <<<\n";
+	$txt += "	- The script currently doesn't work correctly with objects that have multiple shapes. I thought this is not so important feature because common use for this script is creating actual moving geometry from ocean plane. And since implementing this feature requires me to rewrite main function almost completely, I'm not going to add this. But if you really need it for some reason, please post about it at the script's webpage displayed above.\n";
+	$txt += "	- The script currently doesn't support abortion during the process. The reason is the same: to implement this feature I need to seriously modify the main function.\n";
+	$txt += "	- During the process the script flushes undo queue. So you won't be able to use \"Edit > Undo\" to the scene state that was before execution. If it won't flush undo, Maya will need a TREMENDOUS amount of memory 'cause Maya will keep all the converted displacement states in the memory. And since all the results of this script are easily deleted by selecting created object's node and pressing \"delete\" (and then deleting actual cache files), I don't think this is huge disadvantage. I've added a popup window to remind you about it.";
+	
+	$window = `DRL_about
+		"DRL_dispToPoly_about"
+		""
+		"DRL Displacement to Poly v2.0.1"
+		$url
+		""
+		""
+		$txt
+		0
+		200
+		""
+		0
+		-1
+	`;
+	
+	return $window;
+}
+
+
+global proc DRL_dispToPoly_browser(string $window) {
+	string $path = `textFieldGrp -q -tx ($window+"|form|tabs|cache|dir|fld")`;
+	if ($path == "") $path = `internalVar -uwd`;
+	if (`file -q -ex $path` && `filetest -d $path`) workspace -dir $path;
+	
+	fileBrowser (("DRL_dispToPoly_setDir \""+$window+"\" "), "Set", "", 4);
+}
+
+global proc int DRL_dispToPoly_setDir(string $window, string $path, string $type) {
+	textFieldGrp -e -tx $path ($window+"|form|tabs|cache|dir|fld");
+	return 1;
+}
+
+
+// ==========  Settings Management  ===========================================
+
+
+global proc DRL_dispToPoly_reSet(string $window) {
+// This procedure resets all the options in the window to default values
+	string $path="";
+	
+	$path = `DRL_dispToPoly_setToPath $path`;
+	
+	// Transfer the common settings to the window
+	radioButtonGrp -e -sl 1 ($window+"|form|mode");
+	tabLayout -e -sti 1 ($window + "|form|tabs");
+	
+	textFieldGrp -e -tx "" ($window+"|form|postfix");
+	
+	// Transfer the caching settings to the window
+	radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|mode");
+	textFieldGrp -e -tx $path ($window+"|form|tabs|cache|dir|fld");
+	radioButtonGrp -e -sl 2 ($window+"|form|tabs|cache|dblFlt");
+	
+	radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|timeMode1");
+	floatFieldGrp -e
+		-v1 1
+		-v2 10
+		-en 0
+		($window+"|form|tabs|cache|time");
+	floatFieldGrp -e -v1 1 ($window+"|form|tabs|cache|step");
+}
+
+
+global proc DRL_dispToPoly_getSet(string $window) {
+// This procedure takes stored settings and configures the window accordingly
+	int $mode=1, $cacheMode=1, $float=1, $timeMode=1;
+	float $start=1, $end=10, $step=1;
+	string $postfix="", $path="";
+	
+	// Get stored variables if there are some
+	if (`optionVar -ex DRL_disp_mode`)
+		$mode = `optionVar -q DRL_disp_mode`;
+	if (`optionVar -ex DRL_disp_postfix`)
+		$postfix = `optionVar -q DRL_disp_postfix`;
+	if (`optionVar -ex DRL_disp_path`)
+		$path = `optionVar -q DRL_disp_path`;
+	if (`optionVar -ex DRL_disp_cacheMode`)
+		$cacheMode = `optionVar -q DRL_disp_cacheMode`;
+	if (`optionVar -ex DRL_disp_float`)
+		$float = `optionVar -q DRL_disp_float`;
+	if (`optionVar -ex DRL_disp_timeMode`)
+		$timeMode = `optionVar -q DRL_disp_timeMode`;
+	if (`optionVar -ex DRL_disp_start`)
+		$start = `optionVar -q DRL_disp_start`;
+	if (`optionVar -ex DRL_disp_end`)
+		$end = `optionVar -q DRL_disp_end`;
+	if (`optionVar -ex DRL_disp_step`)
+		$step = `optionVar -q DRL_disp_step`;
+	
+	
+	$path = `DRL_dispToPoly_setToPath $path`;
+	
+	
+	// Transfer the common settings to the window
+	if ($mode == 2) {
+		radioButtonGrp -e -sl 2 ($window+"|form|mode");
+		tabLayout -e -sti 2 ($window + "|form|tabs");
+	} else {
+		radioButtonGrp -e -sl 1 ($window+"|form|mode");
+		tabLayout -e -sti 1 ($window + "|form|tabs");
+	}
+	textFieldGrp -e -tx $postfix ($window+"|form|postfix");
+	
+	// Transfer the caching settings to the window
+	if ($cacheMode == 2) radioButtonGrp -e -sl 2 ($window+"|form|tabs|cache|mode");
+	else radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|mode");
+	textFieldGrp -e -tx $path ($window+"|form|tabs|cache|dir|fld");
+	if ($float) radioButtonGrp -e -sl 2 ($window+"|form|tabs|cache|dblFlt");
+	else radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|dblFlt");
+	
+	if ($timeMode == 2) radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|timeMode2");
+	else if ($timeMode == 3) radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|timeMode3");
+	else radioButtonGrp -e -sl 1 ($window+"|form|tabs|cache|timeMode1");
+	
+	floatFieldGrp -e
+		-v1 $start
+		-v2 $end
+		($window+"|form|tabs|cache|time");
+	if ($timeMode==1 || $timeMode==2)floatFieldGrp -e -en 0 ($window+"|form|tabs|cache|time");
+	floatFieldGrp -e -v1 $step ($window+"|form|tabs|cache|step");
+}
+
+
+global proc DRL_dispToPoly_saveSet(string $window) {
+// This procedure saves current settings from window
+	int $mode, $cacheMode, $float=0, $timeMode=1;
+	float $start, $end, $step;
+	string $postfix, $path;
+	
+	// Get current common settings
+	$mode = `radioButtonGrp -q -sl ($window+"|form|mode")`;
+	$postfix = `textFieldGrp -q -tx ($window+"|form|postfix")`;
+	
+	// Get current caching settings
+	$path = `textFieldGrp -q -tx ($window+"|form|tabs|cache|dir|fld")`;
+	$cacheMode = `radioButtonGrp -q -sl ($window+"|form|tabs|cache|mode")`;
+	
+	if (`radioButtonGrp -q -sl ($window+"|form|tabs|cache|dblFlt")` == 2) $float = 1;
+	
+	if (`radioButtonGrp -q -sl ($window+"|form|tabs|cache|timeMode2")`) $timeMode = 2;
+	else if (`radioButtonGrp -q -sl ($window+"|form|tabs|cache|timeMode3")`) $timeMode = 3;
+	
+	$start = `floatFieldGrp -q -v1 ($window+"|form|tabs|cache|time")`;
+	$end = `floatFieldGrp -q -v2 ($window+"|form|tabs|cache|time")`;
+	$step = `floatFieldGrp -q -v1 ($window+"|form|tabs|cache|step")`;
+	
+	
+	$path = `DRL_dispToPoly_pathToSet $path`;
+	
+	
+	// Save settings
+	optionVar -iv DRL_disp_mode      $mode;
+	optionVar -sv DRL_disp_postfix   $postfix;
+	optionVar -sv DRL_disp_path      $path;
+	optionVar -iv DRL_disp_cacheMode $cacheMode;
+	optionVar -iv DRL_disp_float     $float;
+	optionVar -iv DRL_disp_timeMode  $timeMode;
+	optionVar -fv DRL_disp_start     $start;
+	optionVar -fv DRL_disp_end       $end;
+	optionVar -fv DRL_disp_step      $step;
+}
+
+
+// =========  Path Conversion  ================================================
+
+
+global proc string DRL_dispToPoly_setToPath(string $settingsPath) {
+// This procedure converts path from the stored settings format to actual system path
+	string $path, $proj, $cacheSubDir, $scene;
+	
+	string $buffer[] = `DRL_dispToPoly_getPaths`;
+	
+	$proj = $buffer[0];
+	$cacheSubDir = $buffer[1];
+	$scene = $buffer[2];
+	
+	$path = $settingsPath;
+	if ($path == "")
+		$path = "<project>\/<cacheSubDir>\/<scene>";
+	
+	// Replace settings' patterns with actual paths
+	if (`match "^<project>" $path` != "")
+		$path = `substitute "^<project>" $path $proj`;
+	while (`match "<cacheSubDir>" $path` != "")
+		$path = `substitute "<cacheSubDir>" $path $cacheSubDir`;
+	while (`match "<scene>" $path` != "")
+		$path = `substitute "<scene>" $path $scene`;
+	while (`match "\/\/" $path` != "")
+		$path = `substitute "\/\/" $path "\/"`;
+	
+	return $path;
+}
+
+
+global proc string DRL_dispToPoly_pathToSet(string $actualPath) {
+// This procedure does the opposite - it converts actual system path to format for storing as a setting.
+	string $path, $proj, $cacheSubDir, $scene;
+	
+	string $buffer[] = `DRL_dispToPoly_getPaths`;
+	$proj = $buffer[0];
+	$cacheSubDir = $buffer[1];
+	$scene = $buffer[2];
+	while (`substring $proj (size($proj)) (size($proj))` == "\/")
+		$proj = `substring $proj 1 (size($proj)-1)`;
+	
+	$path = $actualPath;
+	
+	// Replace actual paths wit settings' patterns
+	if (`match ("^"+$proj+"$") $path` != "")
+		$path = `substitute ("^"+$proj+"$") $path "<project>"`;
+	else if (`match ("^"+$proj+"\/") $path` != "")
+		$path = `substitute ("^"+$proj+"\/") $path "<project>\/"`;
+	
+	while (`match ("\/"+$cacheSubDir+"$") $path` != "")
+		$path = `substitute ("\/"+$cacheSubDir+"$") $path "\/<cacheSubDir>"`;
+	while (`match ("\/"+$cacheSubDir+"\/") $path` != "")
+		$path = `substitute ("\/"+$cacheSubDir+"\/") $path "\/<cacheSubDir>\/"`;
+	
+	while (`match $scene $path` != "")
+		$path = `substitute $scene $path "<scene>"`;
+	
+	while (`match "\/\/" $path` != "")
+		$path = `substitute "\/\/" $path "\/"`;
+	while (`substring $path (size($path)) (size($path))` == "\/")
+		$path = `substring $path 1 (size($path)-1)`;
+	
+	return $path;
+}
+
+
+global proc string[] DRL_dispToPoly_getPaths() {
+/*
+Returned array format:
+	[0] - project path
+	[1] - cache subdir
+	[2] - scene name without extension and undesired chars
+*/
+	string $proj, $cacheSubDir, $scene;
+	string $buffer[];
+	// Get current project's path
+	$proj = `workspace -q -rd`;
+	
+	// Get cache subdirectory's name
+	$cacheSubDir = `workspace -q -fre "diskCache"`;
+	if ($cacheSubDir == "") {
+		$cacheSubDir = "Cache";
+		workspace -fr "diskCache" $cacheSubDir;
+		workspace -s;
+	}
+	
+	// Get scene name...
+	$scene = `file -q -shortName -sceneName`;
+	//and remove extension and all undesired chars
+	while (`match "[ 	]+" $scene` != "")
+		$scene = `substitute "[ 	]+" $scene "_"`;
+	tokenize $scene "." $buffer;
+	$scene = $buffer[0];
+	for ($i=1; $i<`size $buffer`-1; $i++)
+		$scene = $scene + "_" + $buffer[$i];
+	while (`match "[^a-zA-Z_0-9]+" $scene` != "")
+	 $scene = `substitute "[^a-zA-Z_0-9]+" $scene "_"`;
+	
+	return {
+		$proj,
+		$cacheSubDir,
+		$scene
+		};
+}

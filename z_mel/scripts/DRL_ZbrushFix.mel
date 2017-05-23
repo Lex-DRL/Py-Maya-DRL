@@ -1,0 +1,39 @@
+global proc DRL_ZbrushFix(string $name, string $path, int $amount[]) {
+	int $i;
+	string $model = `substitute "-" $name "_"`;
+	for ($i = $amount[0]; $i <= $amount[1]; $i++) {
+		file -newFile -force; saveMyRemoveButton;
+		setNamedPanelLayout "Single Perspective View"; updateToolbox();
+		outlinerPanel -edit -replacePanel `getPanel -withFocus` outlinerPanel1; updateToolbox();
+		file -import -type "mayaAscii" -rdn -rpr ($name + "-" + $i) -options "v=0"  -pr -loadReferenceDepth "all" ($path + "/" + $name + "-" + $i + ".ma");
+		
+		select -r ($model + "_" + $i) ;
+		delete;
+		rename "_UNKNOWN_REF_NODE_fosterParent1" $model;
+		rename ($model + "_" + $i + "Shape") ($model + "Shape");
+		select -r $model;
+		/*
+		SeparatePolygon;
+		select -r polySurface1 polySurface2 ;
+		string $res[] = {};
+		parent -w;
+		$res[0] = `rename "polySurface1" "displayRing1"`;
+		$res[1] = `rename "polySurface2" "displayRing2"`;
+		
+		string $sel[] = `ls -sl`;
+		string $res[] = {};
+		int $j = 1;
+		for ($obj in $sel) {
+			$res[$j-1] = `rename $obj ("display_ring" + $j)`;
+			$j++;
+		}
+		
+		select -r $res;
+		*/
+		DeleteHistory;
+		//select -r $res;
+		select -r $model;
+		
+		file -op "v=0" -typ "mayaAscii" -pr -es ($path + "/" + $name + "-new-" + $i + ".ma");
+	}
+}

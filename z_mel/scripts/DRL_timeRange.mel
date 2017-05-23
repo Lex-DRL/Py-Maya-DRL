@@ -1,0 +1,20 @@
+//			DRL Time Range v0.1
+global proc float[] DRL_timeRange(int $mode, float $start, float $end) {
+// Mode:
+//	0 - use start and end from given variables
+//	1 - from Render Settings
+//	2 - from Time Slider
+	float $time[];
+	
+	$time[0] = $start;
+	$time[1] = $end;
+	if ($mode == 1) {
+		$time[0] = `getAttr defaultRenderGlobals.startFrame`; 
+		$time[1] = `getAttr defaultRenderGlobals.endFrame`;
+	} else if ($mode == 2) {
+		$time[0] = `playbackOptions -q -min`;
+		$time[1] = `playbackOptions -q -max`;
+	}
+	
+	return $time;
+}

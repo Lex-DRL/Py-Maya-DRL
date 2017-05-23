@@ -1,0 +1,4 @@
+global proc DRL_ThunderRef(int $num) {
+	string $file = "Thunder" + (string)$num + ".ma";
+	DRL_loadRef $file;
+}

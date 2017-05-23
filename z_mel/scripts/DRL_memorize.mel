@@ -1,0 +1,85 @@
+/*
+Код - не мой. Взят из скриптов Денисыча 0-1 и оформлен в виде процедур (немного изменён).
+Соответственно, для работы требуется пак Денисыча.
+В частности - процедуры: sizeSel, createSet.
+*/
+
+
+proc int sizeSel_local()  // local = не global proc
+{
+	$size = (size (`ls -sl -fl`));
+	return $size;
+}
+
+proc createSet_local(string $name)
+{
+	if (`objExists $name`)
+		delete $name;
+	sets -name $name;
+}
+
+proc string[] stringIntersect_local(string $string1[], string $string2[])
+{
+	string $string1no[] = stringArrayRemove($string2, $string1);
+	return (stringArrayRemove($string1no, $string1));
+}
+
+
+
+global proc DRL_mem() { // Запомнить выделение
+	if (sizeSel_local() > 0) createSet_local DRL_tmpMem;
+	else warning "You need to select something first.";
+}
+
+global proc DRL_memSel() { // Выбрать запомненное
+	if (`objExists DRL_tmpMem`) {
+		if (`sets -q -s DRL_tmpMem` > 0)
+			select -r DRL_tmpMem;
+		else warning "Memorized selection is empty.";
+	} else error "Nothing was memorized yet.";
+}
+
+global proc DRL_memAddSel() { // Добавить к запомненному и выделить его
+	select -add DRL_tmpMem;
+	createSet_local DRL_tmpMem;
+}
+
+global proc DRL_memAdd() { // Добавить к запомненному
+	string $sel[] = `ls -sl`;
+	select -add DRL_tmpMem;
+	createSet_local DRL_tmpMem;
+	select -r $sel;
+}
+
+global proc DRL_memRemSel() { // Убрать из запомненного и выделить оставшееся в нём
+	string $sel[] = `ls -sl`;
+	select -r DRL_tmpMem;
+	select -d $sel;
+	createSet_local DRL_tmpMem;
+}
+
+global proc DRL_memRem() { // Убрать из запомненного и выделить то, что не было убрано
+	string $sel[] = `ls -sl`;
+	select -r DRL_tmpMem;
+	string $set[] = `ls -sl`;
+	select -d $sel;
+	createSet_local DRL_tmpMem;
+	select -r $sel;
+	select -d $set;
+}
+
+global proc DRL_memInterSel() { // Пересечь с запомненным и выделить его
+	string $sel[] = `ls -sl -fl`;
+	select -r DRL_tmpMem;
+	select -r (stringIntersect_local($sel, `ls -sl -fl`));
+	createSet_local DRL_tmpMem;
+}
+
+global proc DRL_memInter() { // Пересечь с запомненным и выделить оставшееся
+	string $sel[] = `ls -sl -fl`;
+	select -r DRL_tmpMem;
+	select -r (stringIntersect_local($sel, `ls -sl -fl`));
+	createSet_local DRL_tmpMem;
+	select -r $sel;
+	select -d DRL_tmpMem;
+}

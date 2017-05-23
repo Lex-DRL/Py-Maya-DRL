@@ -1,0 +1,58 @@
+addAttr
+	-ln "frame"
+	-nn "Frame"
+	-at "time"
+	-dv 1
+	|IT_Cam|IT_Cam_Sphere2;
+
+addAttr
+	-ln "blendOutputInvert"
+	-sn "blOutInv"
+	-nn "Inverted Blend Output"
+//	-at "bool" // used for simple attr
+	-at "float"
+//	-dt doubleArray // used for PP attr: doubleArray - float, vectorArray - 3d vector
+	-min 0
+	-hasMinValue 1
+	-max 1
+	-hasMaxValue 1
+	-dv 0 // default value
+	-softMinValue 0
+	-hasSoftMinValue 1
+	-softMaxValue 1
+	-hasSoftMaxValue 1
+	-writable 1
+	-keyable 1
+	;
+addAttr
+	-longName "NoiseColor_target"
+	-shortName "NsClr_tg"
+	-niceName "NoiseColor Target"
+	-usedAsColor
+	-attributeType "float3"
+	-numberOfChildren 3
+	;
+addAttr
+	-keyable true
+	-longName "NoiseColor_targetR"
+	-shortName "NsClr_tgR" 
+	-niceName "NoiseColor Target [R]"
+	-attributeType "float" 
+	-parent "NoiseColor_target"
+	;
+addAttr
+	-keyable true
+	-longName "NoiseColor_targetG"
+	-shortName "NsClr_tgG" 
+	-niceName "NoiseColor Target [G]"
+	-attributeType "float" 
+	-parent "NoiseColor_target"
+	;
+addAttr
+	-keyable true
+	-longName "NoiseColor_targetB"
+	-shortName "NsClr_tgB" 
+	-niceName "NoiseColor Target [B]"
+	-attributeType "float" 
+	-parent "NoiseColor_target"
+	;

@@ -1,0 +1,92 @@
+global proc string[] DRL_bakeVertexColor (
+	string $files[],
+	string $scene,
+	string $bakeSet,
+	string $SG,
+	int $soft
+)
+{
+	string $fls[], $nms[], $pth[], $res[], $buf[];
+	int
+		$i,
+		$sz = `size $files`;
+	string $obj;
+	
+	if ($sz < 1) {
+		warning "No files specified for bake.";
+		return {};
+	}
+	if (`size $scene` < 1) {
+		warning "No preset scene specified for bake.";
+		return {};
+	} else if (!`filetest -f $scene`) {
+		warning "There's no scene at the specified filepath.";
+		return {};
+	}
+	if (`size $bakeSet`<1 || `size $SG`<1) {
+		warning "You haven't specified bakeSet and/or shadingGroup.";
+		return {};
+	}
+	
+	$fls = $files;
+	file -f -options "v=0"  -typ "mayaAscii" -o $scene;
+	
+	if (!`objExists $bakeSet`) {
+		warning ("\"" + $bakeSet + "\" doesn't exist in the scene.");
+		return {};
+	} else if (!`objectType -isType vertexBakeSet $bakeSet`) {
+		warning ("\"" + $bakeSet + "\" is not vertexBakeSet node.");
+		return {};
+	}
+	if (!`objExists $SG`) {
+		warning ("\"" + $SG + "\" doesn't exist in the scene.");
+		return {};
+	} else if (!`objectType -isType shadingEngine $SG`) {
+		warning ("\"" + $SG + "\" is not ShadingGroup node.");
+		return {};
+	}
+	
+	for ($i=0; $i<$sz; $i++) {
+		$fls[$i] = DRL_fixPath($fls[$i], 0);
+		$nms[$i] = $fls[$i];
+		
+		while (`match "^.*/" $nms[$i]` != "")
+			$nms[$i] = `substitute "^.*/" $nms[$i] ""`;
+		$nms[$i] = `substitute "\\..*$" $nms[$i] ""`;
+		
+		$pth[$i] = $fls[$i];
+		$pth[$i] = `substitute "[^/]*$" $pth[$i] ""`;
+		
+		file -import -type "OBJ" -rdn -rpr $nms[$i] -options "mo=0" -pr -loadReferenceDepth "all" $files[$i];
+	}
+	
+	for ($i=0; $i<$sz; $i++) {
+		if ($i < 1)
+			$obj = "polySurface1";
+		else 
+			$obj = $nms[$i] + "_polySurface1";
+		$obj = `rename $obj $nms[$i]`;
+		
+		select -r $obj;
+		sets -e -forceElement $SG;
+		assignBakeSet $bakeSet "";
+		displaySmoothness -divisionsU 0 -divisionsV 0 -pointsWire 4 -pointsShaded 1 -polygonObject 1;
+		subdivDisplaySmoothness -smoothness 1;
+		if ($soft)
+			polySoftEdge -a 180 -ch 0;
+		select -hierarchy $obj;
+		$buf = `ls -sl -s -l`;
+		select -r $obj;
+		convertLightmap  -camera persp -sh -vm $SG $buf[0];
+		
+		
+		// Export to FBX
+		FBXLoadExportPresetFile -f "E:/5-Internet/Dropbox/0-Settings/Maya/FBX/Presets/2011.3.1/export/Slasher-Skin.fbxexportpreset";
+		FBXExportInAscii -v 0;
+		$res[$i] = $pth[$i] + $nms[$i] + ".fbx";
+		FBXExport -f $res[$i] -s;
+	}
+	
+	return $res;
+	
+}

@@ -1,0 +1,197 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL whatIs v1.2.2
+	
+	DEPENDENCIES:
+		<None>
+		(all additional procedures that are called from this script are
+		also inside this script).
+	
+	This script contains the functions slightly extending and simplifying
+	the use of whatIs command.
+	
+	>>> DRL_whatIs_UI <<<
+		Description:
+			This proc creates simple window with textfield allowing easier check
+			text strings with whatIs or runTimeCommand.
+			The procedure takes an int argument specifying the mode:
+			1 - whatIs
+			2 - runTimeCommand
+		Usage:
+			DRL_whatIs_UI <mode>;
+	
+	>>> DRL_whatIs_multi <<<
+		Description:
+			Executes whatIs command for each element from the given array.
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+
+global proc DRL_whatIs_UI(int $mode) {
+	string $window;
+	
+	if (`window -ex whatIs_Window`) deleteUI whatIs_Window;
+	
+	$window = `window
+		-t "whatIs UI"
+		-mxb 0
+		-mnb 1
+		-rtf 1
+		whatIs_Window`;
+	
+	setUITemplate -pushTemplate DefaultTemplate;
+	
+	formLayout form;
+	
+	textField
+		-ann "Enter the proc/command name to be checked."
+		-ec ("DRL_whatIs_exec " + $window)
+		-alwaysInvokeEnterCommandOnReturn 1
+		fld;
+	
+	radioCollection radCll;
+	
+	radioButtonGrp
+		-l "Mode:"
+		-ann "Choose which command to use for execution."
+		-cal 1 center
+		-cw 2 100
+		-cw 3 120
+		-nrb 2
+		-l1 "whatIs"
+		-l2 "runTimeCommand"
+		-on1 ("window -e -t \"whatIs UI\" " + $window + ";setFocus " + $window + "|form|fld;")
+		-on2 ("window -e -t \"runTimeCommand UI\" " + $window + ";setFocus " + $window + "|form|fld;")
+		mode;
+	
+	if($mode == 1 || $mode == 2) radioButtonGrp -e -sl $mode ($window + "|form|mode");
+	else radioButtonGrp -e -sl 1 ($window + "|form|mode");
+	
+	separator sep;
+	
+	scrollField
+		-ann "The history of last commands/functions tested with whatIs/runTimeCommand."
+		-ec ("DRL_whatIs_insert " + $window + " res")
+		-ww 1
+		-en 0
+		-h 200
+		res;
+	button
+		-l "Clear History"
+		-h 26
+		-al "center"
+		-ann "Click this button to remove all the results."
+		-c ("scrollField -e -cl \"" + $window + "|form|res\"")
+		clH;
+	
+	scrollField
+		-ann "The place where you can temporarly store some text if needed."
+		-ec ("DRL_whatIs_insert " + $window + " stor")
+		-ww 1
+		-en 0
+		-h 200
+		stor;
+	button
+		-l "Clear Storage"
+		-h 26
+		-al "center"
+		-ann "Click this button to remove all the text from the storage."
+		-c ("scrollField -e -cl \"" + $window + "|form|stor\"")
+		clS;
+	
+	int $space = 4;
+	
+	setParent ($window + "|form");
+	formLayout -e
+		-attachForm            fld  top    $space
+		-attachForm            fld  left   $space
+		-attachForm            fld  right  $space
+		-attachControl         mode top    $space     fld
+		-attachOppositeControl mode left   0          fld
+		-attachOppositeControl mode right  0          fld
+		
+		-attachControl         sep  top    $space     mode
+		-attachOppositeControl sep  left   0          fld
+		-attachOppositeControl sep  right  0          fld
+		
+		-attachControl         res  top    $space     sep
+		-attachOppositeControl res  left   0          fld
+		-attachPosition        res  right  ($space/2) 50
+		-attachControl         res  bottom $space     clH
+		-attachNone            clH  top
+		-attachOppositeControl clH  left   0          fld
+		-attachPosition        clH  right  ($space/2) 50
+		-attachForm            clH  bottom $space
+		
+		-attachControl         stor top    $space     sep
+		-attachPosition        stor left   ($space/2) 50
+		-attachOppositeControl stor right  0          fld
+		-attachControl         stor bottom $space     clS
+		-attachNone            clS  top
+		-attachPosition        clS  left   ($space/2) 50
+		-attachOppositeControl clS  right  0          fld
+		-attachForm            clS  bottom $space
+		($window + "|form");
+	
+	setUITemplate -popTemplate;
+	setParent $window;
+	
+	// Let's use existing string since we no longer need it:
+	$window = "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+	$window = $window + $window + $window;
+	// to remove scrollbars until they'll be needed (part 1):
+	scrollField -e -tx $window res;
+	scrollField -e -tx $window stor;
+	
+	showWindow;
+	// ... part 2:
+	scrollField -e -tx "" -en 1 res;
+	scrollField -e -tx "" -en 1 stor;
+	scrollField -e -ed 0 res;
+}
+
+
+global proc DRL_whatIs_exec(string $window) {
+	string $proc = `textField -q -tx ($window+"|form|fld")`;
+	if (`size $proc` > 0) {
+		
+		string $res;
+		int $ok=0, $mode=`radioButtonGrp -q -sl ($window + "|form|mode")`;
+		
+		if ($mode == 1) {
+			$res = "whatIs\n-> " + $proc + ":\n";
+			$res += `whatIs $proc` + "\n\n";
+			$ok=1;
+		} else if ($mode == 2) {
+			$res = "runTimeCommand -q -c\n-> " + $proc + ":\n";
+			$res += `runTimeCommand -q -c $proc` + "\n\n";
+			$ok=1;
+		}
+		
+		if ($ok) {
+			$res += `scrollField -q -tx ($window+"|form|res")`;
+			textField -e -tx "" ($window+"|form|fld");
+			scrollField -e -tx $res ($window+"|form|res");
+		} else warning "Please select the type of operation first!";
+		
+	} else warning "Please type the procedure/function/command name first!";
+}
+
+
+global proc DRL_whatIs_insert(string $window, string $field) {
+	string $txt = `scrollField -q -sl ($window + "|form|" + $field)`;
+	$txt = strip($txt);
+	$txt = `textField -q -tx ($window+"|form|fld")` + $txt;
+	textField -e -tx $txt ($window+"|form|fld");
+	setFocus ($window+"|form|fld");
+}
+
+
+
+global proc DRL_whatIs_multi (string $array[]) {
+	string $proc = "";
+	for ($proc in $array) {
+		print ("\n" + $proc + ":\n");
+		print (`whatIs $proc` + "\n");
+	}
+}

@@ -1,0 +1,20 @@
+/*
+				DRL Load Ref v0.1
+	
+	Loads/reloads the given reference file. It load only 1st RN of this file.
+*/
+
+global proc string DRL_loadRef(string $file) {
+	string $path = `referenceQuery -f -wcn $file`;
+	
+	if (`size $path` > 0) {
+		
+		string $node = `referenceQuery -rfn -tr $path`;
+		
+		if ((! `filetest -d $path`) && `filetest -r $path` && `filetest -s $path`) {
+			file -f -loadReference $node $path;
+			return $node;
+		} else error "File doesn't exist, is empty or unaccessable.\n";
+		
+	} else error "No such file is defined as reference.\n";
+}

@@ -1,0 +1,67 @@
+proc string[] removeChildAttrFromArray(string $obj, string $attrArray[]) { // Убираем все аттрибуты, у которых есть родители (цвета, массивы)
+// Гарантированно возвращает без дубликатов
+	string $res[] = {};
+	int $i = 0;
+	
+	for($attr in $attrArray) {
+		string $parent = `addAttr -q -parent ($obj + "." + $attr)`; // Содержит сам атрибут, если нет родителя
+		if( !stringArrayContains($parent, $res) ) {
+			$res[$i] = $parent;
+			$i++;
+		}
+	}
+	
+	return $res;
+}
+
+proc string[] doConnectIdentical(string $objFrom, string $objToArray[]) {
+	string $defaultAttr[] = {
+		"version",
+		"parametersFrameLayoutCollapseState",
+		"outputParametersFrameLayoutCollapseState"
+	};
+	string $mainAttr[] = `listAttr -write -connectable -userDefined -unlocked -settable -hasData $objFrom`;
+	$mainAttr = stringArrayRemove($defaultAttr, $mainAttr);
+	$mainAttr = removeChildAttrFromArray($objFrom, $mainAttr);
+	
+	string $res[] = {};
+	int $i = 0;
+	for($objTo in $objToArray) {
+		for($attr in $mainAttr) {
+			if(`attributeQuery -ex -node $objTo $attr`) {
+				if(`getAttr -lock ($objTo + "." + $attr)`)
+					setAttr -l false ($objTo + "." + $attr);
+				connectAttr -f ($objFrom + "." + $attr) ($objTo + "." + $attr);
+				if( !stringArrayContains($attr, $res) ) {
+					$res[$i] = $attr;
+					$i++;
+				}
+			}
+		}
+	}
+	return $res;
+}
+
+
+
+global proc DRL_connectIdentical() { // Законнектить все совпадающие атрибуты с первой выделенной ноды на остальные
+	string $sel[] = `ls -sl -fl`;
+	int $i = 0;
+	string $objFrom = "";
+	string $objTo[] = {};
+	
+	for ($obj in $sel) {
+		if($i==0)
+			$objFrom = $obj;
+		else
+			$objTo[$i-1] = $obj;
+		$i++;
+	}
+	
+	if(`size $objTo`) {
+		string $res[] = `doConnectIdentical $objFrom $objTo`;
+		print "\n\n\nConnected attributes:\n";
+		print $res;
+	} else
+		warning "You need to select at least 2 nodes first.";
+}

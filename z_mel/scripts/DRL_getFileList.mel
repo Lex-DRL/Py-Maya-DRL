@@ -1,0 +1,47 @@
+/*
+		DRL get file list v0.1
+		
+		Выдаёт листинг файлов в директории во всех возможных форматах. Возвращает число найденных файлов.
+		
+		ТРЕБУЕТСЯ:
+			DRL_fileTools.mel
+*/
+
+global proc int DRL_getFileList (
+	string $dirPath, // Directory path to scan for files.
+	string $fileExt, // File extension filter. If not empty then only files of this type will be returned. Must cuntain only extension with no dot.
+	// Specify a string array variables to return the result:
+	string $filesFull[], // Full filepaths (with extension).
+	string $fileNames[], // Filenames only (no extension).
+	string $fileNamesWithExt[] // Filenames only, but with extension (pure getFileList command output).
+)
+{
+	
+	string $dir = DRL_fixPath($dirPath, 1); // Приводим путь к unix-виду без слеша в конце
+	
+	if (`size $dir` < 1 || !`filetest -d $dir`) {
+		warning ("Folder doesn't exist: " + $dir);
+		return 0;
+	}
+	if ( `match "^[a-zA-Z0-9]+$" $fileExt` == "" && $fileExt != "" ) { // В качестве расширения файла дана какая-то херь
+		warning ("You need to specify either correct file extension with no dot or no extension at all. Not this: " + $fileExt);
+		return 0;
+	}
+	
+	$filesFull = $fileNames = $fileNamesWithExt = {};
+	
+	// Получаем список файлов в папке:
+	if ($fileExt == "")
+		$fileNamesWithExt = `getFileList -folder ($dir + "/")`; // если расширение не указано
+	else
+		$fileNamesWithExt = `getFileList -folder ($dir + "/") -filespec ("*." + $fileExt)`; // если указано и содержит только латиницу и цифры
+	
+	int $size = `size $fileNamesWithExt`;
+	int $i;
+	for ($i=0; $i<$size; $i++) {
+		$filesFull[$i] = $dir + "/" + $fileNamesWithExt[$i];
+		$fileNames[$i] = `substitute "\.[a-zA-Z0-9]+$" $fileNamesWithExt[$i] ""`;
+	}
+	
+	return $size;
+}

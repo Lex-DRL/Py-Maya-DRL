@@ -1,0 +1,404 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Command Tools v1.8
+	
+	>>> !!! DEPENDENCIES !!! <<<
+		This script requires that following scripts are also sourced:
+		- DRL Array Tools
+		- DRL String Tools
+		- DRL File Tools
+	
+	This script contains service functions for work with MEL commands
+	and procedures.
+	There are following functions in this file:
+	
+	
+	>>> DRL_undefined <<<
+		Description:
+			Takes string array as an argument and returns array with only
+			that items which are not a command, procedure, or script name.
+			Returned array contains no duplicates.
+		Usage:
+			DRL_undefined(<string array of names>)
+		e.g.:
+			DRL_undefined({"whatIs", "EXISTS", "doDelete", "zzz", "DRL_undefined", "EXISTS"});
+			// Returns {"EXISTS", "zzz"}
+	
+	>>> DRL_defined <<<
+		Description:
+			The opposite of previous function.
+	
+	>>> DRL_file_findProcsMulti <<<
+		Description:
+			Takes an array of .mel filepaths as an argument and returns
+			an array of function/proc names defined in the given files.
+		Usage:
+			DRL_file_findProcsMulti(<array of mel scripts paths>)
+	
+	>>> DRL_file_findProcs <<<
+		Description:
+			The same as previous but works with single file. So takes
+			an array of that file's lines as an argument.
+			Each line in the given array must be "strict",
+			without \n at the end.
+		Usage:
+			DRL_file_findProcs <array>
+		e.g.:
+			string $array[] = {
+				"global proc string[] DRL_undefined(string $array[]) {",
+				"global proc DRL_whatIs_field(string $field) {",
+				"	string $proc = `textField -query -text $field`;",
+				"	textField -edit -text \"\" $field;",
+				"	print (`whatIs $proc` + \"\n\");"
+			};
+			DRL_file_findProcs $array;
+			//Returns: {"DRL_undefined", "DRL_whatIs_field"}
+	
+	>>> DRL_removeComments <<<
+		Description:
+			Takes string array representing lines of mel script
+			as an argument. Returns the same script as array of lines,
+			but with all comments and empty lines removed.
+			Each line in the given array must be "strict",
+			without \n at the end.
+		Usage:
+			DRL_removeComments(<array_with_script_lines>)
+	
+	>>> DRL_file_dependsProc <<<
+		Description:
+			Takes 2 arguments - array representing contents of MEL file
+			and array of MEL files' paths.
+			Checks whether file from 1st arg uses any procs/functions
+			defined in files from 2nd arg and if so returns the array
+			of required procs/functions (aka dependencies list).
+		Usage:
+			DRL_file_dependsProc(<MEL_script_lines>, <possibly_required_MEL_filepaths>)
+	
+	>>> DRL_file_dependsProcMulti <<<
+		Description:
+			Similar to previous one, but finds dependencies for several MEL
+			scripts.
+			So takes an array of MEL scripts' filepaths as 1st argument
+			instead of single file's contents.
+		Usage:
+			DRL_file_dependsProcMulti(<MEL_filepaths>, <possibly_required_MEL_filepaths>)
+	
+	>>> DRL_file_depends <<<
+		Description:
+			This function is very similar to DRL_file_dependsProc.
+			The only difference is that it returns an array of required MEL
+			files rather than proc names.
+	
+	>>> DRL_file_dependsMulti <<<
+		Description:
+			Like previous, this function is very similar to
+			DRL_file_dependsProcMulti.
+			The only difference is that it returns an array of required MEL
+			files rather than proc names.
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+global proc string[] DRL_undefined(string $array[]) {
+	int $size = `size($array)`;
+	if ($size < 1) {
+		return $array;
+	} else {
+		string $result[] = {};
+		int $i=0, $k=0;
+		for (; $i < $size; $i++) {
+			if (! exists($array[$i])) {
+				$result[$k] = $array[$i];
+				$k++;
+			}
+		}
+		$result = DRL_array_remDupString($result);
+		return $result;
+	}
+}
+
+global proc string[] DRL_defined(string $array[]) {
+	int $size = `size($array)`;
+	if ($size < 1) {
+		return $array;
+	} else {
+		string $result[] = {};
+		int $i=0, $k=0;
+		for (; $i < $size; $i++) {
+			if (exists($array[$i])) {
+				$result[$k] = $array[$i];
+				$k++;
+			}
+		}
+		$result = DRL_array_remDupString($result);
+		return $result;
+	}
+}
+
+global proc string[] DRL_file_findProcsMulti (string $files[]) {
+	string $array[] = `DRL_array_remDupString $files`;
+	int $size = `size($array)`;
+	if ($size < 1) return {};
+	else {
+		string $result[] = {};
+		int $i=0, $j, $k=-1;
+		for (; $i<$size; $i++) {
+			string $file[] = `DRL_file_open $array[$i]`;
+			string $procs[] = `DRL_file_findProcs $file`;
+			int $sizeProcs = `size($procs)`;
+			$j = 0;
+			for (; $j<$sizeProcs; $j++) {
+				$k++;
+				$result[$k] = $procs[$j];
+			}
+		}
+		return $result;
+	}
+}
+
+global proc string[] DRL_file_findProcs(string $file[]) {
+	string $array[] = `DRL_removeComments $file`;
+	int $size = `size($array)`;
+	if ($size < 1) {
+		return {};
+	} else {
+		int $i=0, $k=-1;
+		string $temp = "";
+		string $result[] = {};
+		for (; $i<$size; $i++) {
+			if (`gmatch $array[$i] "*[ 	]proc[ 	]*"`) {
+				
+				// Remove procedure definition keywords
+				$temp = `substitute "[ 	]*(global[ 	]+)*proc[ 	]*" $array[$i] ""`;
+				
+				// Remove output datatype definiton keywords if exists
+				if (`gmatch $temp "int[ 	[]*"`)
+					$temp = `substitute "^int[ 	]*(\\[[ 	]*\\])*[ 	]*" $temp ""`;
+				else if (`gmatch $temp "float[ 	[]*"`)
+					$temp = `substitute "^float[ 	]*(\\[[ 	]*\\])*[ 	]*" $temp ""`;
+				else if (`gmatch $temp "string[ 	[]*"`)
+					$temp = `substitute "^string[ 	]*(\\[[ 	]*\\])*[ 	]*" $temp ""`;
+				else if (`gmatch $temp "vector[ 	[]*"`)
+					$temp = `substitute "^vector[ 	]*(\\[[ 	]*\\])*[ 	]*" $temp ""`;
+				else if (`gmatch $temp "matrix[ 	]*"`)
+					$temp = `substitute "^matrix[ 	]*" $temp ""`;
+				
+				// Leave proc name only
+				$temp = `substitute "[ 	]*\\(.*" $temp ""`;
+				
+				// Check if there is single-word only just in case
+				if (`substitute "[a-zA-Z0-9_]*" $temp ""` == "") {
+					$k++;
+					$result[$k] = $temp;
+				}
+			}
+		}
+		return $result;
+	}
+}
+
+global proc string[] DRL_removeComments (string $array[]) {
+	if (`size $array` < 1) return $array;
+	else {
+		string $result[] = {};
+		int $inQuote=0, $inComm=0, $pos, $size, $i, $k=-1;
+		string $line="", $newLine, $tmp;
+		for ($line in $array) {
+			$newLine = "";
+			$size = `size $line`;
+			while ($size) { // execute until we've moved all needed text from $line to $newLine
+				
+				if ($inComm) { // if current beginning of line is in comment
+					$pos = DRL_string_find($line, "*/");
+					if ($pos) {
+						$line = DRL_string_rem($line, 1, $pos+1);
+						$inComm = 0;
+					} else $line = "";
+					
+				} else if ($inQuote) { // if current beginning of line is in quotes ("")
+					$pos = DRL_string_find($line, "\""); //"
+					if ($pos) {
+						$newLine += `substring $line 1 $pos`;
+						if ($pos>1) {
+						if (`substring $line ($pos-1) $pos` != "\\\"") $inQuote = 0; //"
+						}
+						$line = DRL_string_rem($line, 1, $pos);
+					} else {
+						$newLine += $line;
+						$line = "";
+					}
+					
+				} else {
+					$tmp = `substring $line 1 1`;
+					if ($tmp == "/" && $size>1)
+					{ // if there's a chance that current char is beginning of comment
+						$tmp = `substring $line 1 2`;
+						if ($tmp == "//") $line = ""; // it's single-line comment
+						else if ($tmp == "/*") { // it's multi-line aka range comment
+							$inComm = 1;
+							$line = DRL_string_rem($line, 1, 2);
+						} else { // no, it's just slash
+							$newLine += "/";
+							$line = DRL_string_rem($line, 1, 1);
+						}
+					}
+					else if ($tmp == "\"") //"
+					{ // if current char opens quote (")
+						$inQuote = 1;
+						$newLine += "\""; //"
+						$line = DRL_string_rem($line, 1, 1);
+					}
+					else
+					{ // it's simple char - opening nor quote nor comment
+						$newLine += $tmp;
+						$line = DRL_string_rem($line, 1, 1);
+					}
+				}
+				$size = `size $line`;
+			}
+			
+			if ($newLine != "" && `match "^[ 	]+$" $newLine` == "") {
+				$k++;
+				$result[$k] = $newLine;
+			}
+		}
+		return $result;
+	}
+}
+
+global proc string[] DRL_file_dependsProc (string $mainScript[], string $usedScripts[]) {
+	string $script[] = `DRL_removeComments $mainScript`;
+	if (`size $script` < 1 || `size $usedScripts` < 1) return {};
+	else {
+		string $result[] = {};
+		string $procs[] = `DRL_file_findProcsMulti $usedScripts`;
+		DRL_file_findIn($script, $procs, $result);
+		$result = `DRL_array_remDupString $result`;
+		return $result;
+	}
+}
+
+global proc string[] DRL_file_dependsProcMulti (string $mainScripts[], string $usedScripts[]) {
+	string $paths[] = `DRL_array_remDupString $mainScripts`;
+	string $possibly[] = `DRL_array_remDupString $usedScripts`;
+	int $size = `size($paths)`;
+	
+	if ($size < 1 || `size $possibly` < 1) return {};
+	else {
+		string $procs[] = `DRL_file_findProcsMulti $possibly`;
+		
+		if (`size $procs` < 1) return {};
+		else {
+		
+			string $result[] = {};
+			string $tmp[] = {};
+			string $script[] = {};
+			int $i=0, $j, $k=-1, $sizeTmp;
+			
+			for (; $i<$size; $i++) {
+				$script = `DRL_file_open $paths[$i]`;
+				$script = `DRL_removeComments $script`;
+				DRL_file_findIn($script, $procs, $tmp);
+				$sizeTmp = `size $tmp`;
+				for ($j=0; $j<$sizeTmp; $j++) {
+					$k++;
+					$result[$k] = $tmp[$j];
+				}
+			}
+			$result = `DRL_array_remDupString $result`;
+			
+			return $result;
+		}
+	}
+}
+
+global proc string[] DRL_file_depends (string $mainScript[], string $usedScripts[]) {
+	string $script[] = `DRL_removeComments $mainScript`;
+	string $possibly[] = `DRL_array_remDupString $usedScripts`;
+	int $size = `size($possibly)`;
+	if (`size $script` < 1 || $size < 1) return {};
+	else {
+		string $result[] = {};
+		string $tmp[];
+		string $procs[];
+		int $i=0, $k=-1;
+		for (; $i<$size; $i++) {
+			$tmp = `DRL_file_open $possibly[$i]`; // storing contents of current $possibly to $tmp
+			$procs = `DRL_file_findProcs $tmp`;
+			DRL_file_findIn($script, $procs, $tmp); // now store required procs to $tmp
+			if (`size $tmp`) {
+				$k++;
+				$result[$k] = $possibly[$i];
+			}
+		}
+		return $result;
+	}
+}
+
+global proc string[] DRL_file_dependsMulti (string $mainScripts[], string $usedScripts[]) {
+	string $paths[] = `DRL_array_remDupString $mainScripts`;
+	string $possibly[] = `DRL_array_remDupString $usedScripts`;
+	int $size = `size($paths)`;
+	int $sizePoss = `size($possibly)`;
+	
+	if ($size < 1 || $sizePoss < 1) return {};
+	else {
+		print "\n\n\n	|>>===---- Batch dependencies scan is initialized for: ----===<<|\n";
+		print $paths;
+		print "\n";
+		string $result[];
+		string $tmp[];
+		string $script[];
+		string $proc[] = {};
+		string $procSrc[] = {};
+		int $i=0, $j, $k=-1, $sizeTmp;
+		
+		print "\n Searching potentially required procedures...";
+		for (; $i<$sizePoss; $i++) {
+			$tmp = `DRL_file_open $possibly[$i]`; // storing contents of current $possibly to $tmp
+			$result = `DRL_file_findProcs $tmp`; // current file's procs
+			$sizeTmp = `size $result`;
+			for ($j=0; $j<$sizeTmp; $j++) {
+				$k++;
+				$proc[$k] = $result[$j];
+				$procSrc[$k] = $possibly[$i];
+			}
+		}
+		$result = {}; // since we used $result as temporary storage we need to clear it
+		$k = -1;
+		
+		if (`size($proc)`) {
+			print " found!\n\n";
+			for ($i=0; $i<$size; $i++) {
+				print ((string)`floor(100*$i/$size+0.5)` + "%: Checking " + $paths[$i]);
+				$script = `DRL_file_open $paths[$i]`; // storing contents of current script to $tmp
+				DRL_file_findIn($script, $proc, $tmp); // now store required procs to $tmp
+				$sizeTmp = `size $tmp`;
+				if ($sizeTmp) print (" - " + $sizeTmp + "\n");
+				else print " - not found\n";
+				for ($j=0; $j<$sizeTmp; $j++) { // copy all found depend-s for current script to common array
+					$k++;
+					$result[$k] = $tmp[$j];
+				}
+			}
+			$result = `DRL_array_remDupString $result`;
+			
+			// Now find source file for each required proc:
+			$k = -1;
+			$tmp = {};
+			$size = `size($result)`;
+			$sizeTmp = `size $proc`;
+			for ($i=0; $i<$size; $i++) {
+				for ($j=0; $j<$sizeTmp; $j++) {
+					if ($result[$i] == $proc[$j]) {
+						$k++;
+						$tmp[$k] = $procSrc[$j];
+					}
+				}
+			}
+			$result = `DRL_array_remDupString $tmp`;
+		} else print " NOT FOUND!!!\n\n";
+		
+		print "\n	|>>===---- Completed ----===<<|\n";
+		return $result;
+	}
+}

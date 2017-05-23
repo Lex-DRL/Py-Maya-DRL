@@ -1,0 +1,32 @@
+/*
+				DRL Cast-Receive v0.2
+	
+	Turns "Cast-" and "Receive shadows" on or off for shapes under all selected objects.
+*/
+global proc string[] DRL_castReceive(int $mode) {
+	string $sel[] = `listRelatives -s -pa`;
+	string $buffer[] = `ls -sl -o -s`;
+	if (`size $buffer`) $sel = stringArrayCatenate($sel, $buffer);
+	int $on=0, $i=0;
+	string $print = "OFF";
+	if ($mode) {
+		$on = 1;
+		$print = "ON";
+	}
+	string $res[] = {};
+	
+	if (`size $sel`) {
+		string $message = "";
+		for ($obj in $sel) {
+			setAttr ($obj + ".castsShadows") $on;
+			setAttr ($obj + ".receiveShadows") $on;
+			$res[$i] = $obj;
+			$message += " " + $obj;
+			$i++;
+		}
+		print ("Shadow casting and receiving is turned\n" + $print + ":");
+		print ($message + "\n");
+	} else
+		warning ("No objects selected for turning shadows " + $print + "!\n");
+	return $res;
+}

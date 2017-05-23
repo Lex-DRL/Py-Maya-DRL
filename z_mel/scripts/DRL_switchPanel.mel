@@ -1,0 +1,17 @@
+global proc DRL_switchPanel (string $panelType) {
+	string $curPanel = `getPanel -withFocus`;
+	string $firstPanel;
+	
+	if ($curPanel == "" || $panelType == "")
+		return;
+	
+	// If the panel is torn-off then abort operation.
+	if (`panel -q -tearOff $curPanel`)
+		return;
+	
+	
+	string $allPanelsOfType[] = `getPanel -sty $panelType`;
+	$firstPanel = $allPanelsOfType[0];
+	if ($firstPanel != "" && !`panel -q -to $firstPanel`)
+		scriptedPanel -e -rp $curPanel $firstPanel;
+}

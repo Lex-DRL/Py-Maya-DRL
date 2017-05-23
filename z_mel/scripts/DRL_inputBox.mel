@@ -1,0 +1,666 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Input Box v1.2
+	
+	Author: DRL (drl.message@gmail.com) [based on Maya 2008 scripts].
+	
+	DEPENDENCIES:
+		<None>
+		(all additional procedures that are called from this script are
+		also inside this script).
+	
+	Description:
+		This script creates floating window with Input Box identical to
+		one at the Status Line. It almost completely consists of copies
+		of default Maya functions.
+		I just collected all of them and edited a little to create
+		floating window.
+	
+	Installation:
+		1. Copy this script file into one of the following folders:
+			- <mayaPrefs>/scripts (for all Maya versions),
+			- <mayaPrefs>/maya<Version>/scripts (for specific version),
+			- <mayaPrefs>/maya20XX/scripts (for Maya versions starting from 2008).
+			If you don't know where your <mayaPrefs> folder is, it is
+			<MyDocuments>/maya (for Windows).
+		2. Add the following line:
+				source "DRL_inputBox.mel";
+			into userSetup.mel located at the same folders listed above.
+			If You don't have userSetup.mel file yet, first create one.
+	
+	Usage:
+			DRL_inputBox <Mode_ID>;
+		where <Mode_ID> is:
+			1 - Absolute Transform,
+			2 - Relative Transform,
+			3 - Rename,
+			4 - Select by Name,
+			<any other> (e.g. 0 or 5) - just open window in last used mode.
+		You should create shelf buttons or marking menu items for this
+		window-launching commands.
+		There is also the shelf icon (DRL_FieldIcon.bmp) included.
+	
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+global proc DRL_UpdateInputField()
+//
+//		This is modification of default statusLineUpdateInputField procedure.
+//		Originally it updates the value of the input fields on the Status Line.
+//		This modified version does the same for popup Input Box window.
+//
+//		When the input fields are in rename mode then get the name of 
+//		the lead object in the selection list and display it in the 
+//		field.
+//
+//		When the input fields are in any other mode then clear the 
+//		field values.
+//
+{
+	global string $DRL_txtInputField;
+	global string $DRL_numInputXField;
+	global string $DRL_numInputYField;
+	global string $DRL_numInputZField;
+
+	//	Determine the mode of the field. Only way to do this is
+	//	to figure out what image is currently applied to the field
+	//	label.
+	//
+	string $image = `iconTextButton -query -image1 DRL_InputBoxButton`;
+	string $fieldValue = "";
+	
+	if ("quickRename.xpm" == $image) {
+
+		//	Update the field with the name of the lead object in the selection.
+		//
+		string $selectionArray[], $tokenBuffer[], $selectedObject;
+		int    $numberOfSelectedObjects, $tokenCount;
+		
+		//	Determine the lead object in the selection.
+		//
+		$selectionArray = `ls -selection -tail 1`;
+		$numberOfSelectedObjects = size($selectionArray);
+		if (0 < $numberOfSelectedObjects) {
+			$selectedObject = $selectionArray[$numberOfSelectedObjects - 1];
+
+			//	It is possible that the full path to an object may be
+			//	returned even when querying the selection by short names.
+			//	This will happen if the more than one object has the
+			//	same name. The full path won't fit in the rename field
+			//	so strip off the path and display only the short name.
+			//	To do this tokenize the object name by the | character.
+			//	The short name will be the last item in the array
+			//	returned by the tokenize command.
+			//
+			$tokenCount = `tokenize $selectedObject "|" $tokenBuffer`;
+			$fieldValue = $tokenBuffer[$tokenCount - 1];
+
+		} else {
+			//
+			//	Nothing selected. Clear the field.
+			//
+			$fieldValue = "";
+		}
+
+	} else {
+		//
+		//	For all the other field modes clear the text.
+		//
+		$fieldValue = "";
+	}
+
+	//	Update the field.
+	//
+	if ("quickRename.xpm" == $image || "quickSelect.xpm" == $image) {
+		textField -edit -text $fieldValue $DRL_txtInputField;
+	} else {
+		textField -edit -text $fieldValue $DRL_numInputXField;
+		textField -edit -text $fieldValue $DRL_numInputYField;
+		textField -edit -text $fieldValue $DRL_numInputZField;
+	}
+}
+
+// ============================================================================
+
+global proc DRL_rename()
+//
+//	Description:
+//		This is modification of default proc quickRename.
+//		Called from the quick rename field to allow easy renaming of 
+//		the selected objects for users who don't want to have to open 
+//		the Channel Box or Attribute Editor.
+//
+{
+	global string $DRL_txtInputField;
+
+	string $newName;
+	int    $renameResult;
+
+	//	Get the name in the text field.
+	//
+	$newName = `textField -query -text $DRL_txtInputField`;
+
+	//	The result will contain the number of renamed objects,
+	//	which may be zero if all the objects in the selection
+	//	list are read-only (examples of read-only objects are
+	//	default and referenced objects).
+	//
+	$renameResult = renameSelectionList($newName);
+
+	if (0 <= $renameResult) {
+		//
+		//	Return focus to the panel that last had focus.
+		//
+		setFocus `getPanel -withFocus`;
+
+	} else if (-1 == $renameResult) {
+		//
+		//	The selection list is empty. Not serious, just print
+		//	a warning.
+		//
+		warning (uiRes("m_statusLine.kNoObjectsToRename"));
+
+		DRL_UpdateInputField();
+
+		//	Return focus to the panel that last had focus.
+		//
+		setFocus `getPanel -withFocus`;
+
+	} else if (-2 == $renameResult) {
+		//
+		//	An invalid name error. Print an error message.
+		//	Don't send focus back to the panels. Keep it in the field
+		//	so the user can correct the error in the field.
+		//
+		string $errMsg = (uiRes("m_statusLine.kNameInvalid"));
+		error (`format -s $newName $errMsg`);
+	}
+}
+
+// ============================================================================
+
+global proc DRL_WildcardSelect()
+//
+// This is modification of default quickWildcardSelect proc for popup input box.
+// Called from the quick select field to allow easy wildcard
+// selection with feedback for users who don't want to have
+// to open the outliner for simple selections.
+//
+{
+	global string $DRL_txtInputField;
+
+	//	Get the text in the select field.
+	//
+	string $text = `textField -query -text $DRL_txtInputField`;
+
+	//	Are there any wildcard characters in the text?
+	//	Wildcard characters are * and ? (are there others?).
+	//
+	int $wildcards = false;
+	if (`gmatch $text "*[\*\?]*"`) {
+		$wildcards = true;
+	}
+
+	string $cmd;
+
+	//	If there are no wildcards then do a test to see if the
+	//	name specified in the field uniquely specifies a single
+	//	object in the scene. This can be determined by using
+	//	the "ls" command.
+	//	
+	if (!$wildcards) {
+		string $object, $objectArray[] = `ls $text`;
+		if (1 < size($objectArray)) {
+			//
+			//	There is more than one object with the name specified.
+			//	Be sure to select them all.
+			//
+			$cmd = "select";
+			for ($object in $objectArray) {
+				$cmd += (" " + $object);
+			}
+
+		} else {
+			//
+			//	No wildcards and just one object with the specified
+			//	name.
+			//
+			$cmd = ("select \"" + $text + "\"");
+		}
+
+	} else {
+		$cmd = ("select \"" + $text + "\"");
+	}
+
+	// If something was actually selected then give some feedback
+	// and clean up.  Otherwise the offending text is left in the
+	// field and focus remains in the field for another try.
+	//
+	if (!catch(eval($cmd))) {
+		//	Give some feedback that something was selected. Query
+		//	what's on the selection list and for each item append
+		//	it to a result string that will be echoed to the user.
+		//
+		string $lsList = "";
+		string $lsArray[] = `ls -sl`;
+		for ($i = 0; $i < size($lsArray); $i++) {
+			$lsList = $lsList+" "+$lsArray[$i];
+		}
+		print ("// Result: "+$lsList+"\n");
+		
+		// Clear the field and throw the focus back to the panels
+		//
+		DRL_UpdateInputField();
+	}
+}
+
+// ============================================================================
+
+proc string getValuesForCommand(string $x, string $y, string $z, int $movePivot)
+//
+//  Procedure Name:
+//      getValuesForCommand
+//
+//  Description:
+//		If nothing is entered in a textField on the statusLine, then the 
+//		field should be ignored. Given the values of each field, this
+//		function generates a string with a flag that will cause the move,
+//		scale or rotate commands to ignore the appropriate values, followed
+//		by the values. This string can be appended to the end of the 
+//		respective command.
+//
+//  Return Value:
+//      string = A string that can be appended to a move, scale or rotate command
+//	         to cause it to ignore blank values for $x, $y, or $z, followed
+//	         by the values.
+//
+{
+	// Generate the flag to ignore blank values. Blank values should
+	// not be included.
+	string $result = "";
+	if($x != "")
+	{
+		$result += "-x " + $x + " ";
+	}else if ($movePivot){
+		$result += "-x 0 ";
+	}
+	if($y != "")
+	{
+		$result += "-y " + $y + " ";
+	}else if ($movePivot){
+		$result += "-y 0 ";
+	}
+	if($z != "")
+	{
+		$result += "-z " + $z + " ";
+	}else if ($movePivot){
+		$result += "-z 0 ";
+	}
+
+	return $result;
+}
+// --------------------------------------------------------
+
+proc string getPivotsString() {
+//  Procedure Name:
+//      getPivotsString
+//
+//  Description:
+//		returns a string with the scalePivot and rotatePivot calls for current selection
+//
+//  Return Value:
+//      string with correct rotate and scale pivot object tags
+	string $ret = "";
+	string $sel[] = `ls -sl -o`;
+	
+	int $length = size($sel);
+	int $i = 0;
+	for ($i = 0; $i < $length; $i++){
+		$ret += $sel[$i] + ".scalePivot " + $sel[$i] + ".rotatePivot ";
+	}
+	
+	return $ret;
+}
+// --------------------------------------------------------
+
+proc int localContextTransform(string $mode, string $x, string $y, string $z)
+{
+	// Create input string using "." to ignore an empty field
+	string $input = "";
+	if ($mode == "rel"){
+		$input += "-r ";
+	}else{
+		$input += "-a ";
+	}
+	
+	//use quiet mode
+	$input += "-q ";
+	
+	//Pass in values
+	$input += ($x == "") ? ". " : $x + " ";
+	$input += ($y == "") ? ". " : $y + " ";
+	$input += ($z == "") ? "." : $z;
+
+	return `numericalInput($input)`;
+}
+// --------------------------------------------------------
+
+proc superContextTransform(string $mode, string $curTool, string $x, string $y, string $z)
+{
+	int $pivotMove = `manipMoveContext -q -editPivotMode Move`;
+	
+	if($curTool == "Rotate"){
+		$pivotMove = `manipRotateContext -q -editPivotMode Rotate`;
+	} else if ($curTool == "Scale"){
+		$pivotMove = `manipScaleContext -q -editPivotMode Scale`;
+	}
+	
+	string $validObjs[] = `filterExpand -sm 12 -sm 9 -sm 10`;
+	
+	if (!(size($validObjs) > 0)){
+		$pivotMove = 0;
+	}
+	
+	// $cmd is generated by the code that follows and is later evaluated.
+	string $cmd = "";
+	
+	if($curTool == "Rotate" && $pivotMove == 0)
+	{
+		$cmd = "rotate ";
+	}
+	else if($curTool == "Scale" && $pivotMove == 0)
+	{
+		$cmd = "scale ";
+	}
+	else if($curTool == "Move")
+	{
+		$cmd = "move ";
+	}
+	
+	// Use relative or absolute?
+	if($mode == "rel")
+	{
+		$cmd += "-r ";
+	}
+	
+	//Get the reflection options
+	if(`symmetricModelling -q -symmetry`){
+		$cmd += "-rfl ";
+		if(`symmetricModelling -q -axis` == "x"){
+			$cmd += "-rax ";
+		}else if(`symmetricModelling -q -axis` == "y"){
+			$cmd += "-ray ";
+		}else if(`symmetricModelling -q -axis` == "z"){
+			$cmd += "-raz ";
+		}
+		
+		if (`symmetricModelling -q -about` == "origin"){
+			$cmd += "-rao ";
+		} else if (`symmetricModelling -q -about` == "boundingBox"){
+			$cmd += "-rab ";
+		}
+		
+		$cmd += "-rft ";
+		
+		$cmd += `symmetricModelling -q -tolerance`;
+	}	
+	
+	$cmd += getValuesForCommand($x,$y,$z, $pivotMove);
+	
+	if ($pivotMove){
+		$cmd += getPivotsString();		
+	}
+	// Run the command.
+	catch(`eval($cmd)`);
+}
+
+// ----------------------------------------------------------------------------
+
+global proc DRL_numInputChangeCommand(string $mode) {
+//  Description:
+//		It is modification of default numericalInputChangeCommand proc.
+//		Handles a change in the numerical input fields.  The values are
+//		applied and keyboard focus is returned to the main view panes.
+//
+//  Input Arguments:
+//      $mode = abs or rel
+	global string $DRL_numInputXField;
+	global string $DRL_numInputYField;
+	global string $DRL_numInputZField;
+	
+	// Append the values of the text fields.
+	string $x = `textField -query -text $DRL_numInputXField`;
+	string $y = `textField -query -text $DRL_numInputYField`;
+	string $z = `textField -query -text $DRL_numInputZField`;
+	
+	// Select an operation based on the currently selected tool. The default
+	// behaviour is to move.
+	string $curContext = `currentCtx`;
+	string $curTool = `superCtx -q $curContext`;
+	
+	// Transform object according to the current tool context.  If the object is to be translated, rotated, or scaled,
+	// We use logic defined in superContextTransform.  Otherwise, we call localContextTransform which attempts
+	// to use the 'scmh' command to transform an object in a panel context (ie. Grapher Editor key or UV Texture editor UV).
+	// If scmh fails, we default to translate.
+	
+	if ($curTool == "Move" || $curTool == "Rotate" || $curTool == "Scale"){
+		superContextTransform($mode, $curTool,$x, $y, $z);
+	}
+	else if( !(localContextTransform($mode, $x, $y, $z))){
+		superContextTransform($mode, "Move", $x, $y, $z);
+	}
+	//	Clear the input field.
+	DRL_UpdateInputField();
+}
+
+// ============================================================================
+
+global proc set_DRL_inputBox_mode (string $mode) {
+// This is modification of default setQuickFieldMode procedure.
+// As it's original, this proc sets current mode for Input box, too.
+// But it does that for popup window instead of Status Line.
+	global string $DRL_txtInputField;
+	global string $DRL_numInputXField;
+	global string $DRL_numInputYField;
+	global string $DRL_numInputZField;
+	global string $DRL_inputBox;
+	setParent $DRL_inputBox;
+	
+	int $edging = 2;
+	
+	switch ($mode) {
+		case "Select":
+			iconTextButton -e -i1 "quickSelect.xpm" DRL_InputBoxButton; 
+			menuItem -edit -radioButton true DRL_numPopupSelect;
+			textField -e 
+				-annotation (uiRes("m_statusLine.kSelectWildAnnot")) 
+				-cc "DRL_WildcardSelect" -ec "" 
+				$DRL_txtInputField;
+			break;
+		case "Rename":
+			iconTextButton -e -i1 "quickRename.xpm" DRL_InputBoxButton; 
+			menuItem -edit -radioButton true DRL_numPopupRename;
+			textField -edit
+				-annotation (uiRes("m_statusLine.kRenameAnnot")) 
+				-changeCommand ("DRL_rename") -enterCommand ("")
+				$DRL_txtInputField;
+			break;
+		case "Abs":
+			string $absAnnot = (uiRes("m_statusLine.kAbsAnnot"));
+			iconTextButton -e -i1 "absolute.xpm" DRL_InputBoxButton; 
+			menuItem -edit -radioButton true DRL_numPopupAbs;
+			textField -edit
+				-annotation $absAnnot
+				-enterCommand "DRL_numInputChangeCommand abs" 
+				-alwaysInvokeEnterCommandOnReturn true
+				$DRL_numInputXField;
+			textField -edit
+				-annotation $absAnnot
+				-enterCommand "DRL_numInputChangeCommand abs" 
+				-alwaysInvokeEnterCommandOnReturn true
+				$DRL_numInputYField;
+			textField -edit
+				-annotation $absAnnot
+				-enterCommand "DRL_numInputChangeCommand abs" 
+				-alwaysInvokeEnterCommandOnReturn true
+				$DRL_numInputZField;
+			break;
+		case "Rel":
+			string $relAnnot = (uiRes("m_statusLine.kRelAnnot")) ;
+			iconTextButton -e -i1 "relative.xpm"
+				DRL_InputBoxButton; 
+			menuItem -edit -radioButton true DRL_numPopupRel;
+			textField -edit
+				-annotation $relAnnot
+				-enterCommand "DRL_numInputChangeCommand rel" 
+				-alwaysInvokeEnterCommandOnReturn true
+				$DRL_numInputXField;
+			textField -edit
+				-annotation $relAnnot
+				-enterCommand "DRL_numInputChangeCommand rel" 
+				-alwaysInvokeEnterCommandOnReturn true
+				$DRL_numInputYField;
+			textField -edit
+				-annotation $relAnnot
+				-enterCommand "DRL_numInputChangeCommand rel" 
+				-alwaysInvokeEnterCommandOnReturn true
+				$DRL_numInputZField;
+			break;
+	}
+	// Show/hide the correct fields/labels according to mode
+	if($mode == "Select" || $mode == "Rename"){
+		text -edit -manage false DRL_numInputXLabel;
+		textField -edit -manage false $DRL_numInputXField;
+		text -edit -manage false DRL_numInputYLabel;
+		textField -edit -manage false $DRL_numInputYField;
+		text -edit -manage false DRL_numInputZLabel;
+		textField -edit -manage false $DRL_numInputZField;
+		textField -edit -manage true $DRL_txtInputField;
+	} else {
+		textField -edit -manage false $DRL_txtInputField;
+		text -edit -manage true DRL_numInputXLabel;
+		textField -edit -manage true $DRL_numInputXField;
+		text -edit -manage true DRL_numInputYLabel;
+		textField -edit -manage true $DRL_numInputYField;
+		text -edit -manage true DRL_numInputZLabel;
+		textField -edit -manage true $DRL_numInputZField;	
+	}
+	
+	// Save mode
+	optionVar -stringValue "quickFieldMode" $mode;
+	//	When the mode changes update the field. 
+	DRL_UpdateInputField();
+}
+
+// ============================================================================
+
+global proc DRL_inputBox(int $mode) {
+// This is main procedure, that creates popup window
+// containing Status Line input box.
+	global string $DRL_inputBox;
+	global string $DRL_txtInputField;
+	global string $DRL_numInputXField;
+	global string $DRL_numInputYField;
+	global string $DRL_numInputZField;
+	int $height = 26;
+	
+	if(`window -ex InputBox_popup`){
+		deleteUI InputBox_popup;
+	}
+	// Pre-defining window mode:
+	switch ($mode) {
+		case 1:
+			optionVar -stringValue "quickFieldMode" "Abs";
+			break;
+		case 2:
+			optionVar -stringValue "quickFieldMode" "Rel";
+			break;
+		case 3:
+			optionVar -stringValue "quickFieldMode" "Rename";
+			break;
+		case 4:
+			optionVar -stringValue "quickFieldMode" "Select";
+			break;
+	}
+	
+	window -mxb 0 -mnb 0 -rtf 1 -title "Input Box" InputBox_popup;
+		$DRL_inputBox = `formLayout`;
+		// Create the selection fields
+		iconTextButton -w 30 -h $height	
+			-annotation (uiRes("m_statusLine.kStatusLineInputOptionAnnot"))
+			DRL_InputBoxButton;
+		// Fields for select/rename
+		$DRL_txtInputField = `textField -w 166 -h $height`;
+		// Fields for absolute/relative transform
+		text -align "right" -manage false -label (uiRes("m_statusLine.kNumericalInputX")) DRL_numInputXLabel;
+		$DRL_numInputXField = `textField -w 40 -h $height -manage false`; 
+		text -align "right" -manage false -label (uiRes("m_statusLine.kNumericalInputY")) DRL_numInputYLabel;
+		$DRL_numInputYField = `textField -w 40 -h $height -manage false`; 
+		text -align "right" -manage false -label (uiRes("m_statusLine.kNumericalInputZ")) DRL_numInputZLabel;
+		$DRL_numInputZField = `textField -w 40 -h $height -manage false`; 
+		
+		//	Attach script jobs to the input field to catch object rename  
+		//	and selection change events.
+		scriptJob -parent $DRL_txtInputField
+			-event "SelectionChanged" ("DRL_UpdateInputField; statusLineUpdateInputField");
+		scriptJob -parent $DRL_txtInputField
+			-event "NameChanged" ("DRL_UpdateInputField; statusLineUpdateInputField");
+		string $numericAbs  = (uiRes("m_statusLine.kNumericAbs"));
+		string $numericRel  = (uiRes("m_statusLine.kNumericRel"));
+		string $quickRename = (uiRes("m_statusLine.kQuickRename"));
+		string $quickSelect = (uiRes("m_statusLine.kQuickSelection"));
+		// Put a menu on the button to change modes
+		string $menu = `popupMenu -b 1 -p DRL_InputBoxButton`;
+			radioMenuItemCollection;
+			menuItem -label $numericAbs  -radioButton false -c "set_DRL_inputBox_mode Abs"		DRL_numPopupAbs;
+			menuItem -label $numericRel  -radioButton false -c "set_DRL_inputBox_mode Rel"		DRL_numPopupRel;
+			menuItem -label $quickRename -radioButton false -c "set_DRL_inputBox_mode Rename"	DRL_numPopupRename;
+			menuItem -label $quickSelect -radioButton false -c "set_DRL_inputBox_mode Select"	DRL_numPopupSelect;
+		setParent -menu ..;
+		// Create the quick field option var and set the mode
+		if (!`optionVar -exists "quickFieldMode"`) {
+			set_DRL_inputBox_mode Abs;
+		} else {
+			set_DRL_inputBox_mode `optionVar -query "quickFieldMode"`;
+		}
+		int $edging = 2; 
+		int $numerical_input_edging = 5;
+		int $margin = 1;
+		//	Fix up the spacing before the Menu Mode option menu. Borders around
+		//	option menus are different across platforms. Add a couple pixels
+		//	to NT to make the Status Line align better with the Shelf below it.
+		int $menuModeSpace = 0;
+		if (`about -nt`) {
+			$menuModeSpace = 2;
+		}
+		formLayout -edit -height $height
+			-attachForm    $DRL_txtInputField  top     $margin
+			-attachControl $DRL_txtInputField  left    $edging DRL_InputBoxButton
+			-attachForm    $DRL_txtInputField  top  0
+			-attachNone    $DRL_txtInputField  right
+			-attachForm    DRL_numInputXLabel	  top     $margin
+			-attachControl DRL_numInputXLabel	  left    $edging DRL_InputBoxButton
+			-attachForm    DRL_numInputXLabel	  bottom  0 
+			-attachNone    DRL_numInputXLabel	  right
+			-attachForm    $DRL_numInputXField top     $margin
+			-attachControl $DRL_numInputXField left    $edging DRL_numInputXLabel
+			-attachForm    $DRL_numInputXField bottom  0
+			-attachNone    $DRL_numInputXField right
+			-attachForm    DRL_numInputYLabel	  top     $margin
+			-attachControl DRL_numInputYLabel	  left    $edging $DRL_numInputXField
+			-attachForm    DRL_numInputYLabel	  bottom  0
+			-attachNone    DRL_numInputYLabel	  right
+			-attachForm    $DRL_numInputYField top     $margin
+			-attachControl $DRL_numInputYField left    $edging DRL_numInputYLabel
+			-attachForm    $DRL_numInputYField bottom  0
+			-attachNone    $DRL_numInputYField right
+			-attachForm    DRL_numInputZLabel	  top     $margin
+			-attachControl DRL_numInputZLabel	  left    $edging $DRL_numInputYField
+			-attachForm    DRL_numInputZLabel	  bottom  0
+			-attachNone    DRL_numInputZLabel	  right
+			-attachForm    $DRL_numInputZField top     $margin
+			-attachControl $DRL_numInputZField left    $edging DRL_numInputZLabel
+			-attachForm    $DRL_numInputZField bottom  0
+			-attachNone    $DRL_numInputZField right
+			$DRL_inputBox;
+	showWindow;
+}

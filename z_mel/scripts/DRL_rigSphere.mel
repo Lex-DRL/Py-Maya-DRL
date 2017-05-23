@@ -1,0 +1,33 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Rig Sphere v0.2
+	
+	This script creates additional shape (volume sphere without material)
+	under all selected objects (transforms). This sphere makes it easeier
+	to select small objects, such as lights or fields.
+	
+*/
+
+global proc string[] DRL_rigSphere() {
+	string $sel[], $res[]={};
+	int $k=0;
+	$sel = `ls -sl -o -tr`;
+	
+	if (`size $sel` > 0){
+		print "Spheres created for:\n";
+		for ($obj in $sel) {
+			$res[$k] = `createNode renderSphere -n ($obj + "_Sphere") -p $obj`;
+				setAttr -k off ".v";
+				setAttr ".rt" 1;
+				setAttr ".csh" no;
+				setAttr ".rcsh" no;
+				setAttr ".vis" no;
+				setAttr -k on ".rd";
+			if ($k > 0) print ", ";
+			print $obj;
+			$k++;
+		}
+		print ".\n";
+	}
+	
+	return $res;
+}

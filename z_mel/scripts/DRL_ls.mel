@@ -1,0 +1,30 @@
+/*
+				DRL ls v0.1
+	
+	Executes "ls" command with specified keys/arguments for entire hierarchy of specified objects.
+*/
+global proc string[] DRL_ls(string $objects[], string $keys) {
+	string $res[] = {};
+	string $sel[] = $objects;
+	if (`size $sel` < 1) $sel = `ls -sl`;
+	
+	if (`size $sel` > 0) {
+		string $arg = $keys;
+		if (`size $arg` < 1) $arg = "-sl -o -s";
+		
+		for ($obj in $sel) {
+			select -r -hi $obj;
+			$buffer = `eval ("ls " + $arg)`;
+			if (`size $buffer` > 0)
+				$res = stringArrayCatenate($res, $buffer);
+		}
+		
+		if (`size $res` > 0)
+			$res = `stringArrayRemoveDuplicates $res`;
+		select -r $sel;
+		
+	} else
+		warning "You need to select some objects first!\n";
+	
+	return $res;
+}

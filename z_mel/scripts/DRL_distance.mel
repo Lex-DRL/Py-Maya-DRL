@@ -1,0 +1,54 @@
+global proc string DRL_distance (string $sources[]) {
+/*
+В качестве аргумента передаётся массив с именами объектов.
+Если среди них есть минимум 2 локатора, то первые 2 используются для создания дистанции.
+Иначе используется текущее выделение.
+Передавать можно как трансформы, так и шейпы локаторов.
+
+Результат: выделяется трансформ созданной дистанции, процедура возвращает шейп.
+*/
+	string $sel[] = $sources;
+	string $srcSel[] = `ls -sl`;
+	string $tr[], $loc[];
+	
+	// Получаем выделение, если в аргументах пусто:
+	if (`size $sel` < 1)
+		$sel = `ls -sl`;
+	select -r $sel;
+	// Получаем локатор-шейпы у всех выделенных объектов:
+	$tr = `ls -sl -tr`;
+	$loc = `ls -sl -type locator`;
+	$tr = `listRelatives -s -path -type locator $tr`;
+	select -r $tr;
+	select -add $loc;
+	$sel = `ls -sl`;
+	
+	if (`size $sel` < 2) {
+		select -r $srcSel;
+		warning "You need to select 2 source locators first.";
+		return "";
+	}
+	
+	// Получаем имена трансформ-нод у выбранных шейп-локаторов (через буфер):
+	string $prnt[] = {};
+	string $buf[] = {};
+	$buf = `listRelatives -p $sel[0]`;
+	$prnt[0] = $buf[0];
+	$buf = `listRelatives -p $sel[1]`;
+	$prnt[1] = $buf[0];
+	
+	// Собственно создаём измерялку:
+	string $dst = `createNode transform -n ($prnt[0] + "_" + $prnt[1] + "_dst")`;
+	// ... запомнив её шейпу в буфер:
+	$buf[0] = `createNode distanceDimShape -n ($dst + "Shape") -p $dst`;
+		setAttr -k off ".v";
+	
+	//Коннектим к выявленным локаторам:
+	connectAttr -f ($sel[0] + ".wp") ($buf[0] + ".sp");
+	connectAttr -f ($sel[1] + ".wp") ($buf[0] + ".ep");
+	
+	// Позволяем в дальнейшем работать как с трансформом, так и с шейпом. Для этого выделям трансформ:
+	select -r $dst;
+	// И возвращаем шейп:
+	return $buf[0];
+}

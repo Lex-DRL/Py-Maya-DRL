@@ -1,0 +1,45 @@
+global proc string[] DRL_clipsExport(string $selClips[]) {
+	global string $expClipName;
+	
+	string $clipsDir, $sceneName, $clip;
+	string $clips[], $files[] = {};
+	int $k = 0;
+	
+	// Get scene name:
+	$sceneName = `file -q -shortName -sceneName`;
+	$sceneName = `substitute "\.m[ab]+$" $sceneName ""`;
+	if (`size $sceneName` < 1) {
+		$sceneName = "Untitled";
+	}
+	
+	// Get Clips dir:
+	$clipsDir = `workspace -q -fileRuleEntry "clips"`;
+	if ($clipsDir == "") $clipsDir = "Clips";
+	
+	$clipsDir = `workspace -q -rd` + $clipsDir + "\/" + $sceneName;
+	
+	if (!`filetest -d $clipsDir`) {
+		if (`file -q -ex $clipsDir`)
+			sysFile -del $clipsDir;
+		sysFile -md $clipsDir;
+	}
+	
+	if (`size $selClips`) {
+		$clips = $selClips;
+	} else {
+		$clips =  `ls -sl -type animClip`;
+	}
+	
+	if (`size $clips`) {
+		source "doExportClipArgList.mel";
+		for ($clip in $clips) {
+			$expClipName = $clip;
+			$files[$k] = ($clipsDir + "\/" + $clip + ".ma");
+			clipEditorExportClip $files[$k] "ma";
+			$k++;
+		}
+	} else
+		warning "No clips specified for export";
+	
+	return $files;
+}

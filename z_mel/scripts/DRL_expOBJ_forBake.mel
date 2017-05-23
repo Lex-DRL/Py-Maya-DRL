@@ -1,0 +1,88 @@
+/*
+		DRL export to OBJ for bake v0.1
+		
+		Пакетно экспортирует выделенные объекты в OBJ для последующего снятия нормалей/AO в xNormal.
+		
+		ТРЕБУЕТСЯ:
+			DRL_fileTools.mel
+*/
+
+global proc string[] DRL_expOBJ_forBake (
+	string $objects[],	// если указано, будут экспортированы эти объекты. Иначе - выделенные.
+	string $path,	// путь для экспорта. Если папка не существует, будет создана.
+	int $forceCreate,	// если по этому пути существует файл, удалять ли принудительно, создавая вместо него папку.
+	string $prefix,	// если указано, допишет к названию каждого объекта такой префикс (добавит "_").
+	string $postfix,	// аналогично допишет постфикс в конце.
+	int $remEndDigits,	// удалять ли числа в конце имён объектов.
+	int $undersToDashes,	// заменить поджопники знаками "-".
+	int $soft,	// сглаживать ли нормали перед экспортом.
+	int $triang	// триангулировать ли перед экспортом.
+) {
+	string $sel[];
+	string $buf[] = {};
+	string $dir, $obj, $nm;
+	
+	if ($forceCreate)
+		$dir = DRL_makePath($path, 1);
+	else
+		$dir = DRL_makePath($path, 0);
+	if (`size $dir` < 1)
+		return {};
+	
+	string $res[] = {};
+	int $k = 0;
+	$sel = $objects;
+	if (`size $sel` < 1)
+		$sel =  `ls -sl -fl -tr`;
+	
+	for ($obj in $sel) {
+		select -r $obj;
+		$buf = `duplicate -rr`;
+		if (size (`listRelatives -p $buf[0]`))
+			$buf = `parent -w`;
+		
+		$nm = $obj;
+		$nm = `substitute ".*:" $nm ""`; // удаляем нэймспэйсы
+		$nm = `substitute ".*|" $nm ""`; // Получаем чистое имя объекта
+		$nm = `substitute "[^a-zA-Z_0-9]+" $nm ""`;
+		
+		if (`size $prefix` > 0)
+			$nm = $prefix + "_" + $nm;
+		if ($remEndDigits)
+			$nm = `substitute "[_0-9]+$" $nm ""`;
+		if (`size $postfix` > 0)
+			$nm = $nm + "_" + $postfix;
+		if ($undersToDashes)
+			$nm = `substitute "_+" $nm "-"`;
+		
+		$buf[0] = `rename $buf[0] $nm`;
+		
+		select -r $buf[0];
+		makeIdentity -apply true -t 1 -r 1 -s 1 -n 0; // Freeze transform
+		// Типа нажали 1 на клаве: 
+		displaySmoothness -divisionsU 0 -divisionsV 0 -pointsWire 4 -pointsShaded 1 -polygonObject 1;
+		subdivDisplaySmoothness -smoothness 1;
+		select -r $buf[0];
+		if ($triang) { // триангуляция делается перед сглаживанием, чтобы оно потом было применено ко всем эджам одинаково
+			polyTriangulate -constructionHistory 0;
+			select -r $buf[0];
+		}
+		if ($soft) {
+			polySoftEdge -a 180 -ch 0;
+			select -r $buf[0];
+		}
+		
+		DeleteHistory;
+		
+		$res[$k] = $dir + "/" + $nm + ".obj";
+		file -op "groups=0;ptgroups=0;materials=0;smoothing=1;normals=1" -typ "OBJexport" -pr -es $res[$k];
+		$k++;
+		
+		select -r $buf;
+		delete;
+	}
+	
+	select -r $sel;
+	
+	return $res;
+}

@@ -1,0 +1,28 @@
+string $fls[] = {
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Activate_v2(innerObject)_last.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Activate_v2(innerObject)_pt1.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Activate_v2(innerObject)_pt2.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Drop-innerObject.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Idle-innerObject.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Initiate_pt1-innerObject.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Initiate_pt2-innerObject.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Initiate_v2_pt1-innerObject.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Initiate_v2_pt2-innerObject.fbx",
+	"E:/0-Projects/Snake_3D/FBX/BallWagon@Initiate_v2_pt2-noScale-innerObject.fbx"
+};
+string $fl, $nm;
+
+for ($fl in $fls) {
+	file -f -options "v=0"  -typ "mayaAscii" -o "E:/0-Projects/Snake_3D/Scenes/www.ma";
+	FBXImport -f $fl -t -1;
+	
+	select -r Reference;
+	select -hierarchy Reference;
+	
+	$nm = $fl;
+	/*
+	$nm = `substitute "\\.fbx" $nm ""`;
+	$nm += "-innerObject.fbx";
+	*/
+	FBXExport -f $nm -s;
+}

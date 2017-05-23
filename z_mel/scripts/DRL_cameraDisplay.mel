@@ -1,0 +1,14 @@
+global proc string[] DRL_cameraDisplay() {
+	string $camShapes [] = `listRelatives -c -pa -type camera`;
+	for ($cam in $camShapes)
+	{
+		//setAttr ($cam + ".focalLength") 30;
+		//setAttr ($cam + ".filmFit") 3;
+		//setAttr ($cam + ".horizontalFilmAperture") 1.26;
+		//setAttr ($cam + ".verticalFilmAperture") 0.945;
+		setAttr ($cam + ".displayResolution") 1;
+		setAttr ($cam + ".displayFilmOrigin") 1;
+		setAttr ($cam + ".overscan") 1.05;
+	}
+	return $camShapes;
+}

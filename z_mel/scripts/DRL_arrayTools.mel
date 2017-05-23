@@ -1,0 +1,291 @@
+/*  ||>>>====================----------     ----------====================<<<||
+				DRL Array Tools v1.1
+	
+	DEPENDENCIES:
+		DRL String Tools v1.2
+	
+	This script contains must-have service procedures for arrays editing.
+	There are functions of the following purposes here:
+		Remove an item from array
+		Remove duplicate items from array
+	
+	
+	>>> REMOVE an ITEM from ARRAY <<<
+		Description:
+			This functions remove an array item of given INDEX (not number)
+			and return resulting array without that item.
+			If an array has zero size, the given item  index doesn't exists
+			(exceeds array size) or is below zero - the given array remains
+			unchanged.
+		Functions:
+			DRL_array_remInt
+			DRL_array_remFloat
+			DRL_array_remString
+			DRL_array_remVector
+		Usage:
+			DRL_array_rem<Datatype>(<array>, <index>)
+		e.g.:
+			DRL_array_remInt({1, 2, 3, 4},1); // Returns {1, 3, 4}
+			string $array[] = {"One", "Two", "Three", "Four"};
+			$array = DRL_array_remString($array, 4);
+			// $array is unchanged since there is no $array[4]
+			$array = DRL_array_remString($array, 3);
+			// $array is now = {"One", "Two", "Three"}
+			$array = DRL_array_remString($array, 0);
+			// $array is now = {"Two", "Three"}
+	
+	>>> REMOVE DUPLICATE ITEMS from ARRAY <<<
+		Description:
+			This functions remove duplicate items from the given array
+			if they were there.
+		Functions:
+			DRL_array_remDupInt
+			DRL_array_remDupFloat
+			DRL_array_remDupString
+			DRL_array_remDupVector
+		Usage:
+			DRL_array_remDup<Datatype>(<array>)
+		e.g.:
+			DRL_array_remDupFloat({2.75, 3, 1.2, 2.75, 3.1416});
+			// Returns {2.75, 3, 1.2, 3.1416}
+    ||>>>====================----------     ----------====================<<<||
+*/
+
+
+global proc int[] DRL_array_remInt(int $array[], int $i) {
+	int $size = `size($array)`;
+	if ($size < 1 || $i > $size - 1 || $i < 0) {
+		return $array;
+	} else {
+		int $result[0];
+		int $j = 0;
+		for (; $j < $i; $j++) $result[$j] = $array[$j];
+		$j = $i;
+		for (; $j <= $size - 2; $j++) $result[$j] = $array[$j + 1];
+		return $result;
+	}
+}
+
+global proc float[] DRL_array_remFloat(float $array[], int $i) {
+	int $size = `size($array)`;
+	if ($size < 1 || $i > $size - 1 || $i < 0) {
+		return $array;
+	} else {
+		float $result[0];
+		int $j = 0;
+		for (; $j < $i; $j++) $result[$j] = $array[$j];
+		$j = $i;
+		for (; $j <= $size - 2; $j++) $result[$j] = $array[$j + 1];
+		return $result;
+	}
+}
+
+global proc string[] DRL_array_remString(string $array[], int $i) {
+	int $size = `size($array)`;
+	if ($size < 1 || $i > $size - 1 || $i < 0) {
+		return $array;
+	} else {
+		string $result[0];
+		int $j = 0;
+		for (; $j < $i; $j++) $result[$j] = $array[$j];
+		$j = $i;
+		for (; $j <= $size - 2; $j++) $result[$j] = $array[$j + 1];
+		return $result;
+	}
+}
+
+global proc vector[] DRL_array_remVector(vector $array[], int $i) {
+	int $size = `size($array)`;
+	if ($size < 1 || $i > $size - 1 || $i < 0) {
+		return $array;
+	} else {
+		vector $result[0];
+		int $j = 0;
+		for (; $j < $i; $j++) $result[$j] = $array[$j];
+		$j = $i;
+		for (; $j <= $size - 2; $j++) $result[$j] = $array[$j + 1];
+		return $result;
+	}
+}
+
+// ----------------------------------------------------------------------------
+
+global proc int[] DRL_array_remDupInt(int $array[]) {
+	int $size = `size($array)`;
+	if ($size < 2) {
+		return $array;
+	} else {
+		int $result[] = {$array[0]};
+		int $i, $j, $k=0; // $i - old, $k - new
+		for ($i = 1; $i < $size; $i++) {	// Check all $array items
+			$j = 0;
+			while ($j < $i) { // Check all items from 0 till current
+				if ($array[$i] == $array[$j]) break;
+				$j++;
+			}
+			if ($j==$i) { // if there was no break
+				$k++;
+				$result[$k] = $array[$i];
+			}
+		}
+		return $result;
+	}
+}
+
+global proc float[] DRL_array_remDupFloat(float $array[]) {
+	int $size = `size($array)`;
+	if ($size < 2) {
+		return $array;
+	} else {
+		float $result[] = {$array[0]};
+		int $i, $j, $k=0; // $i - old, $k - new
+		for ($i = 1; $i < $size; $i++) {	// Check all $array items
+			$j = 0;
+			while ($j < $i) { // Check all items from 0 till current
+				if ($array[$i] == $array[$j]) break;
+				$j++;
+			}
+			if ($j==$i) { // if there was no break
+				$k++;
+				$result[$k] = $array[$i];
+			}
+		}
+		return $result;
+	}
+}
+
+global proc string[] DRL_array_remDupString(string $array[]) {
+	int $size = `size($array)`;
+	if ($size < 2) {
+		return $array;
+	} else {
+		string $result[] = {$array[0]};
+		int $i, $j, $k=0; // $i - old, $k - new
+		for ($i = 1; $i < $size; $i++) {	// Check all $array items
+			$j = 0;
+			while ($j < $i) { // Check all items from 0 till current
+				if ($array[$i] == $array[$j]) break;
+				$j++;
+			}
+			if ($j==$i) { // if there was no break
+				$k++;
+				$result[$k] = $array[$i];
+			}
+		}
+		return $result;
+	}
+}
+
+global proc vector[] DRL_array_remDupVector(vector $array[]) {
+	int $size = `size($array)`;
+	if ($size < 2) {
+		return $array;
+	} else {
+		vector $result[] = {$array[0]};
+		int $i, $j, $k=0; // $i - old, $k - new
+		for ($i = 1; $i < $size; $i++) {	// Check all $array items
+			$j = 0;
+			while ($j < $i) { // Check all items from 0 till current
+				if ($array[$i] == $array[$j]) break;
+				$j++;
+			}
+			if ($j==$i) { // if there was no break
+				$k++;
+				$result[$k] = $array[$i];
+			}
+		}
+		return $result;
+	}
+}
+
+global proc string[] DRL_array_subtrString(string $array1[], string $array2[]) {
+	int $size1=`size $array1`, $size2 = `size $array2`;
+	if ($size1<1 || $size2<1) {
+		return $array1;
+	} else {
+		int $i=0, $j;
+		string $temp1[]=$array1, $temp2[]=$array2;
+		
+		while ($i < $size1) {
+			$j = 0;
+			while ($j < $size2) {
+				if ($temp1[$i] == $temp2[$j]) {
+					$temp1 = DRL_array_remString ($temp1, $i);
+					$temp2 = DRL_array_remString ($temp2, $j);
+					break;
+				}
+				$j++;
+			}
+			if ($j < $size2) {
+				$size1 = `size $temp1`;
+				$size2 = `size $temp2`;
+			} else $i++;
+		}
+		
+		return $temp1;
+	}
+}
+
+// ----------------------------------------------------------------------------
+
+global proc int DRL_array_findFirstMatch(string $string, string $array[], int $mode) {
+	/*
+	$string - фрагмент строки, который искать
+	$array - строковый массив, в котором искать
+	$mode - Режим поисковой строки
+		0 - содержит выражение для команды gmatch
+		1 - должно встречаться в начале строки
+		2 - должно встречаться в середине строки ( = где угодно в строке)
+		3 - должно встречаться в конце строки
+		4 - строки должны совпадать
+		5 - содержит регулярное выражение
+		для 1 - 3 производятся проверка на предмет наличия спецсимволов и их экранирование.
+	*/
+	if (`size $string` < 1 || `size $array` < 1) {
+		warning "Not enough arguments specified";
+		return -1;
+	}
+	
+	int $i, $size;
+	string $match = $string;
+	if ($mode) {
+		$match = DRL_gmatch_clean($match);
+		switch ($mode) {
+			case 1:
+				$match += "*";
+				break;
+			case 2:
+				$match = "*" + $match + "*";
+				break;
+			case 3:
+				$match = "*" + $match;
+				break;
+		}
+	}
+	
+	$size = `size $array`;
+	if ($mode == 4) {
+		for ($i = 0; $i < $size; $i++) {
+			if ($array[$i] == $string) {
+				return $i;
+				break;
+			}
+		}
+	} else if ($mode == 5) {
+		for ($i = 0; $i < $size; $i++) {
+			if (`match $string $array[$i]` == $array[$i]) {
+				return $i;
+				break;
+			}
+		}
+	} else {
+		for ($i = 0; $i < $size; $i++) {
+			if (`gmatch $array[$i] $match`) {
+				return $i;
+				break;
+			}
+		}
+	}
+	
+	return -1;
+}

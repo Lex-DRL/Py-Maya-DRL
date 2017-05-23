@@ -1,0 +1,33 @@
+/*
+				DRL Edge Loop v0.1
+	
+	Fixes Maya 2008 bug that makes edge loop for last object selected only.
+	This procedure converts selection to edgs loops for all selected edges, even for edges selected for different objects (not only last).
+*/
+
+global proc DRL_edgeLoop() {
+// Требует процедуру stringIntersect от Денисыча 0-1
+	string $edges[] = `filterExpand -sm 32 -expand 0`; // Список выделенных эджей
+	
+	if (`size $edges` > 0) {
+		// Список шэйп-нод у выделенных эджей:
+		string $shapes[] = `listRelatives -p -path $edges`;
+		$shapes = `stringArrayRemoveDuplicates $shapes`;
+		$edges = `ls -fl $edges`; // Разворачиваем массив для последующего сравнения
+		
+		string $current[];
+		string $res[] = {};
+		
+		for ($obj in $shapes) {
+			// Список всех эджей текущей шэйп-ноды:
+			$current = `polyListComponentConversion -te $obj`;
+			$current = `ls -fl $current`;
+			$current = stringIntersect($edges, $current); // Список первоначально выбранных эджей для текущей ноды
+			select -r $current;
+			SelectEdgeLoop; // Собственно, сабж
+			$res = stringArrayCatenate($res, `ls -sl`); // Запоминаем все сабжи
+		}
+		select -r $res;
+		
+	} else warning "No edges selected.";
+}

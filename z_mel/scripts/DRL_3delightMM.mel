@@ -1,0 +1,259 @@
+global proc DRL_3delightMM_connectBakePass_buildMenu (string $menuName)
+{
+	menu -edit -deleteAllItems $menuName;
+	
+	string $renderPasses[] = `ls -sl -type "delightRenderPass"`;
+	
+	if(`size $renderPasses` > 0)
+	{
+		string $parent = $renderPasses[0];
+		$renderPasses = DRP_getAllRenderPasses();
+		$renderPasses = DL_stringArrayDifference($renderPasses, {$parent});
+		if(`size $renderPasses` > 0) {
+			for($child in $renderPasses) {
+				string $cmd = "DRL_3delightMM_connectBakePass(\"" + $parent + "\", \"" + $child + "\", 1)";
+				menuItem
+					-label $child
+					-annotation ("Connect " + $child + " as bake pass for " + $parent)
+					-command $cmd
+					-parent $menuName
+				;
+			}
+		} else {
+			menuItem
+				-label "<No more passes created yet>"
+				-annotation "To connect your current pass to a bake pass, you need to create some bake pass first"
+				-enable false
+				-parent $menuName
+			;
+		}
+	} else {
+    menuItem
+			-label "<Select Parent pass first>"
+			-annotation "First, you need to select the pass you want to link to bake pass"
+			-enable false
+			-parent $menuName
+		;
+	}
+}
+
+
+global proc DRL_3delightMM_connectBakePass(
+string $parent,
+string $child,
+int $forEachFrame
+)
+/*
+Adds some extra controls to $parent which lets automatically run $child as a pre-pass.
+$parent and $child has to be unique names of "delightRenderPass" nodes.
+If $forEachFrame = 1, this setup will work per-frame,
+i.e. $child pass will run once before rendering each $parent frame.
+Otherwise, $child pass will only run once for the entire sequence render.
+*/
+{
+	addAttr
+		-ln ("render_" + $child)
+		-sn ("rnd_" + $child)
+		-nn ("Render Bake Pass - " + $child)
+		-at "bool"
+		-dv 1
+		-writable 1
+		-keyable 1
+	$parent;
+	
+	string $attr = "preFrameMEL";
+	if ($forEachFrame != 1)
+		$attr = "preRenderMEL";
+	
+	AE_defaultAddRemoveAttr($attr, $parent, 1);
+	
+	string $command = `getAttr ($parent + "." + $attr)`;
+	$command += "if ( `getAttr \""
+		+ $parent
+		+ ".rnd_"
+		+ $child
+		+ "\"` )"
+		+ "\n	delightRenderMenuItemCommand \""
+		+ $child
+		+ "\";"
+	;
+	setAttr ($parent + "." + $attr) -type "string" $command;
+	
+	AE_updateAE;
+}
+
+// ----------------------------------------------------------------------------
+
+global proc DRL_3delightMM_thumb (int $mode)
+/*
+Allows to switch thumbnails in AE on and off
+Mode:
+	0 - turn OFF
+	1 - turn ON
+	else - Toggle
+*/
+{
+	if ($mode==0) {
+		renderThumbnailUpdate 0;
+		print "Thumbnail OFF\n";
+	} else if ($mode==1) {
+		renderThumbnailUpdate 1;
+		print "Thumbnail ON\n";
+	} else if (`renderThumbnailUpdate -q`) {
+		renderThumbnailUpdate 0;
+		print "Thumbnail OFF\n";
+	} else {
+		renderThumbnailUpdate 1;
+		print "Thumbnail ON\n";
+	}
+}
+
+
+// ============================================================================
+// ----------------------------------------------------------------------------
+// ============================================================================
+
+
+global proc DRL_3delightMM (int $withShift, int $withCtrl) {
+	if (`popupMenu -exists tempMM`)
+		deleteUI tempMM;
+	if (`popupMenu -exists tempMM2`)
+		deleteUI tempMM2;
+	string $cmd;
+
+	popupMenu
+		-markingMenu 1
+		-button 1
+		-shiftModifier $withShift
+		-ctrlModifier $withCtrl
+		-parent viewPanes
+	tempMM;
+
+		$cmd = "delightBuildRenderPassMenu(\"MM_Select\", \"select\", 1)";
+
+		menuItem -label "Select"
+			-annotation "Select 3delight Render Pass"
+			-subMenu 1
+			-radialPosition "E"
+			-postMenuCommand $cmd
+			-boldFont 1
+		delightMM_SelectRenderPassMenu;
+		setParent -menu ..; // from submenu
+
+		menuItem -label "Add"
+			-annotation "Add new 3delight Render Pass"
+			-subMenu 1
+			-radialPosition "NE"
+			-postMenuCommand ("delightBuildAddRenderPassMenu delightMM_AddRenderPassMenu")
+			-italicized 1
+		delightMM_AddRenderPassMenu;
+		setParent -menu ..; // from submenu
+
+		$cmd = "delightBuildRenderPassMenu(\"MM_Duplicate\", \"duplicate -inputConnections\", 0)";
+
+		menuItem -label "Duplicate"
+			-annotation "Duplicate 3delight Render Pass"
+			-subMenu 1
+			-radialPosition "SE"
+			-postMenuCommand $cmd
+		delightMM_DuplicateRenderPassMenu;
+		setParent -menu ..; // from submenu
+
+		$cmd = "delightBuildRenderPassMenu(\"MM_Render\", \"delightRenderMenuItemCommand\", 1)";
+
+		menuItem -label "Render"
+			-annotation "Render 3delight Pass"
+			-subMenu 1
+			-radialPosition "W"
+			-postMenuCommand $cmd
+		delightMM_RenderRenderPassMenu;
+		setParent -menu ..; // from submenu
+
+		$cmd = "delightBuildRenderPassMenu(\"SaveAsTemplate\", \"DRP_saveAsTemplate\", 0)";
+
+		menuItem -label "Save as Template"
+			-annotation "Save 3delight Render Pass as Template"
+			-subMenu 1
+			-radialPosition "N"
+			-postMenuCommand $cmd
+		delightSaveAsTemplateRenderPassMenu;
+		setParent -menu ..; // from submenu
+		
+		menuItem -label "Relationship Editor"
+			-annotation "Open the 3Delight relationship editor in a floating window"
+			-command DL_explorerPanel
+			-boldFont 1
+		;
+		menuItem -label "Assignment Panel"
+			-annotation "Open the assignment panel in a floating window"
+			-command DL_shaderAssignmentPanel
+		;
+	
+	// ------------------------------------------------------------------------------------
+	
+	popupMenu
+		-markingMenu 1
+		-button 2
+		-shiftModifier $withShift
+		-ctrlModifier $withCtrl
+		-parent viewPanes
+	tempMM2;
+		
+		menuItem -label "+ CoordSys"
+			-annotation "Add new coordinate system"
+			-radialPosition "N"
+			-command DCS_create
+			-boldFont 1
+		;
+		menuItem -label "+ CSG"
+			-annotation "Add new Constructive Solid Geometry node"
+			-command DCSG_create
+			-radialPosition "NW"
+			-italicized 1
+		;
+		menuItem -label "+ ClipPlane"
+			-annotation "Add new clipping plane"
+			-command DCP_create
+			-radialPosition "NE"
+		;
+		
+		$cmd = "DRL_3delightMM_connectBakePass_buildMenu(\"delightMM_DRL_linkBakePass\")";
+		menuItem -label "Link bake pass"
+			-annotation "Link pre-pass that will render before the selected one"
+			-subMenu 1
+			-radialPosition "W"
+			-postMenuCommand $cmd
+		delightMM_DRL_linkBakePass;
+		setParent -menu ..; // from submenu
+
+		if (`delightAbout -packageDescription` != "3DelightForMaya") {
+			menuItem -label "+ RIB"
+				-annotation "Add a new RIB archive node"
+				-command DRA_create
+				-radialPosition "E"
+			;
+		}
+		menuItem -label "Preferences"
+			-annotation "Open 3Delight for Maya Preferences"
+			-command DL_preferencesWindow
+			-radialPosition "SW"
+		;
+		menuItem -label "Connect shader attributes"
+			-annotation "Links all the identical attributes from the first node selected to the other ones"
+			-command "DRL_connectIdentical;"
+			-radialPosition "SE"
+		;
+		menuItem -label "Toggle thumbnail"
+			-annotation "Toggles thumbnail in Attribute Editor on and off"
+			-command "DRL_3delightMM_thumb 2;"
+			-radialPosition "S"
+		;
+		menuItem -label "Thumbnail ON"
+			-annotation "Turns thumbnail in Attribute Editor ON"
+			-command "DRL_3delightMM_thumb 1;"
+		;
+		menuItem -label "Thumbnail OFF"
+			-annotation "Turns thumbnail in Attribute Editor OFF"
+			-command "DRL_3delightMM_thumb 0;"
+		;
+}

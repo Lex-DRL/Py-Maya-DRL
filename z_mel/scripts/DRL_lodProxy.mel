@@ -1,0 +1,200 @@
+/*
+		DRL LOD Proxy v1.0
+		
+		Позволяет пакетно загружать референсы и цеплять к ним прокси
+		
+		ТРЕБУЕТСЯ:
+			DRL_fileTools.mel
+			DRL_arrayTools.mel
+*/
+
+global proc string[] DRL_lodProxy (string $name[], string $path, int $amount[], string $namespace, int $proxyGroups) {
+/*
+	Рассчитано на работу с файлами .ma
+	Аргументы: {
+		$name[] {
+			Массив имён файлов без расширения (т.е. просто file, а не "file.ma"). В зависимости от количества имён в массиве:
+			1: имя - это общий префикс для нескольких файлов. Их все нужно загрузить как прокси к 1 рефу.
+				Необходимо указать $amount.
+				$proxyGroups игнорируется, т.к. это по определению группа файлов.
+			0: автоматически просканировать указанную папку на наличие файлов .ma и подгрузить их все, сгруппировав в рефы как прокси.
+				Группируются по принципу: <группа>-<номер>.ma
+				$amount игнорируется, т.к. у каждой группы он свой.
+			Несколько: подгрузить все перечисленные файлы. В этом режиме файлы надо указывать с расширением.
+		}
+		$path - общая папка, в которой лежат все файлы.
+		$amount {
+			Используется, если подгружается только одна группа проксей. Т.е. в аргументе $name - только одно имя. Предполагает 2 элемента:
+			[0] - Начало диапазона. Т.е. самый маленький номер файла в группе.
+			[1] - Конец диапазона
+		}
+		$namespace - тоже только для загрузки 1 группы. Собственно namespace для создаваемых рефов. Если аргумент пустой - использовать имя группы.
+		$proxyGroups - загружать ли как группы проксей (при значении true, 1) или "в лоб" каждый файл грузить отдельным рефом (при значении falce, 0).
+	}
+*/
+
+	if (`size $path` < 1)
+		return {};
+	
+	string $res[] = {};
+	string $dir, $file, $rn;
+	$dir = DRL_fixPath($path, 1); // Приводим путь к unix-виду без слеша в конце
+	
+	if (`size $dir` < 1 || !`filetest -d $dir`) {
+		warning ("Folder doesn't exist: " + $dir);
+		return {};
+	}
+	
+	if (`size $name` > 1) { // Если передано несколько имён файлов
+		
+		$res = DRL_ref_proxyGrps($name, $dir, $proxyGroups);
+		
+	} else if (`size $name` == 1) { // Если передано одно имя файла - загрузить его с проксями
+		
+		if (`size $namespace` < 1) $namespace = $name[0]; // Если не указан namespace - использовать вместо него имя
+		
+		if (`size $amount` != 2 || $amount[0] > $amount[1]) // Неверно указан диапазон
+			return {};
+		
+		int $i = $amount[0];
+		$file = $dir + "/" + $name[0] + "-" + $i + ".ma"; // Составляем полное имя файла
+		$i++;
+		
+		$rn = DRL_refFile($file, $namespace); // Референсируем, с проверкой
+		
+		setProxyTag $rn "sub1";
+		
+		// Подгружаем проксями остальные файлы
+		while ($i <= $amount[1]) {
+			$file = $dir + "/" + $name[0] + "-" + $i + ".ma";
+			if (!`file -q -ex $file`)
+				error ("File doesn't exist: " + $file);
+			proxyAdd $rn $file ("sub" + $i);
+			$i++;
+		}
+		
+		$res[0] = `rename ($rn + "group") ($namespace + "_ref")`;
+		
+	} else { // Если аргумент имени файла оставлен пустым
+		
+		string $files[] = `getFileList -folder ($dir + "/")`; // Получаем список файлов в папке
+		if (`size $files` < 1) {
+			warning ("There are no files in this folder: " + $dir);
+			return {};
+		}
+		
+		$res = DRL_ref_proxyGrps($files, $dir, $proxyGroups);
+	}
+	
+	return $res;
+}
+
+
+
+
+
+global proc string[] DRL_ref_proxyGrps(string $files[], string $dir, int $proxyGroups) {
+	string $nameGroup[] = {}; // Группы файлов
+	string $file, $pattern, $textNum, $ns, $rn;
+	int $start[], $end[];
+	int $i, $j, $k, $num;
+	$start = $end = {};
+	$i = $k = $j = 0;
+	
+	// Если никакие группы искать не надо:
+	if (! $proxyGroups) {
+		for ($file in $files) {
+			string $ns = `substitute "\.m[ab]$" $file ""`;
+			$nameGroup[(size($nameGroup))] = DRL_refFile(($dir + "/" + $file), $ns);
+		}
+		return $nameGroup;
+	}
+	
+	// Если надо - поехали... разбиваем файлы на группы и вычисляем диапазоны для каждой:
+	for ($file in $files) {
+		
+		// Парсим имя файла:
+		$pattern = $file;
+		$pattern = `substitute "\.m[ab]$" $pattern ""`;
+		$textNum = `match "[0-9]+$" $pattern`; // Получаем числовой суффикс
+		if (`size $textNum` < 1)
+			$num = -1;
+		else
+			$num = (int)$textNum;
+		$pattern = `substitute "-[0-9]+$" $pattern ""`; // И основное имя ака префикс
+		
+		if ($k == 0) { // Создаём группу файлов по 1-му файлу
+			$nameGroup[0] = $pattern;
+			$start[0] = $num;
+			$end[0] = $num; // Пока что предполагаем, что файл в группе один
+			$k++;
+		} else {
+			$i = `DRL_array_findFirstMatch $pattern $nameGroup 4`; // Узнаём, есть ли в массиве такая же группа
+			if ($i < 0) { // Если нет - создаём
+				$nameGroup[$k] = $pattern;
+				$start[$k] = $num;
+				$end[$k] = $num;
+				$k++;
+			} else { // Если уже есть - расширяем диапазон, добавляя текущий файл
+				if ($num < $start[$i])
+					$start[$i] = $num;
+				if ($num > $end[$i])
+					$end[$i] = $num;
+			}
+		}
+		
+	} // Получили данные о группах
+	
+	// Перебираем все группы:
+	for ($i = 0; $i < $k; $i++) {
+		$ns = $nameGroup[$i];
+		
+		// Чистим имя от нежелательных символов:
+		while (`match "[^0-9a-zA-Z_]+" $ns` != "")
+			$ns = `substitute "[^0-9a-zA-Z_]+" $ns "_"`;
+		while (`match "__+" $ns` != "")
+			$ns = `substitute "__+" $ns "_"`;
+		
+		if ($start[$i] >= $end[$i]) { // Если произошёл какой-то баг, либо файл в группе один
+			
+			$pattern = $nameGroup[$i] + ".m[ab]";
+			$file = `DRL_array_findFirstMatch $pattern $files 0`; // Находим точное имя файла
+			$file = $files[(int)$file];
+			$file = $dir + "/" + $file;
+			
+			$rn = DRL_refFile($file, $ns); // Референсируем, с проверкой
+			
+		} else { // Обычный случай - файлов в группе несколько
+			
+			for ($j = $start[$i]; $j <= $end[$i]; $j++) { // Перебираем все номера в группе
+				$pattern = "^" + $nameGroup[$i] + "-0*" + $j + "\.m[ab]$";
+				$file = `DRL_array_findFirstMatch $pattern $files 5`; // Находим в списке этот файл
+				
+				if ((int)$file < 0) // Если файл в списке не найден - напр., если в группе есть "дырка", файлы не подряд
+					warning ("File is missing: " + $pattern);
+				
+				else {
+					$file = $files[(int)$file];
+					$file = $dir + "/" + $file;
+					
+					if (!`filetest -r $file`)
+						error ("File is inaccessable: " + $file);
+					
+					if ($j == $start[$i]) { // Если файл - первый в группе, референсируем его
+						file -r -type "mayaAscii" -gr -lck -dr 1 -loadReferenceDepth "all" -namespace $ns -options "v=0" $file;
+						$rn = `referenceQuery -referenceNode $file`;
+						setProxyTag $rn ("sub" + $j);
+					} else { // Ели нет - цепляем как прокси
+						proxyAdd $rn $file ("sub" + $j);
+					}
+				}
+			}
+			
+		}
+		
+		$nameGroup[$i] = `rename ($rn + "group") ($ns + "_ref")`;
+		
+	}
+	
+	return $nameGroup;
+}

@@ -1,0 +1,83 @@
+python("from drl.for_unity import bake as bk; reload(bk); bk.Turtle().pre_render()")
+python("from drl.for_unity import bake as bk; reload(bk); bk.Turtle().post_render()")
+python("from drl.for_unity import bake as bk; reload(bk); bk.Turtle().post_frame(True)")
+
+
+ilrTextureBakeCmd -q -fileName
+
+ilrTextureBakeCmd -target "pTorusShape1" -target "pSphereShape1" -frontRange 100 -backRange 100 -frontBias 0 -backBias 0 -transferSpace 1 -selectionMode 0 -mismatchMode 0 -envelopeMode 0 -ignoreInconsistentNormals 1 -considerTransparency 0 -transparencyThreshold 0.001000000047 -camera "persp" -normalDirection 0 -shadows 1 -alpha 1 -viewDependent 0 -orthoRefl 1 -backgroundColor 0 0 0 -frame 1 -bakeLayer TurtleDefaultBakeLayer -width 512 -height 512 -saveToRenderView 0 -saveToFile 1 -directory "E:/1-Projects/Maya/Content/turtle/bakedTextures/" -fileName "baked_$p_$s.$f.$e" -fileFormat 6 -visualize 0 -uvRange 0 -uMin 0 -uMax 1 -vMin 0 -vMax 1 -uvSet "" -tangentUvSet "" -edgeDilation 32 -bilinearFilter 1 -merge 1 -conservative 1 -windingOrder 1 -illumination 1 -useRenderView 1 -layer defaultRenderLayer
+
+workspace -q -fullName
+workspace -q -rootDirectory
+workspace -q -projectPath "qqq"
+
+source "DRL_whatIs";
+DRL_whatIs_UI(1);
+
+if (`popupMenu -exists tempMM`) { deleteUI tempMM; }
+popupMenu -button 1 -ctl false -alt false -allowOptionBoxes true -parent viewPanes -mm 0 tempMM;
+source "menu_ControlPaneVisibility";
+popupMenu -button 2 -ctl false -alt false -allowOptionBoxes true -parent viewPanes -mm 1 tempMM;
+source "menu_ChangePanelLayout";
+
+
+
+int $i, $k = 5;
+string $strBuf[] = {
+	"BoundaryCollider",
+	"BackCollider_Big",
+	"BackCollider_Cover",
+	"BackCollider_L",
+	"BackCollider_R"
+};
+string $str;
+for($i=1; $i<12; $i++) {
+	
+/*	
+	select -r ("MonPos" + $i) ("MonStart" + $i) ("MonEnd" + $i) ("MonDist" + $i);
+	Group;
+	rename "group1" ("Rig" + $i);
+	
+	select -r "CordSrc0";
+	$strBuf = `duplicate -rr`;
+	parent $strBuf[0] ("Monitor" + $i);
+	
+	for($str in $strBuf) {
+//		parent ($str + $i) ("MonPos" + $i);
+		connectAttr ($str + "Shape" + $i + ".outPin[0]") ("HairShape1.inputHairPin[" + $k + "]");
+		$k++;
+	}
+*/	
+	
+//	connectAttr -f ("FollicleShape" + $i + ".outCurve") ("CurrentCurveShape" + $i + ".create");
+//	parent ("MonitorCollider" + $i) ("MonPos" + $i);
+	
+/*
+	connectAttr -f ("MonPos" + $i + ".translate") ("Monitor" + $i + ".translate");
+	connectAttr -f ("MonPos" + $i + ".rotate") ("Monitor" + $i + ".rotate");
+	
+	setKeyframe ("MonEnd" + $i + ".tx");
+	setKeyframe ("MonEnd" + $i + ".ty");
+	setKeyframe ("MonEnd" + $i + ".tz");
+	setKeyframe ("MonEnd" + $i + ".rx");
+	setKeyframe ("MonEnd" + $i + ".ry");
+	setKeyframe ("MonEnd" + $i + ".rz");
+*/	
+	
+	setAttr ("WirePath_offset" + $i + ".translateX") `getAttr ("OutCurve_offset" + $i + ".translateX")`;
+	setAttr ("WirePath_offset" + $i + ".translateY") `getAttr ("OutCurve_offset" + $i + ".translateY")`;
+	setAttr ("WirePath_offset" + $i + ".translateZ") `getAttr ("OutCurve_offset" + $i + ".translateZ")`;
+	setAttr ("WirePath_offset" + $i + ".rotateX") `getAttr ("OutCurve_offset" + $i + ".rotateX")`;
+	setAttr ("WirePath_offset" + $i + ".rotateY") `getAttr ("OutCurve_offset" + $i + ".rotateY")`;
+	setAttr ("WirePath_offset" + $i + ".rotateZ") `getAttr ("OutCurve_offset" + $i + ".rotateZ")`;
+	
+/*	
+	setKeyframe ("MonEnd" + $i + ".tx");
+	setKeyframe ("MonEnd" + $i + ".ty");
+	setKeyframe ("MonEnd" + $i + ".tz");
+	setKeyframe ("MonEnd" + $i + ".rx");
+	setKeyframe ("MonEnd" + $i + ".ry");
+	setKeyframe ("MonEnd" + $i + ".rz");
+*/
+}
+

@@ -1,0 +1,15 @@
+/*
+				DRL Save No Inc v0.1
+	
+	Forces non-incremental save without touching preferences.
+*/
+global proc DRL_saveNoInc() {
+	string $sceneName = `file -q -sceneName`;
+	
+	if (size($sceneName) == 0)
+		projectViewer SaveAs;
+	else if ((`file -q -amf`) || (`file -q -ex` == 0))
+		evalEcho("file -save");
+	else
+		warning (uiRes("m_FileMenu.kNoChangesToSave"));
+}

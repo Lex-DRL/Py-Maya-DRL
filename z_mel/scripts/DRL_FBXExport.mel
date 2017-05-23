@@ -1,0 +1,42 @@
+global proc string[] DRL_FBXExport(string $path, int $undersToDashes) {
+	string $dir = DRL_makePath($path, 1);
+	string $sel[] = `ls -sl -fl -tr`;
+	string $buf[];
+	string $res[] = {};
+	string $obj, $nm;
+	int $k = 0;
+	
+	for ($obj in $sel) {
+		$nm = `substitute ".*:" $obj ""`; // удаляем нэймспэйсы
+		$nm = `substitute ".*|" $nm ""`; // Получаем чистое имя объекта
+		$nm = `substitute "[^a-zA-Z_0-9]+" $nm ""`;
+		
+		select -r $obj;
+		$buf = `duplicate -rr`;
+		if (size (`listRelatives -p $buf[0]`)) {
+			$buf = `parent -w`;
+			$buf[0] = `rename $buf[0] $nm`;
+		}
+		
+		if ($undersToDashes)
+			$nm = `substitute "_+" $nm "-"`;
+		
+		select -r $buf[0];
+		makeIdentity -apply true -t 1 -r 1 -s 1 -n 0; // Freeze transform
+		// Типа нажали 1 на клаве: 
+		displaySmoothness -divisionsU 0 -divisionsV 0 -pointsWire 4 -pointsShaded 1 -polygonObject 1;
+		subdivDisplaySmoothness -smoothness 1;
+		DeleteHistory;
+		
+		select -r $buf[0];
+		$res[$k] = $dir + "/" + $nm + ".fbx";
+		FBXExport -f $res[$k] -s;
+		$k++;
+		
+		select -r $buf;
+		delete;
+	}
+	
+	select -r $sel;
+	return $res;
+}
