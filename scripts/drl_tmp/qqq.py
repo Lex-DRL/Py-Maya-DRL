@@ -20,12 +20,24 @@ p = r'y:\Farm\Textures_Preprocess\_Ramps\0-src\00-ramp-UI-1.png'
 path.splitext(r'y:\Farm\Textures_Preprocess\_Ramps\0-s.rc\.00-ramp-UI-1png')
 
 from for_nuke import processor as pr
+reload(pr)
 
 r = pr.NukeProcessor(
 	(
-		r'y:\Farm\Textures_Preprocess\_Ramps\0-src\00-ramp-UI-1.png',
-		r'y:\Farm\Textures_Preprocess\_Ramps\0-src\01-gradient-orange.png',
+		r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_normalized.png',
+		r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_2-height.png'
 	),
 	# (r'y:\Farm\Textures_Preprocess\_Ramps\0-src\00-ramp-UI-1.exr', None),
 	explicit_to_exr=False
-).get_out_tex()
+).py_file_path()
+print r
+
+
+
+
+from for_nuke import nk_envs
+nk_envs.get_src_tex(r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_normalized.png')
+nk_envs.get_out_tex(r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_normalized.png', '', False)
+nk_envs.get_nuke_exe_path(nuke_dir='', nuke_exe='')
+nk_envs.get_nk_script_path(nk_dir='', nk_filename='')
+nk_envs.get_py_script_path(py_dir='', py_filename='')
