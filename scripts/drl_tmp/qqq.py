@@ -28,9 +28,36 @@ r = pr.NukeProcessor(
 		r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_2-height.png'
 	),
 	# (r'y:\Farm\Textures_Preprocess\_Ramps\0-src\00-ramp-UI-1.exr', None),
-	explicit_to_exr=False
-).py_file_path()
-print r
+	explicit_to_exr=False,
+	nk_dir=r'e:\1-Projects\0-Scripts\Python\for_nuke',
+	py_dir=r'e:\1-Projects\0-Scripts\Python\for_nuke'
+)
+r.get_command()
+print r.get_command()
+nuke_exe_path = r.nuke_exe_path()
+nuke_x = 0
+py_path = r.py_file_path()
+nk_path = r.nk_file_path()
+src_tex = r.src_tex
+out_tex = r.get_out_tex()
+cmd = '"{nuke}" {nukex} -t "{py}" "{nk}" {src} "{out}"'.format(
+	nuke=nuke_exe_path,
+	nukex='--nukex' if nuke_x else '',
+	py=py_path,
+	nk=nk_path,
+	src=repr(str(src_tex)),
+	out=repr(str(out_tex))
+)
+print cmd
+
+str(r.src_tex)
+q = str(
+	(
+		unicode(r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_normalized.png'),
+		unicode(r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_2-height.png')
+	)
+)
+print(repr(q))
 
 
 
