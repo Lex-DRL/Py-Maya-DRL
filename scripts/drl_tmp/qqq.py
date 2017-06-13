@@ -40,4 +40,25 @@ nk_envs.get_src_tex(r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_normalized.png
 nk_envs.get_out_tex(r'y:\Farm\Textures_Preprocess\_BG\Earth\earth_normalized.png', '', False)
 nk_envs.get_nuke_exe_path(nuke_dir='', nuke_exe='')
 nk_envs.get_nk_script_path(nk_dir='', nk_filename='')
+
+
 nk_envs.get_py_script_path(py_dir='', py_filename='')
+nuke_exe = nk_envs.get_nuke_exe_path(nuke_dir='', nuke_exe='')
+
+nk_envs.get_py_script_path(py_dir='', py_filename='')
+print nuke_exe
+
+
+import _winreg as reg
+from pprint import pprint as pp
+
+root = reg.OpenKey(reg.HKEY_CLASSES_ROOT, r'Installer\Assemblies', 0, reg.KEY_ALL_ACCESS)
+subs = [
+	k for k in (reg.EnumKey(root, i) for i in xrange(reg.QueryInfoKey(root)[0]))
+	if k.startswith(r'C:|Program Files|Common Files|Microsoft Shared|Team Foundation Server|14.0')
+]
+pp(subs)
+reg.DeleteKeyEx(root, subs[0])
+pp([
+	reg.DeleteKeyEx(root, k) for k in subs
+])
