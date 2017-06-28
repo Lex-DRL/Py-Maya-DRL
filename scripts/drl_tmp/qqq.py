@@ -115,6 +115,7 @@ from os import path
 path.abspath('.')
 
 
+
 import mining_graph as m
 reload(m)
 from pprint import pprint as pp
@@ -122,6 +123,10 @@ from datetime import timedelta as td
 pp(m.parse_log_files(hash_rate=True, gpu=False))
 m.display_graph(max_timedelta=td(days=1, hours=0), hash_rate=True, gpu_temp=True, gpu_fan=True)
 m.display_graph(hash_rate=True, gpu_temp=True, gpu_fan=True)
+m.MiningGraphZEC(
+	r's:\0-Programs\3-Coins\Zcash\Claymore-AMD', True, True, True,
+	# days=0, hours=11, minutes=20
+).parse_logs_dir().display_graph()
 
 
 a = '215.4'
