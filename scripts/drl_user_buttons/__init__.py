@@ -1,4 +1,4 @@
 __author__ = 'DRL'
 
 
-from . import cleanup, colors, hud, transform, uv_layout, uvs, vertices
+from . import aivik, cleanup, colors, hud, plugin, transform, uv_layout, uvs, vertices
