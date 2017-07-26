@@ -16,7 +16,7 @@ _str_types = (str, unicode)
 def all_faces_to_shape(items=None, selection_if_none=True):
 	"""
 	Reassign material to the shape itself, if it's assigned to all of the faces.
-	Currently only face and NURBS faces are supported.
+	Currently only polygonal and NURBS faces are supported.
 
 	:return: <list of PyNodes> Shapes that was cleaned-up.
 	"""
