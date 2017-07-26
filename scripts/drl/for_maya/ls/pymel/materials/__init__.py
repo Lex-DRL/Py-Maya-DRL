@@ -4,6 +4,8 @@ from itertools import izip as _i_zip
 
 from .. import __common as _ls
 from .. import default_input as _def
+
+from drl.for_maya import base_classes as _bs
 from drl_common import utils as _utils
 from drl_common import errors as _err
 
@@ -193,32 +195,13 @@ def _list_sgs_of_multiple_shapes(shapes, keep_order=False):
 # ---------------------------------------------------------
 
 
-class AssignedTo(object):
+class AssignedTo(_bs.ItemsProcessorBase):
 	"""
 	Get SGs assigned to given poly-/NURBS- shapes or faces.
 	"""
 	def __init__(self, items=None, selection_if_none=True):
-		super(AssignedTo, self).__init__()
-		self.__items = list()
-		self.__set_items(items, selection_if_none)
-
-	def __set_items(self, items=None, selection_if_none=True):
-		self.__items = [
-			x for x in _def.handle_input(items, selection_if_none)
-			if isinstance(x, _sh.restricted_geo_types)
-		]
-
-	def set_items(self, items=None, selection_if_none=True):
-		self.__set_items(items, selection_if_none)
-		return self
-
-	@property
-	def items(self):
-		return self.__items[:]
-
-	@items.setter
-	def items(self, value):
-		self.set_items(value, False)
+		super(AssignedTo, self).__init__(_sh.restricted_geo_types)
+		self.set_items(items, selection_if_none)
 
 	@staticmethod
 	def __is_single_sg_on_all_shapes(sgs_for_each_shape):
