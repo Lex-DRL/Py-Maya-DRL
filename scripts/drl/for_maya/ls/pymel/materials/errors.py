@@ -40,7 +40,7 @@ class UnsupportedComponent(UnsupportedItemBaseError):
 	"""
 	def __init__(self, val, var_name=None):
 		super(UnsupportedComponent, self).__init__(
-			val, (_sh.face_poly, _sh.face_NURBS), var_name, 'poly- / NURBS-face'
+			val, (_sh.poly_face, _sh.NURBS_face), var_name, 'poly- / NURBS-face'
 		)
 
 

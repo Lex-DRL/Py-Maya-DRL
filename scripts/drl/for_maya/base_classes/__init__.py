@@ -5,6 +5,8 @@ _def = _ls.default_input
 
 from drl_common import errors as _err
 
+from drl.for_maya import py_node_types as _t
+
 
 class ItemsProcessorBase(object):
 	"""
@@ -74,3 +76,75 @@ class ItemsProcessorBase(object):
 	@items.setter
 	def items(self, value):
 		self.__set_items(value, False)
+
+	def get_geo_items(self, hierarchy=False):
+		"""
+		Returns the list of geometry items, ready to be processed.
+		I.e., all the transforms in the <items> list are converted to their shapes.
+		All the non-transform items are passed through intact.
+
+		If <allowed_py_node_types> was provided, the found shapes are filtered with this.
+
+		The actual <items> list is intact. Only the returned list is generated.
+
+		:param hierarchy:
+			<bool>
+				* True - all of the child, grandchild etc. shapes of each transform are added to the result.
+				* False - only the direct child shape(s) added.
+		:return: <list of PyNodes>
+		"""
+		allowed_types = self.__py_node_types_allowed
+
+		def _to_direct_shapes(transform):
+			# list shapes immediately after this transform
+			dir_shapes = _ls.to_children(
+				transform, False,
+				keep_shapes=1, keep_source_objects=0,
+				remove_duplicates=1  # in case of instances
+			)
+			return filter(
+				lambda x: isinstance(x, _t.geo_shape),
+				dir_shapes
+			)
+
+		def _to_hierarchy_shapes(transform):
+			# list entire hierarchy of shapes
+			hr_shapes = _ls.to_hierarchy(
+				transform, False,
+				keep_shapes=1, keep_source_objects=0,
+				remove_duplicates=1  # in case of instances
+			)
+			return filter(
+				lambda x: isinstance(x, _t.geo_shape),
+				hr_shapes
+			)
+
+		def _filter_with_allowed_types(shapes):
+			# keep only allowed types (call it only if types are specified)
+			return filter(
+				lambda x: isinstance(x, allowed_types),
+				shapes
+			)
+
+		# generate the actual function that will return the list of appropriate child shapes:
+		to_shapes_f = _to_hierarchy_shapes if hierarchy else _to_direct_shapes
+		filtered_shapes_f = to_shapes_f
+		if not(allowed_types is None):
+			filtered_shapes_f = lambda x: _filter_with_allowed_types(to_shapes_f(x))
+
+		res = list()
+		res_append = res.append
+		res_extend = res.extend
+
+		def _add_single(item):
+			if not isinstance(item, _t.transform):
+				res_append(item)
+				return
+			# now we're sure it's transform
+			res_extend(
+				filtered_shapes_f(item)
+			)
+
+		# process all the items:
+		map(_add_single, self.__items)
+		return res
