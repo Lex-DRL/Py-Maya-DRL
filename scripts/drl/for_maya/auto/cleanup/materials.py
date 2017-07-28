@@ -5,6 +5,10 @@ from pymel import core as _pm
 
 from drl.for_maya.ls import pymel as _ls
 
+from drl.for_maya import py_node_types as _pnt
+_t_shape_poly = _pnt.shape.poly
+_t_shape_nurbs = _pnt.shape.nurbs
+
 _pm_ls = _pm.ls
 _ls_sorted = _ls.sorted_items
 _mat = _ls.materials
@@ -59,10 +63,10 @@ def all_faces_to_shape(items=None, selection_if_none=True):
 			return
 		# ... and group is not empty
 
-		if isinstance(shape, _pm.nt.Mesh):
+		if isinstance(shape, _t_shape_poly):
 			return _check_mesh(sg, shape, s_items)
 
-		if isinstance(shape, _pm.nt.NurbsSurface):
+		if isinstance(shape, _t_shape_nurbs):
 			return _check_nurbs(sg, shape, s_items)
 
 	map(_check_shape, shapes)

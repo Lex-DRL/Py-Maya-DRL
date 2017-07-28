@@ -6,6 +6,9 @@ from drl.for_maya.ls import pymel as ls
 from drl.for_maya.ui import ProgressWindow
 from drl_common import errors as err
 
+from drl.for_maya import py_node_types as _pnt
+_t_transform = _pnt.transform
+
 
 def freeze_transform(
 	items=None, selection_if_none=True,
@@ -85,7 +88,7 @@ def freeze_pivot(
 
 
 	def _clean_single(obj):
-		err.WrongTypeError(obj, (str, unicode, pm.nt.Transform), 'object').raise_if_needed()
+		err.WrongTypeError(obj, (str, unicode, _t_transform), 'object').raise_if_needed()
 		pivot_pos = pm.xform(obj, q=1, worldSpace=1, rotatePivot=1)
 		offset = pivot_pos[:]
 		parent = ls.to_parent(obj, False)  # always returns list
@@ -138,7 +141,7 @@ def reset_pivot(items=None, selection_if_none=True):
 	:return: <list of PyNodes> processed objects. No duplicates, even if components were selected.
 	"""
 	items = ls.to_objects(items, selection_if_none, remove_duplicates=True)
-	items = [x for x in items if isinstance(x, pm.nt.Transform)]
+	items = [x for x in items if isinstance(x, _t_transform)]
 	map(lambda t: t.setPivots((0, 0, 0), objectSpace=1), items)
 	return items
 

@@ -12,6 +12,9 @@ from drl.for_maya.auto import cleanup as cl
 
 from . import messages as m
 
+from drl.for_maya import py_node_types as _pnt
+_t_transform = _pnt.transform
+
 
 
 class BaseExport(object):
@@ -248,7 +251,7 @@ class BaseExport(object):
 			:param parent: the parent group of this one (Island-group relatively to _IslandDn).
 			:return: <list> containing either 0 or 1 object: the combined one.
 			"""
-			combined_group = err.WrongTypeError(combined_group, pm.nt.Transform, 'child_group').raise_if_needed()
+			combined_group = err.WrongTypeError(combined_group, _t_transform, 'child_group').raise_if_needed()
 			res = list()
 			if pm.listRelatives(combined_group, shapes=1):
 				return res
@@ -276,7 +279,7 @@ class BaseExport(object):
 			:param group: parent transform (Island group)
 			:return: list of combined objects
 			"""
-			group = err.WrongTypeError(group, pm.nt.Transform, 'group').raise_if_needed()
+			group = err.WrongTypeError(group, _t_transform, 'group').raise_if_needed()
 			children = BaseExport.children(group)
 			to_combine = [c for c in children if matching_f(c)]
 			res = list()
@@ -385,7 +388,7 @@ class IslandsPVE(BaseExport):
 		* 2 - Partial match: Child's name is '*_Trees', but beginning doesn't match the island-group's name.
 		"""
 		parent_name = err.NotStringError(parent_name, 'parent_name').raise_if_needed_or_empty()
-		child = err.WrongTypeError(child, pm.nt.Transform, 'child').raise_if_needed()
+		child = err.WrongTypeError(child, _t_transform, 'child').raise_if_needed()
 		child_nm = ls.short_item_name(child)
 		match = IslandsPVE._match_trees.match(child_nm)
 		if match is None:
@@ -397,7 +400,7 @@ class IslandsPVE(BaseExport):
 
 	@staticmethod
 	def match_as_enemy_base(island_child):
-		island_child = err.WrongTypeError(island_child, pm.nt.Transform, 'island_child').raise_if_needed()
+		island_child = err.WrongTypeError(island_child, _t_transform, 'island_child').raise_if_needed()
 		child_nm = ls.short_item_name(island_child).lower()
 		return bool(
 			IslandsPVE._match_enemy_base.match(child_nm)

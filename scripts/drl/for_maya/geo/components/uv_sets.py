@@ -5,6 +5,11 @@ from drl.for_maya.ls import pymel as ls
 from drl_common import errors as err
 from drl_common import utils
 
+from drl.for_maya import py_node_types as _pnt
+_t_transform = _pnt.transform
+_t_shape_any = _pnt.shape.any
+_t_shape_poly = _pnt.shape.poly
+
 
 class UVSetError(RuntimeError):
 	def __init__(self, obj, uv_set, formatted_message=None):
@@ -49,7 +54,7 @@ def __error_check_object(obj):
 	if not obj:
 		raise ValueError("No such object: %s" % obj)
 	obj = obj[0]
-	err.WrongTypeError(obj, (pm.nt.Transform, pm.nt.Mesh), 'item', 'mesh object').raise_if_needed()
+	err.WrongTypeError(obj, (_t_transform, _t_shape_poly), 'item', 'mesh object').raise_if_needed()
 	return obj
 
 
@@ -242,7 +247,7 @@ def remove(objects=None, uv_sets=None, selection_if_none=True):
 	)
 	shapes = list()
 	for o in objects:
-		if isinstance(o, pm.nt.Shape):
+		if isinstance(o, _t_shape_any):
 			shapes.append(o)
 			continue
 		shapes.extend(

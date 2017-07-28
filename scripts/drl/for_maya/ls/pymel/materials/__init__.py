@@ -12,11 +12,22 @@ from drl_common import errors as _err
 from . import errors, sg_attr_names
 _sg_a = sg_attr_names
 
-from . import __shorthands as _sh
-
 import pymel.core as _pm
 _pm_ls = _pm.ls
 
+from drl.for_maya import py_node_types as _pnt
+_tt_geo = (
+	_pnt.transform,
+	_pnt.shape.any,
+	_pnt.comp.poly.face,
+	_pnt.comp.nurbs.face
+)
+_t_sg = _pnt.sg
+_t_shape_any = _pnt.shape.any
+_t_shape_poly = _pnt.shape.poly
+_t_shape_nurbs = _pnt.shape.nurbs
+_t_comp_any = _pnt.comp.any
+_t_transform = _pnt.transform
 
 def __sg_to_mat(
 	sg, mat_type=_sg_a.MAT_SURF,
@@ -85,7 +96,7 @@ def sg_to_mat(
 			* A connected material if found.
 			* None otherwise.
 	"""
-	sg = _def.handle_input(sg, False, type=_sh.sg)
+	sg = _def.handle_input(sg, False, type=_t_sg)
 	if not sg:
 		return None
 	if len(sg) > 1:
@@ -137,7 +148,7 @@ def sgs_to_materials(
 			* A connected materials.
 			* None if nothing is connected (and **exclude_not_connected** = False).
 	"""
-	sgs = _def.handle_input(sgs, False, type=_sh.sg)
+	sgs = _def.handle_input(sgs, False, type=_t_sg)
 	if not mat_type:
 		mat_type = _sg_a.MAT_SURF
 
@@ -169,7 +180,7 @@ def _list_sgs_of_shape(shapes):
 	"""
 	if not shapes:
 		return list()
-	res = _pm.listConnections(shapes, type=_sh.sg, s=0, d=1)
+	res = _pm.listConnections(shapes, type=_t_sg, s=0, d=1)
 	return res if res else list()
 
 
@@ -183,7 +194,7 @@ def _list_sgs_of_multiple_shapes(shapes, keep_order=False):
 	"""
 	if not shapes:
 		return list()
-	res = _pm.listConnections(shapes, type=_sh.sg, s=0, d=1)
+	res = _pm.listConnections(shapes, type=_t_sg, s=0, d=1)
 	if not res:
 		return list()
 
@@ -200,7 +211,7 @@ class AssignedTo(_bs.ItemsProcessorBase):
 	Get SGs assigned to given poly-/NURBS- shapes or faces.
 	"""
 	def __init__(self, items=None, selection_if_none=True):
-		super(AssignedTo, self).__init__(_sh.restricted_geo_types)
+		super(AssignedTo, self).__init__(_tt_geo)
 		self.set_items(items, selection_if_none)
 
 	@staticmethod
@@ -277,12 +288,12 @@ class AssignedTo(_bs.ItemsProcessorBase):
 				return
 
 			# multiple shading groups connected, we need to test per-face:
-			if isinstance(shape, _sh.shape_poly):
+			if isinstance(shape, _t_shape_poly):
 				res_extend(
 					_pm_ls(shape.name() + '.f[*]', fl=1)
 				)
 				return
-			if isinstance(shape, _sh.shape_nurbs):
+			if isinstance(shape, _t_shape_nurbs):
 				res_extend(
 					_pm_ls(shape.name() + '.sf[*][*]', fl=1)
 				)
@@ -305,7 +316,7 @@ class AssignedTo(_bs.ItemsProcessorBase):
 
 			:param item: <PyNode> Transform, Shape, or a single face Component
 			"""
-			if isinstance(item, _sh.comp):
+			if isinstance(item, _t_comp_any):
 				# each component is guaranteed to be either poly- or NURBS-face,
 				# so no need to test for specific component types
 				res_extend(
@@ -446,17 +457,17 @@ class AssignedTo(_bs.ItemsProcessorBase):
 		res = _res_template_list()
 
 		def _find_assigned_sg(item):
-			if isinstance(item, _sh.transform):
+			if isinstance(item, _t_transform):
 				# We can have Transform here only if it has shapes
 				# and all of them share the same SG (or none), assigned directly
 				# (to shape, not to faces).
 				item = items_to_shapes(item)[0]
-			if isinstance(item, _sh.shape):
+			if isinstance(item, _t_shape_any):
 				shape_sgs = _list_sgs_of_shape(item)
 				if shape_sgs:
 					return shape_sgs[0]
 				return False
-			item = _err.WrongTypeError(item, _sh.restricted_geo_types, 'item').raise_if_needed()
+			item = _err.WrongTypeError(item, _tt_geo, 'item').raise_if_needed()
 			for sg, assigned_to in _i_zip(possible_shading_groups, sg_assigned_to):
 				if item in assigned_to:
 					return sg
@@ -464,7 +475,7 @@ class AssignedTo(_bs.ItemsProcessorBase):
 
 		for itm in items:
 			assigned_sg = _find_assigned_sg(itm)
-			if isinstance(assigned_sg, _sh.sg):
+			if isinstance(assigned_sg, _t_sg):
 				assigned_sg = assigned_sg.name()
 			sg_group = res[
 				sg_groups[assigned_sg]
