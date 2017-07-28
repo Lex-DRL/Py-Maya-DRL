@@ -1,7 +1,5 @@
 __author__ = 'DRL'
 
-from drl.for_maya.ls.pymel import default_input as _def
-
 from drl_common import errors as _err
 
 from drl.for_maya import py_node_types as _pnt
@@ -40,6 +38,9 @@ class ItemsProcessorBase(object):
 		"""
 		Called only if filtering types not provided.
 		"""
+		from drl.for_maya.ls.pymel import default_input as _def
+		# preventing recursive import ^
+
 		items = _def.handle_input(items, selection_if_none)
 		if not items:
 			self.__items = list()
@@ -50,6 +51,9 @@ class ItemsProcessorBase(object):
 		"""
 		Called only if filtering types are specified via <allowed_py_node_types> argument.
 		"""
+		from drl.for_maya.ls.pymel import default_input as _def
+		# preventing recursive import ^
+
 		items = [
 			x for x in _def.handle_input(items, selection_if_none)
 			if isinstance(x, self.__py_node_types_allowed)

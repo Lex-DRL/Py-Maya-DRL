@@ -5,7 +5,7 @@ from itertools import izip as _i_zip
 from .. import __common as _ls
 from .. import default_input as _def
 
-from drl.for_maya import base_classes as _bs
+from drl.for_maya import base_class as _bs
 from drl_common import utils as _utils
 from drl_common import errors as _err
 

@@ -4,7 +4,9 @@ import maya.cmds as cmds
 from ..input_warn import items_input as wrn_items
 
 
-from . import default_input, convert, pymel
+from . import default_input
+from . import convert
+from . import pymel
 
 
 def unique_sort(objects=None, **ls_args):
