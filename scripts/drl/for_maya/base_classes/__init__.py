@@ -1,7 +1,6 @@
 __author__ = 'DRL'
 
-from drl.for_maya.ls import pymel as _ls
-_def = _ls.default_input
+from drl.for_maya.ls.pymel import default_input as _def
 
 from drl_common import errors as _err
 
@@ -95,6 +94,10 @@ class ItemsProcessorBase(object):
 				* False - only the direct child shape(s) added.
 		:return: <list of PyNodes>
 		"""
+		from drl.for_maya.ls import pymel as _ls
+		# we can't import it ^ in the top of the module, it will cause recursive import
+		# so we have to do it personally for this method, here.
+
 		allowed_types = self.__py_node_types_allowed
 
 		def _to_direct_shapes(transform):
