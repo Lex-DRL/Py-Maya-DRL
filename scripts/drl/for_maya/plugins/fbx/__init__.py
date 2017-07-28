@@ -16,6 +16,12 @@ from drl_common import filesystem as fs
 from . import errors
 from . import messages as m
 
+from drl.for_maya import py_node_types as _pnt
+_t_transform = _pnt.transform
+_t_shape_any = _pnt.shape.any
+_t_comp_any = _pnt.comp.any
+_tt_geo_any = (_pnt.transform, _pnt.shape.any, _pnt.comp.any)
+
 
 _is_str = lambda x: isinstance(x, (str, unicode))
 
@@ -246,9 +252,9 @@ class Exporter(_ImportExportBase):
 		Selected components are converted to their corresponding shapes.
 		"""
 		return [
-			(o.node() if isinstance(o, pm.Component) else o) for o in
+			(o.node() if isinstance(o, _t_comp_any) else o) for o in
 			ls.default_input.handle_input(objects, False)
-			if isinstance(o, (pm.nt.Transform, pm.nt.Shape, pm.Component))
+			if isinstance(o, _tt_geo_any)
 		]
 
 	def set_objects(self, objects):
@@ -434,14 +440,14 @@ class BatchExporter(object):
 		nt = pm.nt
 		objects = ls.default_input.handle_input(objects, False)
 		for o in objects:
-			if isinstance(o, pm.Component):
+			if isinstance(o, _t_comp_any):
 				append(o.node().parent(0))
-			elif isinstance(o, nt.Shape):
+			elif isinstance(o, _t_shape_any):
 				append(o.parent(0))
-			elif isinstance(o, nt.Transform):
+			elif isinstance(o, _t_transform):
 				append(o)
 			else:
-				raise err.WrongTypeError(o, (pm.Component, nt.Shape, nt.Transform), 'group')
+				raise err.WrongTypeError(o, _tt_geo_any, 'group')
 		return res
 
 	def set_groups(self, objects):

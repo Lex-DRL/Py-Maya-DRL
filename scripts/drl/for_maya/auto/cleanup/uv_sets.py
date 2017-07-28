@@ -8,6 +8,9 @@ from drl.for_maya.geo.components import uv_sets
 from drl_common import errors as err
 from drl_common import utils
 
+from drl.for_maya import py_node_types as _pnt
+_t_shape_any = _pnt.shape.any
+
 _this = __sys.modules[__name__]
 _str_types = (str, unicode)
 _rule_types = (int, float, str, unicode)
@@ -112,7 +115,7 @@ class UVSetsRule(object):
 		if len(obj) > 1:
 			raise err.WrongValueError(obj, 'obj', 'a single Transform/Shape')
 		obj = obj[0]
-		return obj if isinstance(obj, pm.nt.Shape) else ls.to_shapes(obj, False)[0]
+		return obj if isinstance(obj, _t_shape_any) else ls.to_shapes(obj, False)[0]
 
 	def __get_matching_sets(self, shape, all_sets=None):
 		"""

@@ -5,12 +5,16 @@ from pymel import core as pm
 
 from drl.for_maya.ls import pymel as ls
 
+from drl.for_maya import py_node_types as _pnt
+_t_transform = _pnt.transform
+_t_shape_any = _pnt.shape.any
+
 _this = __sys.modules[__name__]
 _str_types = (str, unicode)
 
 
 def __is_deformed(node):
-	assert isinstance(node, (pm.nt.Transform, pm.nt.Shape))
+	assert isinstance(node, (_t_transform, _t_shape_any))
 	return any([
 		isinstance(x, pm.nt.GeometryFilter)
 		for x in node.listHistory(pruneDagObjects=1, groupLevels=1)

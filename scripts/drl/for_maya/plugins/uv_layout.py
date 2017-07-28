@@ -5,6 +5,11 @@ from drl.for_maya.ls import pymel as ls
 from drl.for_maya.geo.components import uv_sets
 from drl_common import errors as err
 
+from drl.for_maya import py_node_types as _pnt
+_t_transform = _pnt.transform
+_t_shape_poly = _pnt.shape.poly
+_tt_poly_geo = (_pnt.transform, _pnt.shape.poly)
+
 
 __linkAttr_name = 'uvlSourceMeshTransform'
 __linkAttr_shortName = 'uvlSrcMesh'
@@ -33,8 +38,8 @@ def __error_check_single_obj(obj, obj_name='Temp duplicate'):
 	if isinstance(obj, pm.nt.Mesh):
 		obj = ls.to_parent(obj, False)[0]
 
-	err.WrongTypeError(obj, pm.nt.Transform, obj_name).raise_if_needed()
-	assert isinstance(obj, pm.nt.Transform)
+	err.WrongTypeError(obj, _t_transform, obj_name).raise_if_needed()
+	assert isinstance(obj, _t_transform)
 	return obj
 
 
@@ -46,7 +51,7 @@ def __src_mesh_attr(obj):
 	:param obj: pm.nt.Transform
 	:return: pm.Attribute
 	"""
-	assert isinstance(obj, pm.nt.Transform)
+	assert isinstance(obj, _t_transform)
 	if not obj.hasAttr(__linkAttr_name):
 		pm.addAttr(
 			obj,
@@ -67,7 +72,7 @@ def __src_uv_attr(obj):
 	:param obj: pm.nt.Transform
 	:return: string
 	"""
-	assert isinstance(obj, pm.nt.Transform)
+	assert isinstance(obj, _t_transform)
 	if not obj.hasAttr(__uvAttr_name):
 		pm.addAttr(
 			obj,
@@ -245,7 +250,7 @@ def prepare_duplicates(objects=None, selection_if_none=True):
 	objects = ls.default_input.handle_input(objects, selection_if_none)
 	for o in objects:
 		err.WrongTypeError(
-			o, (pm.nt.Transform, pm.nt.Mesh), 'source item'
+			o, _tt_poly_geo, 'source item'
 		).raise_if_needed()
 	duplicates = [__prepare_single_duplicate(src) for src in objects]
 	pm.select(duplicates, r=1)
@@ -262,10 +267,10 @@ def __get_shape(obj):
 	:param obj: either nt.Transform or nt.Mesh
 	:return: nt.Mesh
 	"""
-	err.WrongTypeError(obj, (pm.nt.Transform, pm.nt.Mesh), 'object').raise_if_needed()
-	if isinstance(obj, pm.nt.Mesh):
+	err.WrongTypeError(obj, _tt_poly_geo, 'object').raise_if_needed()
+	if isinstance(obj, _t_shape_poly):
 		return obj
-	if isinstance(obj, pm.nt.Transform):
+	if isinstance(obj, _t_transform):
 		return __get_shape(obj.getShape())
 
 

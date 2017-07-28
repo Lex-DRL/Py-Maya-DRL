@@ -2,7 +2,10 @@ __author__ = 'DRL'
 
 from drl_common import errors as _err
 
-from . import __shorthands as _sh
+from drl.for_maya import py_node_types as _pnt
+_shape_poly_nurbs = (_pnt.shape.poly, _pnt.shape.nurbs)
+_face_poly_nurbs = (_pnt.comp.poly.face, _pnt.comp.nurbs.face)
+_t_sg = _pnt.sg
 
 
 class UnsupportedItemBaseError(_err.WrongTypeError):
@@ -26,7 +29,7 @@ class UnsupportedShape(UnsupportedItemBaseError):
 	"""
 	def __init__(self, val, var_name=None):
 		super(UnsupportedShape, self).__init__(
-			val, (_sh.shape_poly, _sh.shape_NURBS), var_name, 'poly- / NURBS-shape'
+			val, _shape_poly_nurbs, var_name, 'poly- / NURBS-shape'
 		)
 
 
@@ -40,7 +43,7 @@ class UnsupportedComponent(UnsupportedItemBaseError):
 	"""
 	def __init__(self, val, var_name=None):
 		super(UnsupportedComponent, self).__init__(
-			val, (_sh.face_poly, _sh.face_NURBS), var_name, 'poly- / NURBS-face'
+			val, _face_poly_nurbs, var_name, 'poly- / NURBS-face'
 		)
 
 
@@ -50,5 +53,5 @@ class NotSG(UnsupportedItemBaseError):
 	"""
 	def __init__(self, val, var_name=None):
 		super(NotSG, self).__init__(
-			val, _sh.sg, var_name
+			val, _t_sg, var_name
 		)
