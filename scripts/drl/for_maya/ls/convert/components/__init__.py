@@ -3,106 +3,22 @@ __author__ = 'DRL'
 import itertools
 from pymel import core as pm
 
-from ...pymel import default_input as def_in
+from .base_class import PolyCompConverter as Poly
+
 from drl.for_maya.geo.components import uv_sets
 from drl.for_maya import ui
 
 from drl_common import errors as err
 
 
-def convert_poly(
-	items=None, selection_if_none=True, hierarchy=False,
-	border=False, bo=False,
-	from_edge=False, fe=False,
-	from_face=False, ff=False,
-	from_uv=False, fuv=False,
-	from_vertex=False, fv=False,
-	from_vertex_face=False, fvf=False,
-	internal=False,
-	to_edge=False, te=False,
-	to_face=False, tf=False,
-	to_uv=False, tuv=False,
-	to_vertex=False, tv=False,
-	to_vertex_face=False, tvf=False,
-	flatten=False, fl=False
-):
+def convert_poly(items=None, selection_if_none=True, **kwargs):
 	"""
-	This is just a wrapper with my common input check.
+	A old-style function-wrapper for PolyConverter.
+	Left here for backward-compatibility only.
 
-	:param items: <list> Source elements (objects/components) of a scene to be converted.
-	:param selection_if_none: <bool> whether to use current selection if items is None.
-	:param hierarchy:
-		<bool>
-			* True - All the transforms are turned to the components of the entire hierarchy.
-			* False - only the "direct" items' components are in the result.
-	:param border: (bo) <bool>
-
-		Indicates that the converted components must be on the border of the selection.
-		If it is not provided, the converted components will be the related ones.
-		Flag can have multiple arguments, passed either as a tuple or a list.
-	:param internal: <bool>
-
-		Indicates that the converted components must be totally envolved
-		by the source components.
-		E.g. a converted face must have all of its surrounding vertices being given.
-		If it is not provided, the converted components will be the related ones.
-	:param flatten: (fl) <bool>
-
-		Flattens the returned list of objects so that each component
-		is identified individually.
-	:return: <list> of corresponding components
-
-	Additionally to the listed above, there are following arguments:
-
-	from_*:
-		Indicates the component type to convert from.
-
-		If none of them is provided, it is assumed to be all of them,
-		including poly objects.
-
-	to_*:
-		Indicates the component type to convert to.
-
-		If none of them is provided, it is assumed to the object.
-
-	... where * is one of the following or corresponding shorthands:
-		* edge
-		* face
-		* uv
-		* vertex
-		* vertex_face
+	Use the convert() method of the <PolyConverter> class instead.
 	"""
-	items = def_in.handle_input(items, selection_if_none)
-	if not items:
-		return []
-
-	keys_values = dict(
-		border=border or bo,
-		fromEdge=from_edge or fe,
-		fromFace=from_face or ff,
-		fromUV=from_uv or fuv,
-		fromVertex=from_vertex or fv,
-		fromVertexFace=from_vertex_face or fvf,
-		internal=internal,
-		toEdge=to_edge or te,
-		toFace=to_face or tf,
-		toUV=to_uv or tuv,
-		toVertex=to_vertex or tv,
-		toVertexFace=to_vertex_face or tvf
-	)
-
-	kw_args = {}
-
-	for kw, v in keys_values.iteritems():
-		if v:
-			kw_args[kw] = True
-
-	res = pm.polyListComponentConversion(items, **kw_args)
-
-	if flatten or fl:
-		res = pm.ls(res, fl=1)
-
-	return res
+	return Poly(items, selection_if_none).convert(**kwargs)
 
 
 def _uv_shells_from_mesh(mesh, uv_set=None):
@@ -179,19 +95,20 @@ def uv_shells(items=None, selection_if_none=True, extend_to_full_shell=True, uv_
 
 	# now, let's prepare current items converted to UVs.
 	# Set is better then a list since order doesn't matter:
-	all_uvs = set(convert_poly(items, selection_if_none, to_uv=True, flatten=True))
+	all_uvs = set(
+		Poly(items, selection_if_none).convert(to_uv=True, flatten=True)
+	)
 
 	progress_window.end()
 
 	def _add_sets_from_single_shape(shape, all_uvs_set, out_res_list):
 		all_cur_shells = _uv_shells_from_mesh(shape)  # UV-shells for current shape.
-			# No need to pass a uv-set, since it'shape already active
+			# No need to pass a uv-set, since it's shape already active
 			# So far, all uv-shells are returned,
 			# as a next step we'll intersect it with a given items.
 
 		cur_shells = list()
 		for i, shell in enumerate(all_cur_shells):
-			cur_uvs = [uv for uv in shell if (uv in all_uvs_set)]
 			cur_shells.append(
 				[uv for uv in shell if (uv in all_uvs_set)]  # only selected UVs kept
 			)
@@ -204,7 +121,10 @@ def uv_shells(items=None, selection_if_none=True, extend_to_full_shell=True, uv_
 			cur_shells = [x for x in cur_shells if x]
 
 		if collapse:
-			cur_shells = [convert_poly(uvs, False, to_uv=True) for uvs in cur_shells]
+			cur_shells = [
+				Poly(uvs, False).convert(to_uv=True)
+				for uvs in cur_shells
+			]
 		return out_res_list + cur_shells  # add the shells of this shape to the overall result
 
 	# and finally, let's combine together all the UV-shells from different shapes,
