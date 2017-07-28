@@ -282,7 +282,7 @@ class AssignedTo(_bs.ItemsProcessorBase):
 					_pm_ls(shape.name() + '.f[*]', fl=1)
 				)
 				return
-			if isinstance(shape, _sh.shape_NURBS):
+			if isinstance(shape, _sh.shape_nurbs):
 				res_extend(
 					_pm_ls(shape.name() + '.sf[*][*]', fl=1)
 				)

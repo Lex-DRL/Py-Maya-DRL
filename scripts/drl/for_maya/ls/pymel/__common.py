@@ -3,6 +3,8 @@ __author__ = 'DRL'
 
 import pymel.core as _pm
 
+from drl.for_maya import py_node_types as _pnt
+
 from . import default_input as _def
 
 from drl_common import utils as _utils
@@ -76,10 +78,10 @@ def to_objects(
 		node = o
 		if isinstance(node, _pm.Component):
 			node = comp_to_node_f(node)
-		elif shape_to_object and isinstance(node, _pm.nt.Shape):
+		elif shape_to_object and isinstance(node, _pnt.shape):
 			node = node.parent(0)
 		node = _err.WrongTypeError(
-			node, (_pm.nt.Transform, _pm.nt.Shape), 'item', 'DAG object'
+			node, (_pnt.transform, _pnt.shape), 'item', 'DAG object'
 		).raise_if_needed()
 		if node.intermediateObject.get() and not include_intermediate:
 			return
@@ -104,7 +106,7 @@ def all_object_sets(exclude_default_sets=True):
 	"""
 	all_sets = [
 		x for x in _pm.ls(type='objectSet')
-		if not isinstance(x, _pm.nt.ShadingEngine)
+		if not isinstance(x, _pnt.sg)
 	]
 	if not exclude_default_sets:
 		return all_sets
@@ -236,7 +238,7 @@ def to_hierarchy(
 
 	res.extend([
 		i for i in _pm.listRelatives(items, allDescendents=1, noIntermediate=not include_intermediate)
-		if keep_shapes or not isinstance(i, _pm.nt.Shape)
+		if keep_shapes or not isinstance(i, _pnt.shape)
 	])
 
 	if remove_duplicates:
@@ -312,7 +314,7 @@ def to_children(
 
 	res.extend([
 		i for i in _pm.listRelatives(items, children=1, noIntermediate=not include_intermediate)
-		if keep_shapes or not isinstance(i, _pm.nt.Shape)
+		if keep_shapes or not isinstance(i, _pnt.shape)
 	])
 
 	if remove_duplicates:
@@ -332,7 +334,7 @@ def short_item_name(item):
 		item = [x for x in item][0]
 	if isinstance(item, _pm.PyNode):
 		item = _err.WrongTypeError(
-			item, (_pm.nt.DependNode, _pm.Component), 'item'
+			item, (_pm.nt.DependNode, _pnt.comp), 'item'
 		).raise_if_needed()
 		item = item.name()
 	item = _err.NotStringError(item, 'item').raise_if_needed_or_empty()
@@ -395,7 +397,7 @@ def is_shape_checker_f(
 			raise _err.WrongTypeError(checked_type, var_name='exact_type', types_name='subclass of <_pm.PyNode>')
 		out_arr.append(checked_type)
 
-	nt = _pm.nt.Shape
+	nt = _pnt.shape
 	is_exact = not(exact_type is None)
 	if any([geo_surface, any_geo, light, camera, is_exact]):
 		nt = list()
@@ -406,13 +408,13 @@ def is_shape_checker_f(
 			else:
 				_attach_exact_type(nt, exact_type)
 		if any_geo:
-			nt.append(_pm.nt.GeometryShape)
+			nt.append(_pnt.geo_shape)
 		if geo_surface:
-			nt.append(_pm.nt.SurfaceShape)
+			nt.append(_pnt.surf_shape)
 		if light:
-			nt.append(_pm.nt.Light)
+			nt.append(_pnt.light_shape)
 		if camera:
-			nt.append(_pm.nt.Camera)
+			nt.append(_pnt.cam_shape)
 		nt = tuple(nt)
 
 	return lambda node: isinstance(node, nt)
@@ -424,7 +426,7 @@ def is_shape(
 	"""
 	Is the given node a shape of provided type.
 
-	If no specific type is given, the node is checked to be a generic _pm.nt.Shape.
+	If no specific type is given, the node is checked to be a generic pm.nt.Shape.
 	Otherwise, the node is checked to be any of the given types.
 
 	:param node: checked object
@@ -494,7 +496,7 @@ def to_shapes(
 		if is_right_shape(o):
 			if not(o in res):
 				res.append(o)
-		elif isinstance(o, _pm.nt.Transform):
+		elif isinstance(o, _pnt.transform):
 			child_shapes = _pm.listRelatives(o, shapes=True, noIntermediate=not include_intermediate)
 			res += [
 				c for c in child_shapes

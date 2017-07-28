@@ -6,5 +6,5 @@ restricted_geo_types = (
 	transform,
 	shape,
 	poly_face,
-	NURBS_face
+	nurbs_face
 )

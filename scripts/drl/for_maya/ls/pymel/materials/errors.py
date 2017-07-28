@@ -26,7 +26,7 @@ class UnsupportedShape(UnsupportedItemBaseError):
 	"""
 	def __init__(self, val, var_name=None):
 		super(UnsupportedShape, self).__init__(
-			val, (_sh.shape_poly, _sh.shape_NURBS), var_name, 'poly- / NURBS-shape'
+			val, (_sh.shape_poly, _sh.shape_nurbs), var_name, 'poly- / NURBS-shape'
 		)
 
 
@@ -40,7 +40,7 @@ class UnsupportedComponent(UnsupportedItemBaseError):
 	"""
 	def __init__(self, val, var_name=None):
 		super(UnsupportedComponent, self).__init__(
-			val, (_sh.poly_face, _sh.NURBS_face), var_name, 'poly- / NURBS-face'
+			val, (_sh.poly_face, _sh.nurbs_face), var_name, 'poly- / NURBS-face'
 		)
 
 

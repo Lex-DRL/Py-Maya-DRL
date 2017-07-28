@@ -5,7 +5,7 @@ _def = _ls.default_input
 
 from drl_common import errors as _err
 
-from drl.for_maya import py_node_types as _t
+from drl.for_maya import py_node_types as _pnt
 
 
 class ItemsProcessorBase(object):
@@ -103,7 +103,7 @@ class ItemsProcessorBase(object):
 				remove_duplicates=1  # in case of instances
 			)
 			return filter(
-				lambda x: isinstance(x, _t.geo_shape),
+				lambda x: isinstance(x, _pnt.geo_shape),
 				dir_shapes
 			)
 
@@ -115,7 +115,7 @@ class ItemsProcessorBase(object):
 				remove_duplicates=1  # in case of instances
 			)
 			return filter(
-				lambda x: isinstance(x, _t.geo_shape),
+				lambda x: isinstance(x, _pnt.geo_shape),
 				hr_shapes
 			)
 
@@ -137,7 +137,7 @@ class ItemsProcessorBase(object):
 		res_extend = res.extend
 
 		def _add_single(item):
-			if not isinstance(item, _t.transform):
+			if not isinstance(item, _pnt.transform):
 				res_append(item)
 				return
 			# now we're sure it's transform
