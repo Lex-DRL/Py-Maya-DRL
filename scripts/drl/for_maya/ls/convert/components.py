@@ -11,7 +11,7 @@ from drl_common import errors as err
 
 
 def convert_poly(
-	items=None, selection_if_none=True,
+	items=None, selection_if_none=True, hierarchy=False,
 	border=False, bo=False,
 	from_edge=False, fe=False,
 	from_face=False, ff=False,
@@ -31,9 +31,25 @@ def convert_poly(
 
 	:param items: <list> Source elements (objects/components) of a scene to be converted.
 	:param selection_if_none: <bool> whether to use current selection if items is None.
-	:param border: (bo) <bool> Indicates that the converted components must be on the border of the selection. If it is not provided, the converted components will be the related ones. Flag can have multiple arguments, passed either as a tuple or a list.
-	:param internal: <bool> Indicates that the converted components must be totally envolved by the source components. E.g. a converted face must have all of its surrounding vertices being given. If it is not provided, the converted components will be the related ones.
-	:param flatten: (fl) <bool> Flattens the returned list of objects so that each component is identified individually.
+	:param hierarchy:
+		<bool>
+			* True - All the transforms are turned to the components of the entire hierarchy.
+			* False - only the "direct" items' components are in the result.
+	:param border: (bo) <bool>
+
+		Indicates that the converted components must be on the border of the selection.
+		If it is not provided, the converted components will be the related ones.
+		Flag can have multiple arguments, passed either as a tuple or a list.
+	:param internal: <bool>
+
+		Indicates that the converted components must be totally envolved
+		by the source components.
+		E.g. a converted face must have all of its surrounding vertices being given.
+		If it is not provided, the converted components will be the related ones.
+	:param flatten: (fl) <bool>
+
+		Flattens the returned list of objects so that each component
+		is identified individually.
 	:return: <list> of corresponding components
 
 	Additionally to the listed above, there are following arguments:
