@@ -2,35 +2,17 @@ __author__ = 'DRL'
 
 from pymel import core as _pm
 
-from drl.for_maya.base_class import ItemsProcessorBase as __BaseProcessor
-
-from drl.for_maya import py_node_types as __pnt
-
-# transform, poly shape and all the poly component types
-_tt_poly_geo_all = tuple(
-	[__pnt.transform, __pnt.shape.poly] +
-	list(__pnt.comp.poly.any_tuple)
-)
+from drl.for_maya.base_class import PolyProcessorBase as __BaseProcessor
 
 
 class PolyCompConverter(__BaseProcessor):
 	"""
 	Poly components conversion class
 	and also the base class for all the per-component poly processors.
-	It:
-		* Overrides the constructor, specifying the allowed PyNode types for the input.
-		* Provides the methods converting the items list to a specified component type.
+	It provides the methods converting the items list to a specified component type.
 
-	:param to_hierarchy:
-		<bool> During all PolyConversions, how to convert transforms with children:
-			* True - each Transform is converted to the components of the entire hierarchy.
-			* False - only the "direct" children' components are in the result.
-		It affects only transforms in the items list.
+	It respects inherited <to_hierarchy> argument.
 	"""
-	def __init__(self, items=None, selection_if_none=True, to_hierarchy=False):
-		super(PolyCompConverter, self).__init__(_tt_poly_geo_all)
-		self.set_items(items, selection_if_none)
-		self.to_hierarchy = bool(to_hierarchy)
 
 	def convert(
 		self,
