@@ -4,6 +4,11 @@ from pymel import core as _pm
 
 from drl.for_maya.base_class import PolyProcessorBase as __BaseProcessor
 
+from functools import partial as _part
+
+
+_flatten_f = _part(_pm.ls, fl=1)
+
 
 class PolyCompConverter(__BaseProcessor):
 	"""
@@ -102,7 +107,7 @@ class PolyCompConverter(__BaseProcessor):
 		res = _pm.polyListComponentConversion(items, **kw_args)
 
 		if flatten or fl:
-			res = _pm.ls(res, fl=1)
+			res = _flatten_f(res)
 
 		return res
 
@@ -111,6 +116,28 @@ class PolyCompConverter(__BaseProcessor):
 			flatten=flatten, internal=internal, border=border,
 			to_edge=True
 		)
+
+	def to_edges_on_uv_border(self, internal=False, include_geo_border=False):
+		"""
+		Extra method for getting a list of border edges.
+
+		It doesn't have the <flatten> argument, because the result is always flattened.
+		"""
+		edges = self.convert(
+			flatten=True, internal=internal,
+			to_edge=True
+		)
+		if not edges:
+			return list()
+
+		to_edge_uvs_f = _part(_pm.polyListComponentConversion, fromEdge=True, toUV=True)
+		is_on_uv_border = lambda x: len(_flatten_f(to_edge_uvs_f(x))) > 2
+		if include_geo_border:
+			is_border_edge = lambda x: x.isOnBoundary() or is_on_uv_border(x)
+		else:
+			is_border_edge = is_on_uv_border
+
+		return [e for e in edges if is_border_edge(e)]
 
 	def to_vertices(self, flatten=False, internal=False, border=False):
 		return self.convert(
