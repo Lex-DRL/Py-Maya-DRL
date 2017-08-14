@@ -19,7 +19,7 @@ def get_colors_on_vertexfaces(items=None, selection_if_none=True):
 	:return: <list> of tuples: (MeshVertexFace, red, green, blue, alpha).
 	"""
 	items = ls.default_input.handle_input(items, selection_if_none)
-	vfs = comp.convert_poly(items, selection_if_none=False, tvf=True, flatten=True)
+	vfs = comp.Poly(items, selection_if_none=False).to_vertex_faces(flatten=True)
 	return [
 		tuple(
 			[vf] + pm.polyColorPerVertex(vf, q=1, r=1, g=1, b=1, a=1)
@@ -146,7 +146,7 @@ def get_vertex_faces_with_color(
 
 def _comp_matches(component, matching_vertex_faces, vf_match_combine_f):
 	# list of current component's vertex faces:
-	vfs = comp.convert_poly(component, selection_if_none=False, tvf=True, flatten=True)
+	vfs = comp.Poly(component, selection_if_none=False).to_vertex_faces(flatten=True)
 	# list of bool, which VFs are in the matching list:
 	vfs_in_match = [(vf in matching_vertex_faces) for vf in vfs]
 	# combining vertexFace-match to the main component match:
@@ -246,7 +246,7 @@ def get_vertices_with_color(
 	"""
 	return __get_component_with_color(
 		items, r, g, b, a, inclusive, selection_if_none,
-		lambda itms: comp.convert_poly(itms, selection_if_none=False, tv=True, flatten=True),
+		lambda itms: comp.Poly(itms, selection_if_none=False).to_vertices(flatten=True),
 		show_progress, progress_title, progress_message
 	)
 
@@ -278,7 +278,7 @@ def get_faces_with_color(
 	"""
 	return __get_component_with_color(
 		items, r, g, b, a, inclusive, selection_if_none,
-		lambda itms: comp.convert_poly(itms, selection_if_none=False, tf=True, flatten=True),
+		lambda itms: comp.Poly(itms, selection_if_none=False).to_faces(flatten=True),
 		show_progress, progress_title, progress_message
 	)
 
@@ -335,7 +335,7 @@ def get_components_with_color(
 
 		faces = __get_components_with_matching_vertex_faces(
 			vfs_matching, itm, False,
-			lambda itms: comp.convert_poly(itms, selection_if_none=False, tf=True, flatten=True),
+			lambda itms: comp.Poly(itms, selection_if_none=False).to_faces(flatten=True),
 			show_progress,
 			'{0}/{1}: Get Faces...'.format(seg_state + 2, total_progress_steps),
 			item_name + '-[F]: {0}/{1}'
@@ -343,7 +343,7 @@ def get_components_with_color(
 
 		verts_match = __get_components_with_matching_vertex_faces(
 			vfs_matching, itm, False,
-			lambda itms: comp.convert_poly(itms, selection_if_none=False, tv=True, flatten=True),
+			lambda itms: comp.Poly(itms, selection_if_none=False).to_vertices(flatten=True),
 			show_progress,
 			'{0}/{1}: Get Vertices...'.format(seg_state + 3, total_progress_steps),
 			item_name + '-[V]: {0}/{1}'
@@ -353,7 +353,7 @@ def get_components_with_color(
 			if not all(
 				[
 					(x in faces)
-					for x in comp.convert_poly(v, False, tf=True, flatten=True)
+					for x in comp.Poly(v, False).to_faces(flatten=True)
 				]
 			)
 		]
@@ -361,8 +361,8 @@ def get_components_with_color(
 		def _filter_vertex_faces(matching_vfs):
 			def _check_vertex_face(vert_face):
 				return not (
-					(comp.convert_poly(vert_face, False, tf=True, flatten=True)[0] in faces) or
-					(comp.convert_poly(vert_face, False, tv=True, flatten=True)[0] in verts)
+					(comp.Poly(vert_face, False).to_faces(flatten=True)[0] in faces) or
+					(comp.Poly(vert_face, False).to_vertices(flatten=True)[0] in verts)
 				)
 			if not show_progress:
 				return [

@@ -11,16 +11,6 @@ from drl.for_maya import ui
 from drl_common import errors as err
 
 
-def convert_poly(items=None, selection_if_none=True, **kwargs):
-	"""
-	A old-style function-wrapper for PolyConverter.
-	Left here for backward-compatibility only.
-
-	Use the convert() method of the <PolyConverter> class instead.
-	"""
-	return Poly(items, selection_if_none).convert(**kwargs)
-
-
 def _uv_shells_from_mesh(mesh, uv_set=None):
 	"""
 	Low-level function which returns UVs grouped by shell, as tuple of lists.
