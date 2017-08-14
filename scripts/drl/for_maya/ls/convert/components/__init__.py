@@ -4,6 +4,7 @@ import itertools
 from pymel import core as pm
 
 from .base_class import PolyCompConverter as Poly
+from .base_class import vfs_grouped_by_vertex, vfs_grouped_by_face
 
 from drl.for_maya.geo.components import uv_sets
 from drl.for_maya import ui

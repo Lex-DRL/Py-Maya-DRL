@@ -10,6 +10,101 @@ from functools import partial as _part
 _flatten_f = _part(_pm.ls, fl=1)
 
 
+def __get_vf_id_single_shape(vertex_face, dimension_id=0):
+	"""
+	Gets the id of either vertex or face this vertex-face belongs to.
+
+	:param dimension_id:
+		<int>
+
+		* 0 - vertex
+		* 1 - face
+	:return:
+		<int>
+
+		id of a vertex/face
+	"""
+	return vertex_face.currentItemIndex()[dimension_id]
+
+
+def __get_vf_id_multi_shape(vertex_face, dimension_id=0):
+	"""
+	Gets the id of either vertex or face this vertex-face belongs to.
+
+	:param dimension_id:
+		<int>
+
+		* 0 - vertex
+		* 1 - face
+	:return:
+		<string>, like: "pSphereShape1.1"
+
+		Where number after dot is an id of a vertex/face.
+	"""
+	vf_id = vertex_face.currentItemIndex()[dimension_id]
+	return vertex_face.node().name() + '.' + str(vf_id)
+
+
+def vfs_grouped_by_vertex(vertex_faces_list, single_shape=False):
+	"""
+	Takes a flat list of vertex faces.
+	Returns them grouped by the **vertex** they belong to.
+
+	:param vertex_faces_list:
+		<Flattened list of PyNode vertex-faces>
+
+		If you're unsure about any requirements, use the
+		similar method from PolyCompConverter class.
+		I.e., if you're not sure that:
+
+		* an iterable is given (not a single item)
+		* it is flattened (i.e., no [25:50] items)
+		* every item is a PyNode vertex face (not just a string).
+	:param vertex_faces_list:
+		<bool>
+
+		If all the vertex-faces are guaranteed to belong to a single shape,
+		set this to True to make the function work a little faster.
+	:return: <list of lists>
+	"""
+	grouped = dict()  # start as dict, for easier grouping
+	group = _part(grouped.setdefault, default=[])  # init new list, if necessary
+	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
+	for vf in vertex_faces_list:
+		group(get_id(vf, 0)).append(vf)  # 0 = vertex
+	return list(grouped.itervalues())  # list of lists
+
+
+def vfs_grouped_by_face(vertex_faces_list, single_shape=False):
+	"""
+	Takes a flat list of vertex faces.
+	Returns them grouped by the **face** they belong to.
+
+	:param vertex_faces_list:
+		<Flattened list of PyNode vertex-faces>
+
+		If you're unsure about any requirements, use the
+		similar method from PolyCompConverter class.
+		I.e., if you're not sure that:
+
+		* an iterable is given (not a single item)
+		* it is flattened (i.e., no [25:50] items)
+		* every item is a PyNode vertex face (not just a string).
+	:param vertex_faces_list:
+		<bool>
+
+		If all the vertex-faces are guaranteed to belong to a single shape,
+		set this to True to make the function work a little faster.
+	:return: <list of lists>
+	"""
+	grouped = dict()  # start as dict, for easier grouping
+	group = _part(grouped.setdefault, default=[])  # init new list, if necessary
+	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
+	for vf in vertex_faces_list:
+		group(get_id(vf, 1)).append(vf)  # 1 = face
+	return list(grouped.itervalues())  # list of lists
+
+
 class PolyCompConverter(__BaseProcessor):
 	"""
 	Poly components conversion class
@@ -150,6 +245,50 @@ class PolyCompConverter(__BaseProcessor):
 			flatten=flatten, internal=internal, border=border,
 			to_vertex_face=True
 		)
+
+	def to_vertex_faces_grouped_by_vertex(
+		self, internal=False, border=False
+	):
+		"""
+		Extra method.
+
+		It not just converts the given items to vertex faces,
+		but also groups them by **vertex**.
+
+		If you're absolutely sure that the provided items is already
+		a flattened list of PyNode vertex-faces, then you can use
+		a faster **vfs_grouped_by_vertex()** function instead.
+
+		:return:
+			<list of lists>
+		"""
+		vfs = self.convert(
+			flatten=True, internal=internal, border=border,
+			to_vertex_face=True
+		)
+		return vfs_grouped_by_vertex(vfs)
+
+	def to_vertex_faces_grouped_by_face(
+		self, internal=False, border=False
+	):
+		"""
+		Extra method.
+
+		It not just converts the given items to vertex faces,
+		but also groups them by **face**.
+
+		If you're absolutely sure that the provided items is already
+		a flattened list of PyNode vertex-faces, then you can use
+		a faster **vfs_grouped_by_face()** function instead.
+
+		:return:
+			<list of lists>
+		"""
+		vfs = self.convert(
+			flatten=True, internal=internal, border=border,
+			to_vertex_face=True
+		)
+		return vfs_grouped_by_face(vfs)
 
 	def to_faces(self, flatten=False, internal=False, border=False):
 		return self.convert(
