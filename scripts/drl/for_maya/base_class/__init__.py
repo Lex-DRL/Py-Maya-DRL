@@ -88,7 +88,7 @@ class ItemsProcessorBase(object):
 	def items(self, value):
 		self.__set_items(value, False)
 
-	def get_geo_items(self, hierarchy=False):
+	def _get_geo_items(self, hierarchy=False):
 		"""
 		Returns the list of geometry items, ready to be processed.
 		I.e., all the transforms in the <items> list are converted to their shapes.
@@ -164,6 +164,20 @@ class ItemsProcessorBase(object):
 		map(_add_single, self.__items)
 		return res
 
+	def get_geo_items(self):
+		"""
+		Returns the list of geometry items, ready to be processed.
+		I.e., all the transforms in the <items> list are converted to their shapes.
+		All the non-transform items are passed through intact.
+
+		If <allowed_py_node_types> was provided, the found shapes are filtered with this.
+
+		The actual <items> list is intact. Only the returned list is generated.
+
+		:return: <list of PyNodes>
+		"""
+		return self._get_geo_items(hierarchy=False)
+
 
 class PolyProcessorBase(ItemsProcessorBase):
 	"""
@@ -181,3 +195,6 @@ class PolyProcessorBase(ItemsProcessorBase):
 		super(PolyProcessorBase, self).__init__(_tt_poly_geo_all)
 		self.set_items(items, selection_if_none)
 		self.to_hierarchy = bool(to_hierarchy)
+
+	def get_geo_items(self):
+		super(PolyProcessorBase, self)._get_geo_items(hierarchy=self.to_hierarchy)

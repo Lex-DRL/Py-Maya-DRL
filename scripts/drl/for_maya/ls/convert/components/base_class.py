@@ -1,10 +1,12 @@
 __author__ = 'DRL'
 
+from functools import partial as _part
+
 from pymel import core as _pm
 
-from drl.for_maya.base_class import PolyProcessorBase as __BaseProcessor
+from drl_common.utils import group_items as _group_items
 
-from functools import partial as _part
+from drl.for_maya.base_class import PolyProcessorBase as __BaseProcessor
 
 
 _flatten_f = _part(_pm.ls, fl=1)
@@ -65,18 +67,8 @@ def __vfs_grouped(vertex_faces_list, single_shape=False, dimension_id=0):
 		* 1 - face
 	:return: <list of tuples>
 	"""
-	grouped = dict()  # start as dict, for easier grouping
-	grouped_setdefault = grouped.setdefault
-	group = lambda k: grouped_setdefault(k, [])  # init new list, if necessary
 	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
-	for vf in vertex_faces_list:
-		group(get_id(vf, dimension_id)).append(vf)
-	return [  # list of tuples:
-		tuple(v) for k, v in sorted(
-			grouped.iteritems(),
-			key=lambda x: x[0]
-		)
-	]
+	return _group_items(vertex_faces_list, get_id)
 
 
 def vfs_grouped_by_vertex(vertex_faces_list, single_shape=False):
@@ -195,7 +187,7 @@ class PolyCompConverter(__BaseProcessor):
 			* vertex_face
 		"""
 		if self.to_hierarchy:
-			items = self.get_geo_items(hierarchy=True)
+			items = self.get_geo_items()
 		else:
 			items = self.items
 
@@ -225,8 +217,15 @@ class PolyCompConverter(__BaseProcessor):
 
 		res = _pm.polyListComponentConversion(items, **kw_args)
 
+		if not res:
+			return list()
+
 		if flatten or fl:
-			res = _flatten_f(res)
+			return _flatten_f(res)  # it's already guaranteed to be PyNodes
+
+		if not isinstance(res[0], _pm.PyNode):
+			# assume: if 1st isn't a PyNode - then all of them are
+			return map(_pm.PyNode, res)
 
 		return res
 
