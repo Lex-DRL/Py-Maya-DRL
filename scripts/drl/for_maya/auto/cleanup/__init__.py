@@ -6,7 +6,9 @@ from pymel import core as pm
 
 from drl.for_maya.ls import pymel as ls
 
-from . import history, materials, uv_sets
+from . import history, materials
+from .__uv_sets import UVSets, UVSetsRule
+from .__uvs import UVs
 
 _this = __sys.modules[__name__]
 _str_types = (str, unicode)
@@ -206,7 +208,7 @@ def cleanup_all(
 
 	if uv_sets_rename_first or uv_sets_remove_extra:
 		all_shapes = __all_poly_shapes()
-		cleaner = uv_sets.UVSets(all_shapes, False, kept_sets_rule=uv_sets_kept)
+		cleaner = UVSets(all_shapes, False, kept_sets_rule=uv_sets_kept)
 
 		if uv_sets_rename_first:
 			res_n = cleaner.rename_first_set()
