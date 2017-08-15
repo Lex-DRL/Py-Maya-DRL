@@ -45,64 +45,88 @@ def __get_vf_id_multi_shape(vertex_face, dimension_id=0):
 	return vertex_face.node().name() + '.' + str(vf_id)
 
 
+def __vfs_grouped(vertex_faces_list, single_shape=False, dimension_id=0):
+	"""
+	Takes a flat list/iterable of vertex faces (i.e., no [20:50]),
+	as PyNodes (not strings).
+
+	Returns them grouped either by the vertex or face (depending on <dimension_id> arg).
+
+	:param single_shape:
+		<bool>
+
+		Set to True, if the input is guaranteed to belong to a single shape.
+		It will work a little faster.
+	:param dimension_id:
+		<int>
+		Group by:
+
+		* 0 - vertex
+		* 1 - face
+	:return: <list of tuples>
+	"""
+	grouped = dict()  # start as dict, for easier grouping
+	grouped_setdefault = grouped.setdefault
+	group = lambda k: grouped_setdefault(k, [])  # init new list, if necessary
+	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
+	for vf in vertex_faces_list:
+		group(get_id(vf, dimension_id)).append(vf)
+	return [  # list of tuples:
+		tuple(v) for k, v in sorted(
+			grouped.iteritems(),
+			key=lambda x: x[0]
+		)
+	]
+
+
 def vfs_grouped_by_vertex(vertex_faces_list, single_shape=False):
 	"""
 	Takes a flat list of vertex faces.
-	Returns them grouped by the **vertex** they belong to.
+	Returns them grouped by the **vertex** they belong to, as a list of tuples.
 
 	:param vertex_faces_list:
-		<Flattened list of PyNode vertex-faces>
+		<Flattened list/iterable of PyNode vertex-faces>
 
 		If you're unsure about any requirements, use the
 		similar method from PolyCompConverter class.
 		I.e., if you're not sure that:
 
-		* an iterable is given (not a single item)
+		* an iterable of items is given (not a single item, not a dict)
 		* it is flattened (i.e., no [25:50] items)
 		* every item is a PyNode vertex face (not just a string).
-	:param vertex_faces_list:
+	:param single_shape:
 		<bool>
 
-		If all the vertex-faces are guaranteed to belong to a single shape,
-		set this to True to make the function work a little faster.
-	:return: <list of lists>
+		Set to True, if the input is guaranteed to belong to a single shape.
+		It will work a little faster.
+	:return: <list of tuples>
 	"""
-	grouped = dict()  # start as dict, for easier grouping
-	group = _part(grouped.setdefault, default=[])  # init new list, if necessary
-	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
-	for vf in vertex_faces_list:
-		group(get_id(vf, 0)).append(vf)  # 0 = vertex
-	return list(grouped.itervalues())  # list of lists
+	return __vfs_grouped(vertex_faces_list, single_shape, 0)  # 0 = vertex
 
 
 def vfs_grouped_by_face(vertex_faces_list, single_shape=False):
 	"""
 	Takes a flat list of vertex faces.
-	Returns them grouped by the **face** they belong to.
+	Returns them grouped by the **face** they belong to, as a list of tuples.
 
 	:param vertex_faces_list:
-		<Flattened list of PyNode vertex-faces>
+		<Flattened list/iterable of PyNode vertex-faces>
 
 		If you're unsure about any requirements, use the
 		similar method from PolyCompConverter class.
 		I.e., if you're not sure that:
 
-		* an iterable is given (not a single item)
+		* an iterable of items is given (not a single item, not a dict)
 		* it is flattened (i.e., no [25:50] items)
 		* every item is a PyNode vertex face (not just a string).
-	:param vertex_faces_list:
+	:param single_shape:
 		<bool>
 
-		If all the vertex-faces are guaranteed to belong to a single shape,
-		set this to True to make the function work a little faster.
-	:return: <list of lists>
+		Set to True, if the input is guaranteed to belong to a single shape.
+		It will work a little faster.
+	:return: <list of tuples>
 	"""
-	grouped = dict()  # start as dict, for easier grouping
-	group = _part(grouped.setdefault, default=[])  # init new list, if necessary
-	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
-	for vf in vertex_faces_list:
-		group(get_id(vf, 1)).append(vf)  # 1 = face
-	return list(grouped.itervalues())  # list of lists
+	return __vfs_grouped(vertex_faces_list, single_shape, 0)  # 1 = face
 
 
 class PolyCompConverter(__BaseProcessor):
@@ -266,7 +290,7 @@ class PolyCompConverter(__BaseProcessor):
 			flatten=True, internal=internal, border=border,
 			to_vertex_face=True
 		)
-		return vfs_grouped_by_vertex(vfs)
+		return vfs_grouped_by_vertex(vfs, single_shape=False)
 
 	def to_vertex_faces_grouped_by_face(
 		self, internal=False, border=False
@@ -288,7 +312,7 @@ class PolyCompConverter(__BaseProcessor):
 			flatten=True, internal=internal, border=border,
 			to_vertex_face=True
 		)
-		return vfs_grouped_by_face(vfs)
+		return vfs_grouped_by_face(vfs, single_shape=False)
 
 	def to_faces(self, flatten=False, internal=False, border=False):
 		return self.convert(
