@@ -5,6 +5,7 @@ from drl_common import errors as _err
 from drl.for_maya import py_node_types as _pnt
 _t_transform = _pnt.transform
 _t_shape_geo = _pnt.shape.geo
+_t_obj_poly = (_t_transform, _pnt.shape.poly)
 
 # transform, poly shape and all the poly component types
 _tt_poly_geo_all = tuple(
@@ -27,8 +28,13 @@ class ItemsProcessorBase(object):
 		passing only those items that match the given type.
 
 		Anything else won't go to the <items> list.
+	:param to_hierarchy:
+		<bool>
+
+		Specifies whether to process children, grandchildren etc. It doesn't change
+		the actual <items> list. However, the methods will work with respect to that.
 	"""
-	def __init__(self, allowed_py_node_types=None):
+	def __init__(self, allowed_py_node_types=None, hierarchy=False):
 		super(ItemsProcessorBase, self).__init__()
 		self.__items = list()
 		self.__py_node_types_allowed = None
@@ -36,6 +42,7 @@ class ItemsProcessorBase(object):
 		if not(allowed_py_node_types is None):
 			self.__set_filtering_types(allowed_py_node_types)
 			self.__set_items = self.__set_items_filtered_by_py_node_type
+		self.hierarchy = bool(hierarchy)
 
 	def __set_filtering_types(self, types):
 		self.__py_node_types_allowed = _err.NotTypeError(types, 'types').raise_if_wrong_arg_for_isinstance()
@@ -86,9 +93,9 @@ class ItemsProcessorBase(object):
 
 	@items.setter
 	def items(self, value):
-		self.__set_items(value, False)
+		self.set_items(value, selection_if_none=False)
 
-	def _get_geo_items(self, hierarchy=False):
+	def get_geo_items(self):
 		"""
 		Returns the list of geometry items, ready to be processed.
 		I.e., all the transforms in the <items> list are converted to their shapes.
@@ -98,10 +105,6 @@ class ItemsProcessorBase(object):
 
 		The actual <items> list is intact. Only the returned list is generated.
 
-		:param hierarchy:
-			<bool>
-				* True - all of the child, grandchild etc. shapes of each transform are added to the result.
-				* False - only the direct child shape(s) added.
 		:return: <list of PyNodes>
 		"""
 		from drl.for_maya.ls import pymel as _ls
@@ -142,7 +145,7 @@ class ItemsProcessorBase(object):
 			)
 
 		# generate the actual function that will return the list of appropriate child shapes:
-		to_shapes_f = _to_hierarchy_shapes if hierarchy else _to_direct_shapes
+		to_shapes_f = _to_hierarchy_shapes if self.hierarchy else _to_direct_shapes
 		filtered_shapes_f = to_shapes_f
 		if not(allowed_types is None):
 			filtered_shapes_f = lambda x: _filter_with_allowed_types(to_shapes_f(x))
@@ -164,22 +167,17 @@ class ItemsProcessorBase(object):
 		map(_add_single, self.__items)
 		return res
 
-	def get_geo_items(self):
-		"""
-		Returns the list of geometry items, ready to be processed.
-		I.e., all the transforms in the <items> list are converted to their shapes.
-		All the non-transform items are passed through intact.
 
-		If <allowed_py_node_types> was provided, the found shapes are filtered with this.
-
-		The actual <items> list is intact. Only the returned list is generated.
-
-		:return: <list of PyNodes>
-		"""
-		return self._get_geo_items(hierarchy=False)
+class PolyObjectsProcessorBase(ItemsProcessorBase):
+	def __init__(self, items=None, selection_if_none=True, hierarchy=False):
+		super(PolyObjectsProcessorBase, self).__init__(
+			_t_obj_poly,
+			hierarchy=hierarchy
+		)
+		self.set_items(items, selection_if_none)
 
 
-class PolyProcessorBase(ItemsProcessorBase):
+class PolyItemsProcessorBase(ItemsProcessorBase):
 	"""
 	Poly geometry processor class.
 	It overrides the constructor, specifying the allowed PyNode types for the input,
@@ -191,10 +189,9 @@ class PolyProcessorBase(ItemsProcessorBase):
 			* False - only the "direct" children's components are in the result.
 		It affects only transforms in the items list.
 	"""
-	def __init__(self, items=None, selection_if_none=True, to_hierarchy=False):
-		super(PolyProcessorBase, self).__init__(_tt_poly_geo_all)
+	def __init__(self, items=None, selection_if_none=True, hierarchy=False):
+		super(PolyItemsProcessorBase, self).__init__(
+			_tt_poly_geo_all,
+			hierarchy=hierarchy
+		)
 		self.set_items(items, selection_if_none)
-		self.to_hierarchy = bool(to_hierarchy)
-
-	def get_geo_items(self):
-		super(PolyProcessorBase, self)._get_geo_items(hierarchy=self.to_hierarchy)

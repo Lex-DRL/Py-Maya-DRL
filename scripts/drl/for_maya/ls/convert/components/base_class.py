@@ -6,7 +6,7 @@ from pymel import core as _pm
 
 from drl_common.utils import group_items as _group_items
 
-from drl.for_maya.base_class import PolyProcessorBase as __BaseProcessor
+from drl.for_maya.base_class import PolyItemsProcessorBase as __BaseProcessor
 
 
 _flatten_f = _part(_pm.ls, fl=1)
@@ -127,7 +127,7 @@ class PolyCompConverter(__BaseProcessor):
 	and also the base class for all the per-component poly processors.
 	It provides the methods converting the items list to a specified component type.
 
-	It respects inherited <to_hierarchy> argument.
+	It respects inherited <hierarchy> argument.
 	"""
 
 	def convert(
@@ -186,7 +186,7 @@ class PolyCompConverter(__BaseProcessor):
 			* vertex
 			* vertex_face
 		"""
-		if self.to_hierarchy:
+		if self.hierarchy:
 			items = self.get_geo_items()
 		else:
 			items = self.items

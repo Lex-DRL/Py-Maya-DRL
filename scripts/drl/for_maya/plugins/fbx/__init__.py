@@ -289,7 +289,7 @@ class Exporter(_ImportExportBase):
 		"""
 		Returns the exact list of objects marked for export.
 
-		All their to_hierarchy, grandchildren etc. will be exported.
+		All their hierarchy, grandchildren etc. will be exported.
 		:return: <list> of objects
 		"""
 		return self.__objects[:]

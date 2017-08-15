@@ -183,7 +183,7 @@ class BaseExport(object):
 		exported = self.get_all_exported_objects(False)
 		if not exported:
 			return self
-		cleaner = cl.uv_sets.UVSets(exported, kept_sets_rule, False)
+		cleaner = cl.uv_sets.UVSets(exported, False, kept_sets_rule=kept_sets_rule)
 		cleaner.rename_first_set()
 		cleaner.remove_extra_sets()
 		return self

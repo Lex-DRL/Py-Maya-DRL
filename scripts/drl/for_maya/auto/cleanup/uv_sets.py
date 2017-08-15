@@ -5,6 +5,7 @@ from pymel import core as pm
 
 from drl.for_maya.ls import pymel as ls
 from drl.for_maya.geo.components import uv_sets
+from drl.for_maya.base_class import PolyObjectsProcessorBase as __BaseProcessor
 from drl_common import errors as err
 from drl_common import utils
 
@@ -235,34 +236,32 @@ def _keep_all_rule():
 	return UVSetsRule((), is_keep=False)
 
 
-class UVSets(object):
+class UVSets(__BaseProcessor):
 	"""
 	This is a class performing UV-sets cleanup.
 	I.e., it keeps/removes only those UV-sets which pass the list of given UVSetsRule's.
 	"""
-	def __init__(self, objects=None, kept_sets_rule=None, selection_if_none=True):
-		super(UVSets, self).__init__()
-		self.__objects = list()
+	def __init__(
+		self, items=None, selection_if_none=True, hierarchy=False,
+		kept_sets_rule=None
+	):
+		super(UVSets, self).__init__(
+			items=None, selection_if_none=False,
+			hierarchy=hierarchy
+		)
+		self.__set_items(items, selection_if_none)
 		self.__kept_sets_rule = _keep_all_rule()
-		self._set_objects(objects, selection_if_none)
-		self._set_kept_sets_rule(kept_sets_rule)
+		self.__set_kept_sets_rule(kept_sets_rule)
 
-	def _set_objects(self, objects=None, selection_if_none=True):
-		self.__objects = ls.to_objects(objects, selection_if_none)
+	def __set_items(self, items=None, selection_if_none=True):
+		items = ls.to_geo_nodes(items, selection_if_none, remove_duplicates=True)
+		super(UVSets, self).set_items(items, selection_if_none)
 
-	def set_objects(self, objects=None, selection_if_none=True):
-		self._set_objects(objects, selection_if_none)
+	def set_items(self, items=None, selection_if_none=True):
+		self.__set_items(items, selection_if_none)
 		return self
 
-	@property
-	def objects(self):
-		return self.__objects[:]
-
-	@objects.setter
-	def objects(self, value):
-		self._set_objects(value, False)
-
-	def _set_kept_sets_rule(self, rule, is_keep=True):
+	def __set_kept_sets_rule(self, rule, is_keep=True):
 		if isinstance(rule, UVSetsRule):
 			self.__kept_sets_rule = rule
 			return
@@ -270,10 +269,6 @@ class UVSets(object):
 			self.__kept_sets_rule = _keep_all_rule()
 			return
 		self.__kept_sets_rule = UVSetsRule(rule, is_keep)
-
-	def set_kept_sets_rule(self, rule, is_keep=True):
-		self._set_kept_sets_rule(rule, is_keep)
-		return self
 
 	@property
 	def kept_sets_rule(self):
@@ -283,15 +278,15 @@ class UVSets(object):
 
 	@kept_sets_rule.setter
 	def kept_sets_rule(self, value):
-		self._set_kept_sets_rule(value)
+		self.__set_kept_sets_rule(value)
 
 	def get_shapes(self):
 		"""
-		Converts the list of specified objects to their shapes.
+		Converts the list of specified items to their shapes.
 
 		:return: <list of PyNodes> shapes.
 		"""
-		return ls.to_shapes(self.__objects, False, exact_type=pm.nt.Mesh)
+		return ls.to_shapes(self.get_geo_items(), False, exact_type=pm.nt.Mesh)
 
 	def remove_extra_sets(self):
 		"""

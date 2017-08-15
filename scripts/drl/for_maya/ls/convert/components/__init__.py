@@ -17,7 +17,11 @@ def _uv_shells_from_mesh(mesh, uv_set=None):
 	Low-level function which returns UVs grouped by shell, as tuple of lists.
 
 	:param mesh: source mesh to get UVs for
-	:param uv_set: uv-set to check. None or 0 for the current set, 	name or number (starting from 1) to get the specific UV-set.
+	:param uv_set:
+		uv-set to check.
+
+		* None or 0 for the current set,
+		* name or number (starting from 1) to get the specific UV-set.
 	:return: <tuple of lists>: res[uvShell][UV]
 	"""
 	err.WrongTypeError(mesh, pm.nt.Mesh, 'mesh').raise_if_needed()
@@ -36,16 +40,41 @@ def _uv_shells_from_mesh(mesh, uv_set=None):
 	return res
 
 
-def uv_shells(items=None, selection_if_none=True, extend_to_full_shell=True, uv_set=None, collapse=False):
+def uv_shells(
+	items=None, selection_if_none=True,
+	extend_to_full_shell=True, uv_set=None, collapse=False
+):
 	"""
-	High-level function, converting any given input (transforms/mesh-shapes/components) to a list of UV-shells.
-	The result is tuples of lists, where 1st level is a group of a shell and the 2nd level is a UV.
+	High-level function, converting any given input (transforms/mesh-shapes/components)
+	to a list of UV-shells.
+	The result is tuples of lists, where 1st level is a group of a shell
+	and the 2nd level is a UV.
 
-	:param items: <list> Source elements (objects/components) of a scene to be converted.
-	:param selection_if_none: <bool> whether to use current selection if items is None.
-	:param extend_to_full_shell: When True, the result will contain the full UV-sheels, even if just one UV was given as a source item. Otherwise, there will be only those UVs that were directly converted from items.
-	:param uv_set: uv-set to check. None or 0 for the current set, 	name or number (starting from 1) to get the specific UV-set.\nWARNING! Though it's possible to specify a uv-set here, the function will work MUCH faster if just currently active UV-set is used.
-	:param collapse: <bool> the opposite to flatten. Combines multiple MeshUV items to single range, if possible.
+	:param items:
+		<list>
+
+		Source elements (objects/components) of a scene to be converted.
+	:param selection_if_none:
+		<bool>
+
+		whether to use current selection if items is None.
+	:param extend_to_full_shell:
+		<bool>
+
+		When True, the result will contain the full UV-shells,
+		even if just one UV was given as a source item.
+		Otherwise, there will be only those UVs that were directly converted from items.
+	:param uv_set:
+		uv-set to check.
+
+		* None or 0 for the current set,
+		* name or number (starting from 1) to get the specific UV-set.
+
+		WARNING! Though it's possible to specify a uv-set here, the function will work MUCH faster if just currently active UV-set is used.
+	:param collapse:
+		<bool>
+
+		the opposite to flatten. Combines multiple MeshUV items to single range, if possible.
 	:return: <tuple of lists>: res[uvShell][UV]
 	"""
 	from ... import pymel

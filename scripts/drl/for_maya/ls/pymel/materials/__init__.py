@@ -210,8 +210,8 @@ class AssignedTo(_bs.ItemsProcessorBase):
 	"""
 	Get SGs assigned to given poly-/NURBS- shapes or faces.
 	"""
-	def __init__(self, items=None, selection_if_none=True):
-		super(AssignedTo, self).__init__(_tt_geo)
+	def __init__(self, items=None, selection_if_none=True, hierarchy=False):
+		super(AssignedTo, self).__init__(_tt_geo, hierarchy=hierarchy)
 		self.set_items(items, selection_if_none)
 
 	@staticmethod
