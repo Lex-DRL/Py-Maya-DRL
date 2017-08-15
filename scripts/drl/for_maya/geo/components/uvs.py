@@ -101,7 +101,7 @@ def bounding_box(items=None, selection_if_none=True):
 	:param selection_if_none: <bool> whether to use current selection if items is None.
 	:return: <floats>: (min_u, min_v), (max_u, max_v)
 	"""
-	uvs = comp.convert_poly(items, to_uv=True, flatten=True, selection_if_none=selection_if_none)
+	uvs = comp.Poly(items, selection_if_none=selection_if_none).to_uvs(flatten=True)
 	return _get_bbox(uvs)
 
 

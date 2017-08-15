@@ -62,7 +62,7 @@ def snap_point_to_point(
 	res = []
 
 	def snap_item(mesh, base_msg):
-		vtxs = comp.convert_poly(mesh, False, tv=True, flatten=True)
+		vtxs = comp.Poly(mesh, False).to_vertices(flatten=True)
 		ProgressWindow.message = base_msg + '\t\tverts: %s' % len(vtxs)
 		for vrt in vtxs:
 			p = vrt.getPosition(space=transfer_space)

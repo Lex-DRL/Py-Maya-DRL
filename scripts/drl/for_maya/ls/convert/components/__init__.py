@@ -4,21 +4,12 @@ import itertools
 from pymel import core as pm
 
 from .base_class import PolyCompConverter as Poly
+from .base_class import vfs_grouped_by_vertex, vfs_grouped_by_face
 
 from drl.for_maya.geo.components import uv_sets
 from drl.for_maya import ui
 
 from drl_common import errors as err
-
-
-def convert_poly(items=None, selection_if_none=True, **kwargs):
-	"""
-	A old-style function-wrapper for PolyConverter.
-	Left here for backward-compatibility only.
-
-	Use the convert() method of the <PolyConverter> class instead.
-	"""
-	return Poly(items, selection_if_none).convert(**kwargs)
 
 
 def _uv_shells_from_mesh(mesh, uv_set=None):

@@ -1,36 +1,134 @@
 __author__ = 'DRL'
 
+from functools import partial as _part
+
 from pymel import core as _pm
 
-from drl.for_maya.base_class import ItemsProcessorBase as __BaseProcessor
+from drl_common.utils import group_items as _group_items
 
-from drl.for_maya import py_node_types as __pnt
+from drl.for_maya.base_class import PolyProcessorBase as __BaseProcessor
 
-# transform, poly shape and all the poly component types
-_tt_poly_geo_all = tuple(
-	[__pnt.transform, __pnt.shape.poly] +
-	list(__pnt.comp.poly.any_tuple)
-)
+
+_flatten_f = _part(_pm.ls, fl=1)
+
+
+def __get_vf_id_single_shape(vertex_face, dimension_id=0):
+	"""
+	Gets the id of either vertex or face this vertex-face belongs to.
+
+	:param dimension_id:
+		<int>
+
+		* 0 - vertex
+		* 1 - face
+	:return:
+		<int>
+
+		id of a vertex/face
+	"""
+	return vertex_face.currentItemIndex()[dimension_id]
+
+
+def __get_vf_id_multi_shape(vertex_face, dimension_id=0):
+	"""
+	Gets the id of either vertex or face this vertex-face belongs to.
+
+	:param dimension_id:
+		<int>
+
+		* 0 - vertex
+		* 1 - face
+	:return:
+		<string>, like: "pSphereShape1.1"
+
+		Where number after dot is an id of a vertex/face.
+	"""
+	vf_id = vertex_face.currentItemIndex()[dimension_id]
+	return vertex_face.node().name() + '.' + str(vf_id)
+
+
+def __vfs_grouped(vertex_faces_list, single_shape=False, dimension_id=0):
+	"""
+	Takes a flat list/iterable of vertex faces (i.e., no [20:50]),
+	as PyNodes (not strings).
+
+	Returns them grouped either by the vertex or face (depending on <dimension_id> arg).
+
+	:param single_shape:
+		<bool>
+
+		Set to True, if the input is guaranteed to belong to a single shape.
+		It will work a little faster.
+	:param dimension_id:
+		<int>
+		Group by:
+
+		* 0 - vertex
+		* 1 - face
+	:return: <list of tuples>
+	"""
+	get_id = __get_vf_id_single_shape if single_shape else __get_vf_id_multi_shape
+	return _group_items(vertex_faces_list, get_id)
+
+
+def vfs_grouped_by_vertex(vertex_faces_list, single_shape=False):
+	"""
+	Takes a flat list of vertex faces.
+	Returns them grouped by the **vertex** they belong to, as a list of tuples.
+
+	:param vertex_faces_list:
+		<Flattened list/iterable of PyNode vertex-faces>
+
+		If you're unsure about any requirements, use the
+		similar method from PolyCompConverter class.
+		I.e., if you're not sure that:
+
+		* an iterable of items is given (not a single item, not a dict)
+		* it is flattened (i.e., no [25:50] items)
+		* every item is a PyNode vertex face (not just a string).
+	:param single_shape:
+		<bool>
+
+		Set to True, if the input is guaranteed to belong to a single shape.
+		It will work a little faster.
+	:return: <list of tuples>
+	"""
+	return __vfs_grouped(vertex_faces_list, single_shape, 0)  # 0 = vertex
+
+
+def vfs_grouped_by_face(vertex_faces_list, single_shape=False):
+	"""
+	Takes a flat list of vertex faces.
+	Returns them grouped by the **face** they belong to, as a list of tuples.
+
+	:param vertex_faces_list:
+		<Flattened list/iterable of PyNode vertex-faces>
+
+		If you're unsure about any requirements, use the
+		similar method from PolyCompConverter class.
+		I.e., if you're not sure that:
+
+		* an iterable of items is given (not a single item, not a dict)
+		* it is flattened (i.e., no [25:50] items)
+		* every item is a PyNode vertex face (not just a string).
+	:param single_shape:
+		<bool>
+
+		Set to True, if the input is guaranteed to belong to a single shape.
+		It will work a little faster.
+	:return: <list of tuples>
+	"""
+	return __vfs_grouped(vertex_faces_list, single_shape, 0)  # 1 = face
 
 
 class PolyCompConverter(__BaseProcessor):
 	"""
 	Poly components conversion class
 	and also the base class for all the per-component poly processors.
-	It:
-		* Overrides the constructor, specifying the allowed PyNode types for the input.
-		* Provides the methods converting the items list to a specified component type.
+	It provides the methods converting the items list to a specified component type.
 
-	:param to_hierarchy:
-		<bool> During all PolyConversions, how to convert transforms with children:
-			* True - each Transform is converted to the components of the entire hierarchy.
-			* False - only the "direct" children' components are in the result.
-		It affects only transforms in the items list.
+	It respects inherited <to_hierarchy> argument.
 	"""
-	def __init__(self, items=None, selection_if_none=True, to_hierarchy=False):
-		super(PolyCompConverter, self).__init__(_tt_poly_geo_all)
-		self.set_items(items, selection_if_none)
-		self.to_hierarchy = bool(to_hierarchy)
 
 	def convert(
 		self,
@@ -89,7 +187,7 @@ class PolyCompConverter(__BaseProcessor):
 			* vertex_face
 		"""
 		if self.to_hierarchy:
-			items = self.get_geo_items(hierarchy=True)
+			items = self.get_geo_items()
 		else:
 			items = self.items
 
@@ -119,8 +217,15 @@ class PolyCompConverter(__BaseProcessor):
 
 		res = _pm.polyListComponentConversion(items, **kw_args)
 
+		if not res:
+			return list()
+
 		if flatten or fl:
-			res = _pm.ls(res, fl=1)
+			return _flatten_f(res)  # it's already guaranteed to be PyNodes
+
+		if not isinstance(res[0], _pm.PyNode):
+			# assume: if 1st isn't a PyNode - then all of them are
+			return map(_pm.PyNode, res)
 
 		return res
 
@@ -129,6 +234,28 @@ class PolyCompConverter(__BaseProcessor):
 			flatten=flatten, internal=internal, border=border,
 			to_edge=True
 		)
+
+	def to_edges_on_uv_border(self, internal=False, include_geo_border=False):
+		"""
+		Extra method for getting a list of border edges.
+
+		It doesn't have the <flatten> argument, because the result is always flattened.
+		"""
+		edges = self.convert(
+			flatten=True, internal=internal,
+			to_edge=True
+		)
+		if not edges:
+			return list()
+
+		to_edge_uvs_f = _part(_pm.polyListComponentConversion, fromEdge=True, toUV=True)
+		is_on_uv_border = lambda x: len(_flatten_f(to_edge_uvs_f(x))) > 2
+		if include_geo_border:
+			is_border_edge = lambda x: x.isOnBoundary() or is_on_uv_border(x)
+		else:
+			is_border_edge = is_on_uv_border
+
+		return [e for e in edges if is_border_edge(e)]
 
 	def to_vertices(self, flatten=False, internal=False, border=False):
 		return self.convert(
@@ -141,6 +268,50 @@ class PolyCompConverter(__BaseProcessor):
 			flatten=flatten, internal=internal, border=border,
 			to_vertex_face=True
 		)
+
+	def to_vertex_faces_grouped_by_vertex(
+		self, internal=False, border=False
+	):
+		"""
+		Extra method.
+
+		It not just converts the given items to vertex faces,
+		but also groups them by **vertex**.
+
+		If you're absolutely sure that the provided items is already
+		a flattened list of PyNode vertex-faces, then you can use
+		a faster **vfs_grouped_by_vertex()** function instead.
+
+		:return:
+			<list of lists>
+		"""
+		vfs = self.convert(
+			flatten=True, internal=internal, border=border,
+			to_vertex_face=True
+		)
+		return vfs_grouped_by_vertex(vfs, single_shape=False)
+
+	def to_vertex_faces_grouped_by_face(
+		self, internal=False, border=False
+	):
+		"""
+		Extra method.
+
+		It not just converts the given items to vertex faces,
+		but also groups them by **face**.
+
+		If you're absolutely sure that the provided items is already
+		a flattened list of PyNode vertex-faces, then you can use
+		a faster **vfs_grouped_by_face()** function instead.
+
+		:return:
+			<list of lists>
+		"""
+		vfs = self.convert(
+			flatten=True, internal=internal, border=border,
+			to_vertex_face=True
+		)
+		return vfs_grouped_by_face(vfs, single_shape=False)
 
 	def to_faces(self, flatten=False, internal=False, border=False):
 		return self.convert(
