@@ -200,7 +200,7 @@ def __prepare_single_duplicate(src_obj, uv_set=''):
 	err.WrongTypeError(dup_shape, pm.nt.Mesh, 'duplicate shape').raise_if_needed()
 	assert isinstance(dup_shape, pm.nt.Mesh)
 
-	# also remove any to_hierarchy:
+	# also remove any hierarchy:
 	extra_children = [x for x in pm.listRelatives(dup, children=1) if x != dup_shape]
 	if extra_children:
 		pm.delete(extra_children)

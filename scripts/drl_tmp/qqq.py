@@ -201,3 +201,7 @@ legend = ax.legend(loc='upper center', shadow=True, fontsize='x-large')
 legend.get_frame().set_facecolor('#00FFCC')
 
 plt.show()
+
+
+from drl.for_maya.auto.cleanup.uv_sets import UVSets
+UVSets(kept_sets_rule=('windUVs', ('LM_out', 'LM'), 1)).remove_extra_sets()

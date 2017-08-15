@@ -77,11 +77,11 @@ def to_parents(items=None, selection_if_empty=True, fullPath=False, **lsRel_args
 
 def to_children(items=None, selection_if_empty=True, immediate_only=True, fullPath=False, **lsRel_args):
 	"""
-	Converts given list of objects/components to their to_hierarchy.
+	Converts given list of objects/components to their hierarchy.
 	:param items:
 	:param selection_if_empty: True by default. If true, and no items is provided, current selection is used.
-	:param immediate_only: True by default. If true, returns only immediate to_hierarchy.
-		Otherwise, returns also all grand-to_hierarchy, grand-grand to_hierarchy etc.
+	:param immediate_only: True by default. If true, returns only immediate hierarchy.
+		Otherwise, returns also all grand-hierarchy, grand-grand hierarchy etc.
 	:param fullPath: The result may be forced to have full path on each element.
 	:param lsRel_args: Additional arguments may be passed to Maya's listRelatives function.
 	:return: List of strings with parents' names. Empty list if nothing selected.
@@ -127,7 +127,7 @@ def to_full_paths_unique(items=None, selection_if_empty=True, **ls_args):
 
 def to_poly_hierarchy(items=None, selection_if_empty=True):
 	"""
-	Converts items to the entire polygonal hierarchy, wirh all polygonal to_hierarchy, grand-to_hierarchy etc
+	Converts items to the entire polygonal hierarchy, wirh all polygonal hierarchy, grand-hierarchy etc
 	:param selection_if_empty: True by default. If true, and no items is provided, current selection is used.
 	:return: List of strings with polygonal transforms' full paths without duplicates. Empty list if nothing selected.
 	"""
