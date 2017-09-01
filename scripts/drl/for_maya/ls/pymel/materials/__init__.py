@@ -29,6 +29,7 @@ _t_shape_nurbs = _pnt.shape.nurbs
 _t_comp_any = _pnt.comp.any
 _t_transform = _pnt.transform
 
+
 def __sg_to_mat(
 	sg, mat_type=_sg_a.MAT_SURF,
 	fallback_from_mr=True, fallback_to_mr=False

@@ -293,7 +293,7 @@ class ProgressWindow(object):
 			if not(isinstance(func_args, (list, tuple)) and len(func_args) == 3):
 				raise ValueError(
 					'The given <do_with_each_f> requires exactly 3 arguments. Got: '
-					+ str(func_args)
+					+ repr(func_args)
 				)
 
 		def _error_check_formatter_f(formatter):
@@ -315,7 +315,7 @@ class ProgressWindow(object):
 				# ... it has the wrong number of arguments
 				raise ValueError(
 					'The given <progress_message_formatter_f> requires exactly 3 arguments. Got: '
-					+ str(func_args)
+					+ repr(func_args)
 				)
 			return formatter
 

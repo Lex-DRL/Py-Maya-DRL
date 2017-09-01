@@ -98,7 +98,7 @@ class Turtle(object):
 				node = ''
 			else:
 				if len(node) > 1:
-					raise Exception('Single Turtle node expected. Multiple provided: ' + str(node))
+					raise Exception('Single Turtle node expected. Multiple provided: ' + repr(node))
 				node = node[0]
 
 		if self.__initialisation:
@@ -278,7 +278,7 @@ class Turtle(object):
 		]
 		if extra_replacements:
 			if not isinstance(extra_replacements, (list, tuple, set)):
-				raise Exception('Wrong datatype for argument <extra_replacements>: ' + str(extra_replacements))
+				raise Exception('Wrong datatype for argument <extra_replacements>: ' + repr(extra_replacements))
 			replacements.extend(extra_replacements)
 		for rep in replacements:
 			# filename = 'shapes_tpIllumination.3'
@@ -443,7 +443,7 @@ class BakeSet(object):
 		else:
 			# BakeSet doesn't exist
 			if not create_if_dont_exist:
-				raise Exception("Silent BakeSet creation is disabled, and given <obj> doesn't exist: " + str(obj))
+				raise Exception("Silent BakeSet creation is disabled, and given <obj> doesn't exist: " + repr(obj))
 			obj = pm.sets(name=proper_name, empty=True)
 
 		obj = BakeSet.assert_set_node(obj)
@@ -1132,7 +1132,7 @@ class BakeSet(object):
 		# Probably with PyNodes or strings.
 
 		if len(objs) == 1 and BakeSet.exists(objs[0]):
-			raise Exception('At least one object is expected. Only set provided: ' + str(objs[0]))
+			raise Exception('At least one object is expected. Only set provided: ' + repr(objs[0]))
 		# now ^ there should be either multiple object, or one non-ObjectSet obj
 		return objs
 
@@ -1557,9 +1557,9 @@ class Sequence(object):
 			if isinstance(frames, tuple):
 				frames = list(frames)
 			if not isinstance(frames, list):
-				raise Exception('List of size 2 is expected as <frames> argument. Got: ' + str(frames))
+				raise Exception('List of size 2 is expected as <frames> argument. Got: ' + repr(frames))
 			if len(frames) > 2:
-				raise Exception('Wrong number of items in <frames> argument. 2 expected. Got: ' + str(frames))
+				raise Exception('Wrong number of items in <frames> argument. 2 expected. Got: ' + repr(frames))
 			elif len(frames) == 1:
 				frames = [frames[0], frames[0]]
 			assert len(frames) == 2

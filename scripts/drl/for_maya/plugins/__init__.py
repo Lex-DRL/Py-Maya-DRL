@@ -18,7 +18,7 @@ class PluginBaseError(Exception):
 		"""
 		formatter = 'Error in plugin <%s>'
 		if not isinstance(plugin, (str, unicode)):
-			plugin = str(plugin)
+			plugin = repr(plugin)
 		msg = formatter % plugin
 		super(PluginBaseError, self).__init__(msg)
 		self._msg_formatter = formatter
@@ -48,7 +48,7 @@ class PluginBaseError(Exception):
 		:param plugin: <str> plugin name or path.
 		"""
 		if not isinstance(plugin, (str, unicode)):
-			plugin = str(plugin)
+			plugin = repr(plugin)
 		self._plugin = plugin
 		self._update_message()
 
@@ -88,7 +88,10 @@ class Plugin(object):
 	The constructor takes exactly one string argument: either a plugin name or it's full path.
 	"""
 	def __init__(self, plugin):
-		super(Plugin, self).__init__()
+		# for some reason, the default initialiser throws an error:
+		# TypeError: super(type, obj): obj must be an instance or subtype of type
+		# so:
+		# super(Plugin, self).__init__()
 		self.__name = ''
 		self.__path = ''
 		self.__id = ''

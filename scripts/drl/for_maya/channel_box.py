@@ -26,7 +26,7 @@ class ChannelBoxData(object):
 
 		if isinstance(val, pm.uitypes.ChannelBox):
 			if not val:
-				raise Exception("The provided Channel Box doesn't exist: " + str(val))
+				raise Exception("The provided Channel Box doesn't exist: " + repr(val))
 			self.__cb = val
 			return
 
@@ -34,7 +34,7 @@ class ChannelBoxData(object):
 			val = ChannelBoxData.main_box_ui_name()
 		elif not isinstance(val, str_types):
 			raise Exception(
-				'The <channel_box> property needs to be either string or uitypes.ChannelBox. Got: ' + str(val)
+				'The <channel_box> property needs to be either string or uitypes.ChannelBox. Got: ' + repr(val)
 			)
 		self.__cb = pm.uitypes.ChannelBox(val)
 

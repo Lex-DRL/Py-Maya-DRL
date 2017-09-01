@@ -48,7 +48,7 @@ def __get_color_comp_arg(arg):
 			err.WrongTypeError(arg[0], (int, float), 'min range value', 'int or float').raise_if_needed()
 			err.WrongTypeError(arg[1], (int, float), 'max range value', 'int or float').raise_if_needed()
 			return arg
-		raise IndexError('Exactly 2 items should be in the provided tuple for range. Got: ' + str(arg))
+		raise IndexError('Exactly 2 items should be in the provided tuple for range. Got: ' + repr(arg))
 
 	raise err.WrongTypeError(arg, types_name='float, int, tuple of 2 ints or None')
 

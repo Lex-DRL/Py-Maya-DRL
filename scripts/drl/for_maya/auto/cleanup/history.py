@@ -104,7 +104,9 @@ def delete_non_deformer(items=None, selection_if_none=True, before_deformers_onl
 		<bool>
 
 		Remove only the part of history that occur before the deformers.
-			* When **False** (default), all the non-deformer modeling history is removed.
+			*
+				When **False** (default), all the non-deformer modeling history is removed.
+				No matter if it's before or after deformers.
 	"""
 	objects = __to_nodes(items, selection_if_none)
 	if not objects:
@@ -150,10 +152,13 @@ def delete_smart(items=None, selection_if_none=True, before_deformers_only=False
 	:param items:
 	:param selection_if_none:
 	:param before_deformers_only:
-		<bool>, affects deformed items only.
+		<bool>
 
-		Remove only the part of history that occur before the deformers.
-			* When **False** (default), all the non-deformer modeling history is removed.
+		For deformed objects, tells to remove only the part of history
+		that occur before the deformers.
+			*
+				When **False** (default), all the non-deformer modeling history is removed.
+				No matter if it's before or after deformers.
 	:return:
 		<list of PyNodes>
 

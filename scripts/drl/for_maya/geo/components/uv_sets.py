@@ -83,7 +83,7 @@ def __error_check_object_and_set(obj, uv_set, all_sets=None):
 			raise NoSuchUVSetError(obj, uv_set)
 	else:
 		raise TypeError(
-			'Either int or string expected for <uv_set> argument. Got: ' + str(uv_set)
+			'Either int or string expected for <uv_set> argument. Got: ' + repr(uv_set)
 		)
 	assert isinstance(uv_set, (str, unicode))
 	return obj, uv_set
@@ -135,7 +135,13 @@ def set_current(items=None, uv_set=None, selection_if_none=True):
 	Then nothing is performed and empty list is returned with no error.
 
 	:param items: <list> Source elements (objects/components) of a scene to be converted.
-	:param uv_set: (int / string) The number or the name for the set
+	:param uv_set:
+		<int / string>
+
+		The number or the name for the set:
+			* None/0 - current (don't change)
+			* <str> - name
+			* <int> - 1-based UV-set number
 	:param selection_if_none: <bool> whether to use current selection if items is None.
 	:return: list of <Mesh> shapes for which UV-set has been changed.
 	"""
@@ -209,7 +215,7 @@ def copy_to_set(objects=None, to_set=1, from_set='', selection_if_none=True, **k
 	if errors:
 		print (
 			'Unable to copy sets for following objects:\n\t'
-			+ '\n\t'.join([str(x) for x in errors])
+			+ '\n\t'.join([repr(x) for x in errors])
 		)
 	pm.select(res, r=1)
 

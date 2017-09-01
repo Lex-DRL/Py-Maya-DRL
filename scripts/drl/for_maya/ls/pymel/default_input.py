@@ -105,7 +105,7 @@ def handle_single_obj(obj=None, selection_if_none=True, show_errors=True, **ls_s
 				raise Exception("Empty list is given. Single expected.")
 			return None
 		if len(obj) > 1 and show_errors:
-			raise Exception("Single object expected. Multiple provided: " + str(obj))
+			raise Exception("Single object expected. Multiple provided: " + repr(obj))
 		obj = obj[0]
 
 	if isinstance(obj, (str, unicode)):
