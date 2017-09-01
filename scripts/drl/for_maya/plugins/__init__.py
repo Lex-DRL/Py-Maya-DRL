@@ -88,7 +88,10 @@ class Plugin(object):
 	The constructor takes exactly one string argument: either a plugin name or it's full path.
 	"""
 	def __init__(self, plugin):
-		super(Plugin, self).__init__()
+		# for some reason, the default initialiser throws an error:
+		# TypeError: super(type, obj): obj must be an instance or subtype of type
+		# so:
+		# super(Plugin, self).__init__()
 		self.__name = ''
 		self.__path = ''
 		self.__id = ''

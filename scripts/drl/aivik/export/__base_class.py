@@ -377,7 +377,9 @@ class BaseExport(object):
 
 	def un_turtle(self):
 		from drl.for_maya.plugins import Plugin
-		Plugin('Turtle').unload(remove_dependent_nodes=True)
+		ttl = Plugin('Turtle')
+		if ttl.registered() and ttl.loaded():
+			ttl.unload(remove_dependent_nodes=True)
 		return self
 
 	def mat_faces_to_obj(self):
