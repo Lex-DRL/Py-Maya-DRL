@@ -32,7 +32,7 @@ class Preset(object):
 
 	def __set_name(self, name):
 		if not isinstance(name, str_types):
-			raise Exception('Wrong type for <name>. String expected, got: ' + str(name))
+			raise Exception('Wrong type for <name>. String expected, got: ' + repr(name))
 		if name == '':
 			raise Exception('Empty string provided as preset name.')
 		self._name = name
@@ -128,7 +128,7 @@ class Export(object):
 
 	def __set_path(self, path):
 		if not isinstance(path, str_types):
-			raise Exception('Wrong type for <path> property. String expected, got: ' + str(path))
+			raise Exception('Wrong type for <path> property. String expected, got: ' + repr(path))
 		if not path:
 			raise Exception('Empty string is given as <path> property.')
 		self._path = path.replace('\\', '/')

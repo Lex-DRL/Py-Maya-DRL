@@ -18,7 +18,7 @@ class PluginBaseError(Exception):
 		"""
 		formatter = 'Error in plugin <%s>'
 		if not isinstance(plugin, (str, unicode)):
-			plugin = str(plugin)
+			plugin = repr(plugin)
 		msg = formatter % plugin
 		super(PluginBaseError, self).__init__(msg)
 		self._msg_formatter = formatter
@@ -48,7 +48,7 @@ class PluginBaseError(Exception):
 		:param plugin: <str> plugin name or path.
 		"""
 		if not isinstance(plugin, (str, unicode)):
-			plugin = str(plugin)
+			plugin = repr(plugin)
 		self._plugin = plugin
 		self._update_message()
 

@@ -83,7 +83,7 @@ def __error_check_object_and_set(obj, uv_set, all_sets=None):
 			raise NoSuchUVSetError(obj, uv_set)
 	else:
 		raise TypeError(
-			'Either int or string expected for <uv_set> argument. Got: ' + str(uv_set)
+			'Either int or string expected for <uv_set> argument. Got: ' + repr(uv_set)
 		)
 	assert isinstance(uv_set, (str, unicode))
 	return obj, uv_set
@@ -215,7 +215,7 @@ def copy_to_set(objects=None, to_set=1, from_set='', selection_if_none=True, **k
 	if errors:
 		print (
 			'Unable to copy sets for following objects:\n\t'
-			+ '\n\t'.join([str(x) for x in errors])
+			+ '\n\t'.join([repr(x) for x in errors])
 		)
 	pm.select(res, r=1)
 

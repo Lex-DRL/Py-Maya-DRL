@@ -25,10 +25,10 @@ class Node(object):
 			self.__full_path = value.full_path
 			return
 		if not isinstance(value, (str, unicode, list, tuple)):
-			raise Exception('Node name(s) expected. Provided: ' + str(value))
+			raise Exception('Node name(s) expected. Provided: ' + repr(value))
 		long_paths = cmds.ls(value, long=True)
 		if not (long_paths and cmds.objExists(value)):
-			raise Exception("Given node doesn't exist: " + str(value))
+			raise Exception("Given node doesn't exist: " + repr(value))
 		self.__full_path = long_paths[0]
 
 	@property

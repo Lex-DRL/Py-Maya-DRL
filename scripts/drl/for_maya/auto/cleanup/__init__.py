@@ -114,10 +114,11 @@ def create_debug_normals_layer_if_needed(
 	allowing to easily check whether mesh normals face the right direction.
 
 	:param layer_name: string, the name of the debug layer (the actual layer will get '_rl' postfix). Default: 'testNormals'
-	:return: tuple: (
-		0: Layer's PyNode
-		1: bool: True if this layer was created, False if it was already present in the scene.
-	)
+	:return:
+		tuple: (
+			* Layer's PyNode
+			* bool: True if this layer was created, False if it was already present in the scene.
+		)
 	"""
 	from drl_common import errors as err
 	err.NotStringError(layer_name, 'layer_name').raise_if_needed()
@@ -226,7 +227,7 @@ def cleanup_all(
 	if debug_normals:
 		rl, created = create_debug_normals_layer_if_needed(switch_to_debug_lr)
 		if created:
-			print '\nCreated <debug layer> for testing normals:\n' + str(rl)
+			print '\nCreated <debug layer> for testing normals:\n' + repr(rl)
 
 	if res:
 		pm.select(res, r=True)

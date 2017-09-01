@@ -211,7 +211,7 @@ class GroupedShapes(object):
 			self.mat = ShapesGroup('caused by material')
 			self.big = ShapesGroup('objects out of limit')
 		def __repr__(self):
-			return '< GroupedShapes.__ErrorGroup:\n%s,\n%s\n>' % (str(self.mat), str(self.big))
+			return '< GroupedShapes.__ErrorGroup:\n%s,\n%s\n>' % (repr(self.mat), repr(self.big))
 		def __str__(self):
 			return self.__repr__()
 		def __call__(self, *args, **kwargs):
