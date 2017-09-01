@@ -9,7 +9,7 @@ from drl.for_maya.ui import dialogs
 from drl.for_maya.plugins import fbx
 from drl.for_maya.auto import cleanup as cl
 
-from . import messages as m
+from .messages import common as m
 
 from drl.for_maya.py_node_types import transform as _t_transform
 

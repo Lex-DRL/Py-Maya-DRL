@@ -9,7 +9,7 @@ from drl.for_maya.ls import pymel as ls
 from drl.for_maya.ui import dialogs
 from drl.for_maya.plugins import fbx
 
-from . import messages as m
+from .messages import island as m, common as m_c
 
 from drl.for_maya.py_node_types import transform as _t_transform
 
@@ -132,9 +132,9 @@ class IslandsPVE(BaseExport):
 				choice = dialogs.confirm(
 					title=m.TREES_TITLE, message=msg,
 					icon=dialogs.confirm_icon.QUESTION,
-					yes=(m.YES, m.TREES_YES_TIP),
-					no=(m.NO, m.TREES_NO_TIP),
-					extra_buttons=((m.YES_ALL, m.TREES_YES_ALL_TIP),),
+					yes=(m_c.YES, m.TREES_YES_TIP),
+					no=(m_c.NO, m.TREES_NO_TIP),
+					extra_buttons=((m_c.YES_ALL, m.TREES_YES_ALL_TIP),),
 					default_if_not_maya=1
 				)
 				if choice == 2:
@@ -215,9 +215,9 @@ class IslandsPVE(BaseExport):
 					choice = dialogs.confirm(
 						title=m.COLOR_SETS_TITLE, message=msg,
 						icon=dialogs.confirm_icon.QUESTION,
-						yes=(m.YES, m.COLOR_SETS_YES_TIP),
+						yes=(m_c.YES, m.COLOR_SETS_YES_TIP),
 						no=(m.COLOR_SETS_CANCEL, m.COLOR_SETS_CANCEL_TIP),
-						extra_buttons=((m.NO, m.COLOR_SETS_NO_TIP),),
+						extra_buttons=((m_c.NO, m.COLOR_SETS_NO_TIP),),
 						default_if_not_maya=1
 					)
 					if not choice:
