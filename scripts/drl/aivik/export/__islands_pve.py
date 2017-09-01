@@ -44,6 +44,37 @@ _re_kept_colors_tuple_ignore_case = tuple(
 )
 
 
+def _match_as_trees_group(parent_name, child):
+	"""
+	Check if the given child object seems to be a <Trees> group under <Island> group.
+
+	:param parent_name: <str> the name of the parent (Island group).
+	:param child: <PyNode:Transform> Object located right under island group in hierarchy.
+	:return: <int>:
+	* 0 - it's just an abitrary island objec | another group (i.e., Roads)
+	* 1 - Match, it's a Trees group
+	* 2 - Partial match: Child's name is '*_Trees', but beginning doesn't match the island-group's name.
+	"""
+	parent_name = err.NotStringError(parent_name, 'parent_name').raise_if_needed_or_empty()
+	child = err.WrongTypeError(child, _t_transform, 'child').raise_if_needed()
+	child_nm = ls.short_item_name(child)
+	match = _match_trees.match(child_nm)
+	if match is None:
+		return 0
+	# we've got match now
+	if not parent_name.endswith(match.group(1)):
+		return 2
+	return 1
+
+
+def _match_as_enemy_base(island_child):
+	island_child = err.WrongTypeError(island_child, _t_transform, 'island_child').raise_if_needed()
+	child_nm = ls.short_item_name(island_child).lower()
+	return bool(
+		_match_enemy_base.match(child_nm)
+	)
+
+
 class IslandsPVE(BaseExport):
 	def export(self, overwrite=2, map1_res=2048):
 		self.un_turtle().del_not_exported().render_layers_cleanup()
@@ -57,37 +88,6 @@ class IslandsPVE(BaseExport):
 		self._del_unused_nodes()
 		return self.load_preset().export_dialog(overwrite)
 
-	@staticmethod
-	def _match_as_trees_group(parent_name, child):
-		"""
-		Check if the given child object seems to be a <Trees> group under <Island> group.
-
-		:param parent_name: <str> the name of the parent (Island group).
-		:param child: <PyNode:Transform> Object located right under island group in hierarchy.
-		:return: <int>:
-		* 0 - it's just an abitrary island objec | another group (i.e., Roads)
-		* 1 - Match, it's a Trees group
-		* 2 - Partial match: Child's name is '*_Trees', but beginning doesn't match the island-group's name.
-		"""
-		parent_name = err.NotStringError(parent_name, 'parent_name').raise_if_needed_or_empty()
-		child = err.WrongTypeError(child, _t_transform, 'child').raise_if_needed()
-		child_nm = ls.short_item_name(child)
-		match = _match_trees.match(child_nm)
-		if match is None:
-			return 0
-		# we've got match now
-		if not parent_name.endswith(match.group(1)):
-			return 2
-		return 1
-
-	@staticmethod
-	def _match_as_enemy_base(island_child):
-		island_child = err.WrongTypeError(island_child, _t_transform, 'island_child').raise_if_needed()
-		child_nm = ls.short_item_name(island_child).lower()
-		return bool(
-			_match_enemy_base.match(child_nm)
-		)
-
 	def get_enemy_base_transforms(self):
 		"""
 		All the EnemyBase root transform. It's either an EnemyBase object itself, or it's group.
@@ -95,7 +95,7 @@ class IslandsPVE(BaseExport):
 		:return: <list of PyNodes> Transforms.
 		"""
 		children = self.get_objects_child_transforms()
-		return [x for x in children if IslandsPVE._match_as_enemy_base(x)]
+		return [x for x in children if _match_as_enemy_base(x)]
 
 	def get_trees(self):
 		"""
@@ -123,7 +123,7 @@ class IslandsPVE(BaseExport):
 				:param ignore_warning: partial_match_ok, silence the following warnings
 				:return: <bool> is it a trees group, <bool> partial_match_ok
 				"""
-				match = IslandsPVE._match_as_trees_group(parent_name, child)
+				match = _match_as_trees_group(parent_name, child)
 				if match in (0, 1):
 					return bool(match), ignore_warning
 
