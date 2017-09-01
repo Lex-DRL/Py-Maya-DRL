@@ -10,7 +10,11 @@ def meshes(match_regex=None):
 	Select source trees (transforms) first, their shapes will replace
 	all the other trees in the scene, if they're named correspondingly.
 
-	:param match_regex: Optional regular expression that determines the rule to match new object's name with the old one. If none provided, default is used.
+	:param match_regex:
+		Optional regular expression that determines the rule to match
+		new object's name with the old one.
+
+		If none provided, default is used.
 	:return: list of updated transforms
 	"""
 	import re
@@ -61,12 +65,16 @@ def meshes_and_transforms(match_regex=None):
 	all the other trees in the scene, if they're named correspondingly.
 
 	Each tree has to be parented to a transform representing the old tree mesh. I.e.:
-	* to_parent - old tree geo, with old pivot/transform
+	* parent - old tree geo, with old pivot/transform
 	* child - new tree geo (shape is changed/offset relatively to pivot/transform)
 
-	to_parent and child need to look the same (but, obviously, child's transform is offset)
+	Parent and child need to look the same (but, obviously, child's transform is offset)
 
-	:param match_regex: Optional regular expression that determines the rule to match new object's name with the old one. If none provided, default is used.
+	:param match_regex:
+		Optional regular expression that determines the rule to match
+		new object's name with the old one.
+
+		If none provided, default is used.
 	:return: list of updated transforms
 	"""
 	import re

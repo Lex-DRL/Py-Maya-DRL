@@ -103,7 +103,7 @@ class BaseExport(object):
 
 	@staticmethod
 	def children(obj):
-		return list(set(
+		return sorted(set(
 			ls.to_children(
 				obj, False,
 				from_shape_transforms=True, keep_source_objects=False
@@ -127,10 +127,16 @@ class BaseExport(object):
 
 	def get_all_exported_objects(self, transforms_only=True, keep_order=False):
 		"""
-		The list of entire hierarchy of exported objects. I.e., specified objects with their children, grand-children etc.
+		The list of entire hierarchy of exported objects.
+		I.e., specified objects with their children, grand-children etc.
 
-		:param transforms_only: When True, only exported transforms (not their shapes) are returned.
-		:param keep_order: Leave it to false if the order doesn't matter. It will work faster.
+		Shapes not included in the result. If shapes were given as <objects>,
+		they're turned to their transforms (with other children).
+
+		:param transforms_only:
+			When True, only exported transforms (not their shapes) are returned.
+		:param keep_order:
+			Leave it to false if the order doesn't matter. It will work faster.
 		:return: <list of PyNodes>
 		"""
 		objects = self._objects
@@ -141,7 +147,7 @@ class BaseExport(object):
 		if keep_order:
 			kw_args['remove_duplicates'] = True
 			return ls.to_hierarchy(objects, False, **kw_args)
-		return list(set(
+		return sorted(set(
 			ls.to_hierarchy(objects, False, **kw_args)
 		))
 
@@ -170,7 +176,7 @@ class BaseExport(object):
 		self._objects = geo.un_parent(self._objects, False)
 		return self
 
-	def cleanup_uv_sets(self, kept_sets_rule=None):
+	def uv_sets_cleanup(self, kept_sets_rule=None):
 		"""
 		Cleans up UV-sets on the meshes selected for export.
 			* ensures the 1st set is named "map1".
@@ -178,8 +184,11 @@ class BaseExport(object):
 
 		:param kept_sets_rule: e.g.: (1, ('LM_out', 'LM'), 'windUVs')
 		"""
+		if kept_sets_rule is None:
+			kept_sets_rule = (1, ('LM_out', 'LM'), 'windUVs')
 		if not kept_sets_rule:
 			return self
+
 		exported = self.get_all_exported_objects(False)
 		if not exported:
 			return self
@@ -188,12 +197,13 @@ class BaseExport(object):
 		cleaner.remove_extra_sets()
 		return self
 
-	def _cleanup_color_sets(self, match_kept_colors_f=None):
+	def _color_sets_cleanup(self, match_kept_colors_f=None):
 		"""
-		Removes color sets for any object that don't match to the rule described by <match_kept_colors_f>.
+		Removes color sets for any object that don't match to the given rule.
 
 		:param match_kept_colors_f:
-			<function with 1 argument> the rule, returning True if the object needs it's color set to be kept.
+			<function with 1 argument> the rule,
+			returning True if the object needs it's color set to be kept.
 				* the checked object (PyNode, Transform) is passed as the argument.
 		"""
 		from drl.for_maya.geo.components import color_sets as cs
@@ -212,15 +222,15 @@ class BaseExport(object):
 		cs.delete_all_sets(removed_for, False)
 		return self
 
-	def del_object_sets(self):
+	def _del_object_sets(self):
 		cl.del_all_object_sets()
 		return self
 
-	def del_unused_nodes(self):
+	def _del_unused_nodes(self):
 		cl.del_unused_nodes()
 		return self
 
-	def combine_child_groups(self, ends_with='_islanddn', matching_f=None):
+	def _combine_child_groups(self, ends_with='_islanddn', matching_f=None):
 		"""
 		Under each marked object, find child groups matching the condition
 		and merge each of them to a single object, with transforms matching to the parent.
@@ -335,48 +345,57 @@ class BaseExport(object):
 		I.e., for deformed models, <Delete Non-Deformer History> is used.
 
 		:param before_deformers_only:
-			<bool>, affects deformed objects only.
+			<bool>
 
-			Remove only the part of history that occur before the deformers.
-				* When **False** (default), all the non-deformer modeling history is removed.
+			For deformed objects, tells to remove only the part of history
+			that occur before the deformers.
+				*
+					When **False** (default), all the non-deformer modeling history is removed.
+					No matter if it's before or after deformers.
 		"""
 		objects = self.get_all_exported_objects()
 		cl.history.delete_smart(objects, False, before_deformers_only)
 		return self
 
 
+_island_match_trees = re.compile(r'^([\d_A-Za-z]+)_Trees\d*$')
+_island_match_enemy_base = re.compile(r'.*enemy[\dA-Za-z]*base.*')
+_island_kept_colors_name_parts = (
+	'IslandUp',
+	'GroundPatch',
+	'Rock',
+	'Flag',
+	'IslandDn'
+)
+# exact-match functions for "keep colors" check:
+_island_re_kept_colors_tuple_exact_case = tuple(
+	re.compile(
+		r'^.*_{0}[\dA-Za-z]*$'.format(x)
+	)
+	for x in _island_kept_colors_name_parts
+)
+# (lowercase-comparison match, expected name) functions:
+_island_re_kept_colors_tuple_ignore_case = tuple(
+	(
+		re.compile(
+			r'^.*_{0}[\dA-Za-z]*$'.format(x.lower())
+		),
+		x
+	)
+	for x in _island_kept_colors_name_parts
+)
+
 
 class IslandsPVE(BaseExport):
-	_match_trees = re.compile(r'^([\d_A-Za-z]+)_Trees\d*$')
-	_match_enemy_base = re.compile(r'.*enemy[\dA-Za-z]*base.*')
-	_kept_colors_name_parts = (
-		'IslandUp',
-		'GroundPatch',
-		'Rock',
-		'Flag',
-		'IslandDn'
-	)
-	# exact-match functions for "keep colors" check:
-	_re_kept_colors_tuple_exact_case = tuple(map(
-		lambda x: re.compile(
-			r'^.*_{0}[\dA-Za-z]*$'.format(x)
-		),
-		_kept_colors_name_parts
-	))
-	# (lowercase-comparison match, expected name) functions:
-	_re_kept_colors_tuple_ignore_case = tuple(map(
-		lambda x: (re.compile(
-			r'^.*_{0}[\dA-Za-z]*$'.format(x.lower())
-		), x),
-		_kept_colors_name_parts
-	))
-
-	def export_as_pve_islands(self, overwrite=2):
-		exp = self.un_parent().del_trees_mesh().combine_islands_dn().combine_waterfalls()
+	def export(self, overwrite=2):
+		exp = self.un_parent().del_trees_mesh().del_enemy_base_mesh()
+		exp.combine_islands_dn().combine_waterfalls()
+		exp.uv_sets_cleanup().color_sets_cleanup()
+		exp.del_history_smart()._del_unused_nodes()._del_object_sets()
 		return exp.load_preset().export_dialog(overwrite)
 
 	@staticmethod
-	def match_as_trees_group(parent_name, child):
+	def _match_as_trees_group(parent_name, child):
 		"""
 		Check if the given child object seems to be a <Trees> group under <Island> group.
 
@@ -390,7 +409,7 @@ class IslandsPVE(BaseExport):
 		parent_name = err.NotStringError(parent_name, 'parent_name').raise_if_needed_or_empty()
 		child = err.WrongTypeError(child, _t_transform, 'child').raise_if_needed()
 		child_nm = ls.short_item_name(child)
-		match = IslandsPVE._match_trees.match(child_nm)
+		match = _island_match_trees.match(child_nm)
 		if match is None:
 			return 0
 		# we've got match now
@@ -399,11 +418,11 @@ class IslandsPVE(BaseExport):
 		return 1
 
 	@staticmethod
-	def match_as_enemy_base(island_child):
+	def _match_as_enemy_base(island_child):
 		island_child = err.WrongTypeError(island_child, _t_transform, 'island_child').raise_if_needed()
 		child_nm = ls.short_item_name(island_child).lower()
 		return bool(
-			IslandsPVE._match_enemy_base.match(child_nm)
+			_island_match_enemy_base.match(child_nm)
 		)
 
 	def get_enemy_base_transforms(self):
@@ -413,7 +432,7 @@ class IslandsPVE(BaseExport):
 		:return: <list of PyNodes> Transforms.
 		"""
 		children = self.get_objects_child_transforms()
-		return [x for x in children if IslandsPVE.match_as_enemy_base(x)]
+		return [x for x in children if IslandsPVE._match_as_enemy_base(x)]
 
 	def get_trees(self):
 		"""
@@ -441,7 +460,7 @@ class IslandsPVE(BaseExport):
 				:param ignore_warning: partial_match_ok, silence the following warnings
 				:return: <bool> is it a trees group, <bool> partial_match_ok
 				"""
-				match = IslandsPVE.match_as_trees_group(parent_name, child)
+				match = IslandsPVE._match_as_trees_group(parent_name, child)
 				if match in (0, 1):
 					return bool(match), ignore_warning
 
@@ -513,7 +532,7 @@ class IslandsPVE(BaseExport):
 			pm.delete(pm.listRelatives(t, children=1))
 		return self
 
-	def cleanup_color_sets(self):
+	def color_sets_cleanup(self):
 		"""
 		Removes color sets for anything with not matching name.
 		Matching names are listed in _kept_colors_name_parts.
@@ -524,13 +543,13 @@ class IslandsPVE(BaseExport):
 		def _is_color_kept(node):
 			nm = ls.short_item_name(node)
 			is_exact_match = any([
-				x.match(nm) for x in IslandsPVE._re_kept_colors_tuple_exact_case
+				x.match(nm) for x in _island_re_kept_colors_tuple_exact_case
 			])
 			if is_exact_match:
 				return True
 			# exact match not found, trying a case-insensitive match:
 			nm_lower = nm.lower()
-			for m_f, m_nm in IslandsPVE._re_kept_colors_tuple_ignore_case:
+			for m_f, m_nm in _island_re_kept_colors_tuple_ignore_case:
 				if m_f.match(nm_lower):
 					msg = m.COLOR_SETS_MESSAGE.format(nm, m_nm)
 					choice = dialogs.confirm(
@@ -547,13 +566,13 @@ class IslandsPVE(BaseExport):
 						return True
 			return False
 
-		self._cleanup_color_sets(_is_color_kept)
+		self._color_sets_cleanup(_is_color_kept)
 		return self
 
 	def combine_islands_dn(self):
-		return self.combine_child_groups()
+		return self._combine_child_groups()
 
 	def combine_waterfalls(self):
-		return self.combine_child_groups(
+		return self._combine_child_groups(
 			matching_f=lambda x: ls.short_item_name(x).lower().rstrip('1234567890s').endswith('_waterfall')
 		)
