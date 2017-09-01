@@ -56,7 +56,8 @@ def all_faces_to_shape(items=None, selection_if_none=True):
 		grouped = _mat.AssignedTo(shape, False).grouped_by_sg()
 		if len(grouped) != 2 or grouped[-1][1]:
 			return
-		# we have a single SG connected to the shape
+
+		# now we know a single SG connected to the shape ...
 
 		sg, s_items = grouped[0]
 		if not s_items:

@@ -106,7 +106,7 @@ class BaseExport(object):
 				obj, False,
 				from_shape_transforms=True, keep_source_objects=False
 			)
-		))
+		), key=ls.long_item_name)
 
 	def get_objects_child_transforms(self):
 		"""
@@ -143,11 +143,10 @@ class BaseExport(object):
 			keep_shapes=not transforms_only
 		)
 		if keep_order:
-			kw_args['remove_duplicates'] = True
-			return ls.to_hierarchy(objects, False, **kw_args)
+			return ls.to_hierarchy(objects, False, remove_duplicates=True, **kw_args)
 		return sorted(set(
-			ls.to_hierarchy(objects, False, **kw_args)
-		))
+			ls.to_hierarchy(objects, False, remove_duplicates=False, **kw_args)
+		), key=ls.long_item_name)
 
 	def del_not_exported(self):
 		"""
