@@ -40,7 +40,9 @@ class Buildings(BaseExport):
 		self.un_turtle().del_not_exported().render_layers_cleanup()
 		self.un_parent()
 		self.uv_sets_cleanup().uvs_sew(map1_res).color_sets_cleanup()
-		self.del_history_smart().mat_faces_to_obj()
+		self.del_history_smart()
+		# TODO: replace with forcefully-set initial mat:
+		# self.mat_faces_to_obj()  # takes too long to execute.
 		self.del_not_exported()  # one more time, if anything is left after un-parenting
 		self._del_object_sets()
 		self._del_unused_nodes()

@@ -95,7 +95,9 @@ class IslandsPVE(BaseExport):
 		self.combine_islands_dn().combine_waterfalls()
 		self.un_parent()
 		self.uv_sets_cleanup().uvs_sew(map1_res).color_sets_cleanup()
-		self.del_history_smart().mat_faces_to_obj()
+		self.del_history_smart()
+		# TODO: replace with forcefully-set initial mat:
+		# self.mat_faces_to_obj()  # takes too long to execute.
 		self.del_not_exported()  # one more time, if anything is left after un-parenting
 		self._del_object_sets()
 		self._del_unused_nodes()
@@ -252,3 +254,39 @@ class IslandsPVE(BaseExport):
 		return self._combine_child_groups(
 			matching_f=lambda x: ls.short_item_name(x).lower().rstrip('1234567890s').endswith('_waterfall')
 		)
+
+
+#only for debugging:
+from time import time as _tm
+
+
+class _Counter(object):
+	"""
+	Measures the time that a given function took to execute.
+	Prints the log into output.
+
+	Optional second argument for methods can contain a string which will be displayed
+	instead of function's repr() (for lambdas etc.).
+	"""
+	def __init__(self):
+		super(_Counter, self).__init__()
+		self.t = _tm()
+
+	def start(self, f, f_name=''):
+		self.t = _tm()
+		f_name = f_name or repr(f)
+		print f_name + ':'
+		return f()
+
+	def mid(self, f, f_name=''):
+		c = _tm()
+		print c - self.t
+		self.t = c
+		f_name = f_name or repr(f)
+		print '\n' + f_name + ':'
+		return f()
+
+	def end(self, f, f_name=''):
+		res = self.mid(f, f_name)
+		print _tm() - self.t
+		return res
