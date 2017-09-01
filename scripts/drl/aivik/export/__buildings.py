@@ -23,6 +23,14 @@ _kept_colors_name_starts_f = tuple(
 
 
 class Buildings(BaseExport):
+	def export(self, overwrite=2, map1_res=2048):
+		self.un_turtle().un_parent()
+		self.uv_sets_cleanup().uvs_sew(map1_res).color_sets_cleanup()
+		self.del_history_smart().mat_faces_to_obj()
+		self._del_unused_nodes()
+		self._del_object_sets()
+		return self.load_preset().export_dialog(overwrite)
+
 	@staticmethod
 	def do_keep_color(obj):
 		"""

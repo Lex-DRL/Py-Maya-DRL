@@ -135,7 +135,13 @@ def set_current(items=None, uv_set=None, selection_if_none=True):
 	Then nothing is performed and empty list is returned with no error.
 
 	:param items: <list> Source elements (objects/components) of a scene to be converted.
-	:param uv_set: (int / string) The number or the name for the set
+	:param uv_set:
+		<int / string>
+
+		The number or the name for the set:
+			* None/0 - current (don't change)
+			* <str> - name
+			* <int> - 1-based UV-set number
 	:param selection_if_none: <bool> whether to use current selection if items is None.
 	:return: list of <Mesh> shapes for which UV-set has been changed.
 	"""

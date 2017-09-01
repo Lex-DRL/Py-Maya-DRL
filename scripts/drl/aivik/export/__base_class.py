@@ -135,6 +135,7 @@ class BaseExport(object):
 			When True, only exported transforms (not their shapes) are returned.
 		:param keep_order:
 			Leave it to false if the order doesn't matter. It will work faster.
+			When False, the processed objects are sorted alphabetically.
 		:return: <list of PyNodes>
 		"""
 		objects = self._objects
@@ -194,6 +195,14 @@ class BaseExport(object):
 		cleaner.remove_extra_sets()
 		return self
 
+	def uvs_sew(self, resolution=2048, pixel_fraction=0.6, uv_set=1):
+		cl.UVs(
+			self.get_all_exported_objects(transforms_only=True),
+			selection_if_none=False, hierarchy=False,
+			uv_set=uv_set
+		).sew_extra_seams(resolution, pixel_fraction)
+		return self
+
 	def _color_sets_cleanup(self, match_kept_colors_f=None):
 		"""
 		Removes color sets for any object that don't match to the given rule.
@@ -205,7 +214,7 @@ class BaseExport(object):
 		"""
 		from drl.for_maya.geo.components import color_sets as cs
 		if match_kept_colors_f is None:
-			return self
+			return
 		if not callable(match_kept_colors_f):
 			raise err.WrongTypeError(
 				match_kept_colors_f, var_name='match_kept_colors_f', types_name='callable'
@@ -217,7 +226,6 @@ class BaseExport(object):
 		]
 		removed_for = [x for x in exported if not match_kept_colors_f(x)]
 		cs.delete_all_sets(removed_for, False)
-		return self
 
 	def _del_object_sets(self):
 		cl.del_all_object_sets()
