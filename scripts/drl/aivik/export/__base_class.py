@@ -345,11 +345,11 @@ class BaseExport(object):
 		Performs export of each parent object to it's own FBX file.
 		The folder for export is selected interactively by a user.
 
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
+		:param overwrite:
+			<int>, whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
 		:return: <list of strings> paths of exported FBX files.
 		"""
 		exp = self.__batch_exporter

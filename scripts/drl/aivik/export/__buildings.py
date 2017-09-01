@@ -24,6 +24,19 @@ _kept_colors_name_starts_f = tuple(
 
 class Buildings(BaseExport):
 	def export(self, overwrite=2, map1_res=2048):
+		"""
+		:param overwrite:
+			<int>, whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:param map1_res:
+			<int>
+
+			Resolution of the texture on main UV-set (map1).
+			Used to sew border UVs which are closer then 1px.
+		:return: <list of strings> paths of exported FBX files.
+		"""
 		self.un_turtle().del_not_exported().render_layers_cleanup()
 		self.un_parent()
 		self.uv_sets_cleanup().uvs_sew(map1_res).color_sets_cleanup()
