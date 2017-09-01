@@ -49,7 +49,7 @@ class IslandsPVE(BaseExport):
 		self.un_parent().del_trees_mesh().del_enemy_base_mesh()
 		self.combine_islands_dn().combine_waterfalls()
 		self.uv_sets_cleanup().color_sets_cleanup()
-		self.del_history_smart()
+		self.un_turtle().del_history_smart().mat_faces_to_obj()
 		self._del_unused_nodes()
 		self._del_object_sets()
 		return self.load_preset().export_dialog(overwrite)

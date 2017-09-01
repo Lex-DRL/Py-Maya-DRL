@@ -353,3 +353,13 @@ class BaseExport(object):
 		objects = self.get_all_exported_objects()
 		cl.history.delete_smart(objects, False, before_deformers_only)
 		return self
+
+	def un_turtle(self):
+		from drl.for_maya.plugins import Plugin
+		Plugin('Turtle').unload(remove_dependent_nodes=True)
+		return self
+
+	def mat_faces_to_obj(self):
+		objects = self.get_all_exported_objects()
+		cl.materials.all_faces_to_shape(objects, False)
+		return self
