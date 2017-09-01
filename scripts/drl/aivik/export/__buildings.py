@@ -7,22 +7,22 @@ from drl.for_maya.ls import pymel as ls
 from .__base_class import BaseExport
 
 
+_kept_colors_name_starts = (
+	"ground",
+	"hill",
+	"island",
+	"vane",
+	"steam"
+)
+_kept_colors_name_starts_f = tuple(
+	re.compile(
+		r'^{0}[\d_A-Za-z]*$'.format(x.lower())
+	)
+	for x in _kept_colors_name_starts
+)
+
 
 class Buildings(BaseExport):
-	_kept_colors_name_starts = (
-		"ground",
-		"hill",
-		"island",
-		"vane",
-		"steam"
-	)
-	_kept_colors_name_starts_f = tuple(
-		re.compile(
-			r'^{0}[\d_A-Za-z]*$'.format(x.lower())
-		)
-		for x in _kept_colors_name_starts
-	)
-
 	@staticmethod
 	def do_keep_color(obj):
 		"""
@@ -35,7 +35,7 @@ class Buildings(BaseExport):
 		nm_lower = ls.short_item_name(obj).lower()
 		nm_lower = nm_lower.split('.')[0]  # remove component to get a shape name
 		return any(
-			f.match(nm_lower) for f in Buildings._kept_colors_name_starts_f
+			f.match(nm_lower) for f in _kept_colors_name_starts_f
 		)
 
 	def color_sets_cleanup(self):
