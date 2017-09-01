@@ -22,6 +22,13 @@ _maya_default_objects = (
 )
 
 
+# TODO:
+# * move UV-shells to range (both LM and map1)
+# * replace mat_faces_to_obj() with forcefully-setting initial mat
+# * unlocking normals / sewing them if they're about the same
+# * merging vertices (for normal-reversed polygons acting as two sides)
+# * (maybe) auto-detect texture resolution for map1 sewing
+# * remove shadow-caster objects
 class BaseExport(object):
 	def __init__(self, objects=None, selection_if_none=True, save_scene_warning=True, **kwargs_exporter):
 		super(BaseExport, self).__init__()
