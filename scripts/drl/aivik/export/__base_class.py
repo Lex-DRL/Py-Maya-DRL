@@ -32,10 +32,6 @@ class BaseExport(object):
 			self.__save_changed_scene()  # requires ^ __batch_exporter to already be set
 		self.__set_objects(objects, selection_if_none)
 
-	def export_as_asset_static(self, overwrite=2):
-		self.un_parent()
-		return self.load_preset().export_dialog(overwrite)
-
 	def _plugin(self):
 		return self.__batch_exporter.get_exporter().id
 
@@ -203,6 +199,23 @@ class BaseExport(object):
 		).sew_extra_seams(resolution, pixel_fraction)
 		return self
 
+	@staticmethod
+	def render_layers_cleanup():
+		"""
+		* Switches current render-layer back to default one.
+		* Removes any other render-layers.
+		"""
+		pm_rl = pm.nt.RenderLayer
+		def_lr = pm_rl.defaultRenderLayer()
+		assert isinstance(def_lr, pm_rl)
+		def_lr.setCurrent()
+		extra_lrs = [
+			lr for lr in pm.ls(exactType="renderLayer")
+			if lr != def_lr
+		]
+		if extra_lrs:
+			pm.delete(extra_lrs)
+
 	def _color_sets_cleanup(self, match_kept_colors_f=None):
 		"""
 		Removes color sets for any object that don't match to the given rule.
@@ -227,13 +240,13 @@ class BaseExport(object):
 		removed_for = [x for x in exported if not match_kept_colors_f(x)]
 		cs.delete_all_sets(removed_for, False)
 
-	def _del_object_sets(self):
+	@staticmethod
+	def _del_object_sets():
 		cl.del_all_object_sets()
-		return self
 
-	def _del_unused_nodes(self):
+	@staticmethod
+	def _del_unused_nodes():
 		cl.del_unused_nodes()
-		return self
 
 	def _combine_child_groups(self, ends_with='_islanddn', matching_f=None):
 		"""

@@ -46,13 +46,15 @@ _re_kept_colors_tuple_ignore_case = tuple(
 
 class IslandsPVE(BaseExport):
 	def export(self, overwrite=2, map1_res=2048):
-		self.un_turtle().un_parent()
+		self.un_turtle().del_not_exported().render_layers_cleanup()
 		self.del_trees_mesh().del_enemy_base_mesh()
 		self.combine_islands_dn().combine_waterfalls()
+		self.un_parent()
 		self.uv_sets_cleanup().uvs_sew(map1_res).color_sets_cleanup()
 		self.del_history_smart().mat_faces_to_obj()
-		self._del_unused_nodes()
+		self.del_not_exported()  # one more time, if anything is left after un-parenting
 		self._del_object_sets()
+		self._del_unused_nodes()
 		return self.load_preset().export_dialog(overwrite)
 
 	@staticmethod
