@@ -205,3 +205,7 @@ plt.show()
 
 from drl.for_maya.auto.cleanup import UVSets
 UVSets(kept_sets_rule=('windUVs', ('LM_out', 'LM'), 1)).remove_extra_sets()
+
+drl_btn.aivik.update_duplicated_meshes()
+from drl.for_maya.ls import pymel as pyls
+pyls.short_item_name()
