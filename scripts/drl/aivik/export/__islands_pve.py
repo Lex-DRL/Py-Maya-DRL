@@ -92,18 +92,32 @@ class IslandsPVE(BaseExport):
 			Used to sew border UVs which are closer then 1px.
 		:return: <list of strings> paths of exported FBX files.
 		"""
-		self.un_turtle().del_not_exported().render_layers_cleanup()
-		self.del_trees_mesh().del_enemy_base_mesh()
-		self.combine_islands_dn().combine_waterfalls()
-		self.un_parent()
-		self.uv_sets_cleanup().uvs_sew(map1_res).color_sets_cleanup()
-		self.del_history_smart()
+		c = _Counter()
+		c.start(self.un_turtle)
+		c.mid(self.del_not_exported)
+		c.mid(self.render_layers_cleanup)
+		c.mid(self.del_trees_mesh)
+		c.mid(self.del_enemy_base_mesh)
+		c.mid(self.combine_islands_dn)
+		c.mid(self.combine_waterfalls)
+		c.mid(self.un_parent)
+		c.mid(self.uv_sets_cleanup)
+		c.mid(
+			lambda: self.uvs_sew(map1_res),
+			'uvs_sew({})'.format(map1_res)
+		)
+		c.mid(self.color_sets_cleanup)
+		c.mid(self.del_history_smart)
 		# TODO: replace with forcefully-set initial mat:
 		# self.mat_faces_to_obj()  # takes too long to execute.
-		self.del_not_exported()  # one more time, if anything is left after un-parenting
-		self._del_object_sets()
-		self._del_unused_nodes()
-		return self.load_preset().export_dialog(overwrite)
+		c.mid(self.del_not_exported)  # one more time, if anything is left after un-parenting
+		c.mid(self._del_object_sets)
+		c.mid(self._del_unused_nodes)
+		c.mid(self.load_preset)
+		return c.end(
+			lambda: self.export_dialog(overwrite),
+			'export_dialog({})'.format(overwrite)
+		)
 
 	def get_enemy_base_transforms(self):
 		"""
