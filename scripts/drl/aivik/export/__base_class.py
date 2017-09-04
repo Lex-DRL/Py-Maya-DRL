@@ -273,6 +273,11 @@ class BaseExport(object):
 		if not callable(matching_f):
 			raise err.WrongTypeError(matching_f, var_name='matching_f', types_name='callable')
 
+		def _cleanup_combined(nu_comb):
+			geo.freeze_transform(nu_comb, False)
+			pm.delete(nu_comb, ch=1)
+			return geo.reset_pivot(nu_comb, False)
+
 		def _combine_single_child_group(combined_group, parent):
 			"""
 			If the given group  doesn't have shape, but has children:
@@ -288,14 +293,17 @@ class BaseExport(object):
 			"""
 			combined_group = err.WrongTypeError(combined_group, _t_transform, 'child_group').raise_if_needed()
 			res = list()
-			if pm.listRelatives(combined_group, shapes=1):
-				return res
+			has_shape = bool(pm.listRelatives(combined_group, shapes=1))
 			children = BaseExport.children(combined_group)
+			if has_shape and not children:
+				# single matching object (waterfall), no children
+				return [_cleanup_combined(combined_group)]
+
 			if not children:
 				return res
 			name = ls.short_item_name(combined_group)
 
-			if len(children) < 2:
+			if len(children) == 1:
 				combined = pm.parent(children[0], parent, absolute=1)[0]
 				pm.delete(combined_group)
 			else:
@@ -303,9 +311,7 @@ class BaseExport(object):
 				combined = pm.parent(combined, parent, absolute=1)[0]
 
 			combined = pm.rename(combined, name)
-			geo.freeze_transform(combined, False)
-			pm.delete(combined, ch=1)
-			return geo.reset_pivot(combined, False)
+			return _cleanup_combined(combined)
 
 
 		def _process_single_group(group):
