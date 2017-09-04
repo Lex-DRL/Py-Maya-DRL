@@ -146,31 +146,63 @@ def reset_pivot(items=None, selection_if_none=True):
 	return items
 
 
-def instance_to_object(objects=None, selection_if_none=True):
+def instance_to_object(
+	objects=None, selection_if_none=True,
+	hierarchy=True, check_intermediate=True
+):
 	"""
 	Converts an instanced object to a "normal" one.
 
 	:param objects: source
 	:param selection_if_none: whether to use selection if <objects> is None
-	:return: list of PyNodes. It contains both converted and intact objects.
+	:param hierarchy:
+		<bool>
+			* When True, all the children, grandchildren etc are checked to be unique.
+			*
+				Otherwise, only immediate children (shapes/transforms,
+				but not transforms' shapes) are checked if they are instances.
+	:param check_intermediate:
+		<bool>
+
+		When False, any intermediate objects (shapes in construction history) are ignored.
+		I.e., in this case some of these objects could be left as instances,
+		while their resulting shapes will be unique anyway.
+	:return:
+		<list of PyNodes>
+
+		It contains both converted and intact objects.
+		But not their children (even if those forced an object to be un-instanced).
 	"""
 	objects = ls.default_input.handle_input(objects, selection_if_none)
 	res = list()
+	res_append = res.append
 
-	def is_instanced(shape):
-		parents = pm.listRelatives(shape, allParents=1)
+	def is_instanced(obj):
+		parents = pm.listRelatives(obj, allParents=1)
 		return len(parents) > 1
 
+	get_kids_kwargs = dict()
+	if hierarchy:
+		get_kids_kwargs['allDescendents'] = True
+	else:
+		get_kids_kwargs['children'] = True
+	get_kids_kwargs['noIntermediate'] = not check_intermediate
+
 	for o in objects:
-		shapes = pm.listRelatives(o, shapes=1)
-		if not shapes or any(map(is_instanced, shapes)):
-			res.append(o)
+		checked = [o] + pm.listRelatives(o, **get_kids_kwargs)
+		checked = sorted(set(checked), key=ls.long_item_name)
+
+		if not any(map(is_instanced, checked)):
+			# none of the checked objects/shapes is an instance,
+			# just add branch root to result:
+			res_append(o)
 			continue
+
 		dup = pm.duplicate(o)[0]
-		nm = o.name()
+		nm = ls.short_item_name(o)
 		pm.delete(o)
 		dup = pm.rename(dup, nm)
-		res.append(dup)
+		res_append(dup)
 	return res
 
 
