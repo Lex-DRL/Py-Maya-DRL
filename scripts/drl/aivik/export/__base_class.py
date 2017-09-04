@@ -292,26 +292,40 @@ class BaseExport(object):
 			:return: <list> containing either 0 or 1 object: the combined one.
 			"""
 			combined_group = err.WrongTypeError(combined_group, _t_transform, 'child_group').raise_if_needed()
-			res = list()
-			has_shape = bool(pm.listRelatives(combined_group, shapes=1))
 			children = BaseExport.children(combined_group)
-			if has_shape and not children:
-				# single matching object (waterfall), no children
-				return [_cleanup_combined(combined_group)]
 
 			if not children:
-				return res
+				if pm.listRelatives(combined_group, shapes=1):
+					# no children BUT the transform itself is a geo-object (has shape)
+					return _cleanup_combined(combined_group)
+				return list()
+
 			name = ls.short_item_name(combined_group)
 
 			if len(children) == 1:
-				combined = pm.parent(children[0], parent, absolute=1)[0]
-				pm.delete(combined_group)
+				# no need to combine, just cleanup move a single child up in hierarchy
+				# extra-freeze - to prevent creating a scale-parent:
+				combined = geo.freeze_transform(children[0], False)
 			else:
+				# we're processing the full-case: multiple children that needs to be combined:
 				combined = pm.polyUnite(children, ch=0, mergeUVSets=1)[0]
-				combined = pm.parent(combined, parent, absolute=1)[0]
+
+			# in both cases above, the resulting object is still
+			# in the wrong place in hierarchy, so we need to re-parent it under exported group:
+			combined = pm.parent(combined, parent, absolute=1)[0]
+
+			# final cleanup:
+			combined = _cleanup_combined(combined)[0]
+			try:
+				# the old combined-group may have left.
+				# So, before renaming the resulting object, we need to "free some space":
+				pm.delete(combined_group)
+			except pm.MayaNodeError:
+				# the combined-group is already removed as history, in _cleanup_combined
+				pass
 
 			combined = pm.rename(combined, name)
-			return _cleanup_combined(combined)
+			return [combined]
 
 
 		def _process_single_group(group):
@@ -323,6 +337,7 @@ class BaseExport(object):
 			group = err.WrongTypeError(group, _t_transform, 'group').raise_if_needed()
 			children = BaseExport.children(group)
 			to_combine = [c for c in children if matching_f(c)]
+			to_combine = geo.instance_to_object(to_combine, False)
 			res = list()
 			for combined in to_combine:
 				res.extend(_combine_single_child_group(combined, group))
