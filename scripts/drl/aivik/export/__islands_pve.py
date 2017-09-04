@@ -23,7 +23,8 @@ _kept_colors_name_parts = (
 	'GroundPatch',
 	'Rock',
 	'Flag',
-	'IslandDn'
+	'IslandDn',
+	'Waterfall'
 )
 # exact-match functions for "keep colors" check:
 _re_kept_colors_tuple_exact_case = tuple(
