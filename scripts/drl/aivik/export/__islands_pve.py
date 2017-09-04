@@ -21,6 +21,7 @@ _match_enemy_base = re.compile(r'.*enemy[\dA-Za-z]*base.*')
 _kept_colors_name_parts = (
 	'IslandUp',
 	'GroundPatch',
+	'Dark',
 	'Rock',
 	'Flag',
 	'IslandDn',
