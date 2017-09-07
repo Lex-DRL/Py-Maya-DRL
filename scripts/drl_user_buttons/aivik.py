@@ -5,11 +5,11 @@ reload(_avk)
 
 
 def update_duplicated_meshes():
-	return _avk.update_duplicated.meshes()
+	return _avk.replace_shapes.from_many_sources()
 
 
 def update_duplicated_with_offset():
-	return _avk.update_duplicated.meshes_and_transforms()
+	return _avk.replace_shapes.from_many_sources_with_offset()
 
 
 def export_buildings(map1_res=2048):
