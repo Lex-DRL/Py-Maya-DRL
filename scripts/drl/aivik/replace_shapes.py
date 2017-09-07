@@ -110,7 +110,15 @@ def from_many_sources(match_regex=None):
 		new object's name with the old one.
 
 		If none provided, default is used.
-	:return: list of updated transforms
+	:return:
+		<list of PyNodes>
+
+		List of newly instanced shapes and children.
+			* immediate shapes are instances.
+			*
+				immediate children are created the same way Maya's "instantiate" works.
+				i.e., the created child's transform is is a "full" object,
+				while all of it's own children (both transforms and shapes) are instances.
 	"""
 	src_objects = pm.ls(sl=1, tr=1)
 	# src = src_objects[0]
@@ -157,7 +165,15 @@ def from_many_sources_with_offset(match_regex=None):
 		new object's name with the old one.
 
 		If none provided, default is used.
-	:return: list of updated transforms
+	:return:
+		<list of PyNodes>
+
+		List of newly instanced shapes and children.
+			* immediate shapes are instances.
+			*
+				immediate children are created the same way Maya's "instantiate" works.
+				i.e., the created child's transform is is a "full" object,
+				while all of it's own children (both transforms and shapes) are instances.
 	"""
 	src_objects = pm.ls(sl=1, tr=1)
 	# src = src_objects[0]
@@ -196,3 +212,43 @@ def from_many_sources_with_offset(match_regex=None):
 
 	pm.select(res, r=1)
 	return res
+
+
+def source_to_targets(targets=None, source=None, selection_if_none=True):
+	"""
+	Replace given targets' shapes and children with the ones from given source.
+
+	The arguments fallback sequence is:
+		* both targets and source are specified.
+		* only targets specified -> the last item is considered as source
+		*
+			targets are None, and <selection_if_none> is true ->
+			selection is used, last item is source.
+		* nothing processed, empty list returned.
+
+	:param targets: <list of strings/PyNodes/None> Target objects (transforms).
+	:param source: <string/PyNode/None> Source object
+	:return:
+		<list of PyNodes>
+
+		List of newly instanced shapes and children.
+			* immediate shapes are instances.
+			*
+				immediate children are created the same way Maya's "instantiate" works.
+				i.e., the created child's transform is is a "full" object,
+				while all of it's own children (both transforms and shapes) are instances.
+	"""
+	from drl.for_maya.ls.pymel import default_input
+	targets = default_input.handle_input(targets, selection_if_none)
+	if not targets:
+		return list()
+
+	source = default_input.handle_input(source, False)
+	if source:
+		source = source[0]
+	else:
+		source = targets.pop()
+		if not targets:
+			return list()
+
+	return __replace_shapes_with_object(source, targets)

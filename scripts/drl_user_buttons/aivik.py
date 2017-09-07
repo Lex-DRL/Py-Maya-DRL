@@ -12,6 +12,10 @@ def update_duplicated_with_offset():
 	return _avk.replace_shapes.from_many_sources_with_offset()
 
 
+def replace_shapes_with():
+	return _avk.replace_shapes.source_to_targets(selection_if_none=True)
+
+
 def export_buildings(map1_res=2048):
 	return _avk.export.Buildings().export(map1_res=map1_res)
 
