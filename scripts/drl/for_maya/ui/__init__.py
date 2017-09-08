@@ -257,19 +257,31 @@ class ProgressWindow(object):
 		on the entire list of elements, displaying the progress.
 
 		:param items: <list/tuple> of elements to perform action on
-		:param do_with_each_f: the actual <function> that does what you need. It needs to take 3 arguments:
+		:param do_with_each_f:
+			The actual <function> that does what you need.
 
-			* current element in the list
-			* <int> index of the current element
-			* the resulting <list>. I.e., the list you may want to add the current element to if some condition is met.
+			It's signature:
+
+			:arg: current element in the list
+			:arg: <int> index of the current element
+			:arg:
+				the resulting <list>.
+
+				I.e., the list you may want to add the current element to
+				if some condition is met.
 		:param progress_title: <string> The title of the window.
 		:param progress_message: <string> The message that will be formatted.
-		:param progress_message_formatter_f: a custom <function> that performs the actual formatting of the message. It requires 3 arguments:
+		:param progress_message_formatter_f:
+			A custom <function> that performs the actual formatting of the message.
 
-			* <string> the formatted message
-			* <int> number of the current item (i + 1)
-			* <int> total number of items
-		:return: <list>, that you can add anything to by accessing the last argument of the <do_with_each_f>.
+			It's signature:
+
+			:arg: <string> the formatted message
+			:arg: <int> number of the current item (i + 1)
+			:arg: <int> total number of items
+		:return:
+			<list>, that you can add anything to by accessing
+			the last argument of the <do_with_each_f>.
 		"""
 		import inspect
 
