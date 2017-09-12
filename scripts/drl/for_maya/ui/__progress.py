@@ -13,6 +13,108 @@ class ProgressError(Exception):
 ProgressBarTuple = _c.namedtuple('ProgressBarTuple', 'is_main bar')
 
 
+class ProgressBarsCouple(object):
+	"""
+	Custom iterable class containing the set of two possible progress bars:
+
+	:param main: <None/ProgressBarTuple>: Main (global) progress bar.
+	:param in_window: <None/ProgressBarTuple>: The bar in window.
+	"""
+	def __init__(self, main=None, in_window=None):
+		super(ProgressBarsCouple, self).__init__()
+		self.__main = None
+		self.__in_window = None
+		self.__both = tuple()
+		self.__n = 0
+		self.__total = 0
+
+		self.__set_main(main)
+		self.__set_in_window(in_window)
+		self.__update_both()
+		self.__next__ = self.next
+
+	def __update_both(self):
+		self.__both = tuple(
+			x for x in (self.__main, self.__in_window)
+			if not (x is None)
+		)
+
+	def __set_main(self, val):
+		self.__main = val or None
+
+	def __set_in_window(self, val):
+		self.__in_window = val or None
+
+	@property
+	def main(self):
+		bar = self.__main
+		assert bar is None or isinstance(bar, ProgressBarTuple)
+		return bar
+
+	@main.setter
+	def main(self, value):
+		self.__set_main(value)
+		self.__update_both()
+
+	@property
+	def in_window(self):
+		bar = self.__in_window
+		assert bar is None or isinstance(bar, ProgressBarTuple)
+		return bar
+
+	@in_window.setter
+	def in_window(self, value):
+		self.__set_in_window(value)
+		self.__update_both()
+
+	def __iter__(self):
+		self.__n = 0
+		self.__total = len(self.__both)
+		return self
+
+	def next(self):
+		n = self.__n
+		if n < self.__total:
+			bar = self.__both[n]
+			assert isinstance(bar, ProgressBarTuple)
+			self.__n = n + 1
+			return bar
+		else:
+			raise StopIteration
+
+	def __len__(self):
+		return len(self.__both)
+
+	def __getitem__(self, item):
+		bar = self.__in_window if item else self.__main
+		assert (bar is None or isinstance(bar, ProgressBarTuple))
+		return bar
+
+	def __contains__(self, item):
+		return item in self.__both
+
+	def __get_str_repr(self, pattern=u'', children_repr_f=None):
+		return pattern.format(
+			n=self.__class__.__name__,
+			id=hex(id(self)),
+			m=children_repr_f(self.__main),
+			w=children_repr_f(self.__in_window)
+		)
+
+	def __repr__(self):
+		try:
+			return self.__get_str_repr('<{n} {id}>: ({m}, {w})', repr)
+		except UnicodeError:
+			return self.__get_str_repr(u'<{n} {id}>: ({m}, {w})', repr)
+
+	def __str__(self):
+		return self.__get_str_repr('{n}({m}, {w})', str)
+
+	def __unicode__(self):
+		return self.__get_str_repr(u'{n}({m}, {w})', unicode)
+
+
+
 def _set_str_prop(set_f, val):
 	"""
 	Sets a property value in a unified way. I.e., ensures it's value is None/str/unicode.
@@ -107,6 +209,9 @@ class Progress(object):
 	@staticmethod
 	def __get_progresses():
 		"""
+		Ensures there's a common private <__progresses_list> property and returns it value:
+			* None: no window created yet
+			* <pymel.core.uitypes.Window> The main multi-level progresses window.
 		On the current class (including inherited), creates <__progresses_list>
 		if it doesn't exist yet, and returns it.
 
