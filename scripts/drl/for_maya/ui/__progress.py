@@ -108,7 +108,7 @@ class ProgressBarsCouple(object):
 		return len(self.__both)
 
 	def __getitem__(self, item):
-		bar = self.__in_window if item else self.__main
+		bar = (self.__main, self.__in_window)[item]
 		assert (bar is None or isinstance(bar, _ui.ProgressBar))
 		return bar
 
