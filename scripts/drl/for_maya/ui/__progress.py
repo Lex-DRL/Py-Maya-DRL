@@ -23,10 +23,13 @@ def _get_bar_asserted(p_bar):
 
 class ProgressBarsCouple(object):
 	"""
+	* When iterated, ProgressBarTuple is returned for each item.
+	* When setting one of the properties themself, a <None/_ui.ProgressBar> is expected.
+
 	Custom iterable class containing the set of two possible progress bars:
 
-	:param main: <None/ProgressBarTuple>: Main (global) progress bar.
-	:param in_window: <None/ProgressBarTuple>: The bar in window.
+	:param main: Main (global) progress bar.
+	:param in_window: The bar in window.
 	"""
 	def __init__(self, main=None, in_window=None):
 		super(ProgressBarsCouple, self).__init__()
@@ -39,12 +42,14 @@ class ProgressBarsCouple(object):
 		self.__set_main(main)
 		self.__set_in_window(in_window)
 		self.__update_both()
+
 		self.__next__ = self.next
 
 	def __update_both(self):
 		self.__both = tuple(
-			x for x in (self.__main, self.__in_window)
-			if not (x is None)
+			ProgressBarTuple(is_main, bar)
+			for is_main, bar in ((True, self.__main), (False, self.__in_window))
+			if not (bar is None)
 		)
 
 	def __set_main(self, val):
@@ -56,7 +61,7 @@ class ProgressBarsCouple(object):
 	@property
 	def main(self):
 		bar = self.__main
-		assert bar is None or isinstance(bar, ProgressBarTuple)
+		assert bar is None or isinstance(bar, _ui.ProgressBar)
 		return bar
 
 	@main.setter
@@ -67,7 +72,7 @@ class ProgressBarsCouple(object):
 	@property
 	def in_window(self):
 		bar = self.__in_window
-		assert bar is None or isinstance(bar, ProgressBarTuple)
+		assert bar is None or isinstance(bar, _ui.ProgressBar)
 		return bar
 
 	@in_window.setter
@@ -90,12 +95,21 @@ class ProgressBarsCouple(object):
 		else:
 			raise StopIteration
 
+	def iter_bars_only(self):
+		"""
+		Normally, this class is iterated as ProgressBarTuple.
+		Using this method, you can generate the bars themselves.
+
+		:return: <generator>
+		"""
+		return (_get_bar_asserted(x) for x in self.__both)
+
 	def __len__(self):
 		return len(self.__both)
 
 	def __getitem__(self, item):
 		bar = self.__in_window if item else self.__main
-		assert (bar is None or isinstance(bar, ProgressBarTuple))
+		assert (bar is None or isinstance(bar, _ui.ProgressBar))
 		return bar
 
 	def __contains__(self, item):
