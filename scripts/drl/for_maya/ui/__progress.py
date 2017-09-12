@@ -102,7 +102,7 @@ class ProgressBarsCouple(object):
 
 		:return: <generator>
 		"""
-		return (_get_bar_asserted(x) for x in self.__both)
+		return (_get_bar_asserted(x) for x in self)
 
 	def __len__(self):
 		return len(self.__both)
