@@ -175,7 +175,7 @@ class Progress(object):
 		# Progress instance properties:
 		self.__max_displayed = 3
 		self.__set_max_displayed(max_displayed)
-		self.__p_bars = tuple()
+		self.__p_bars = ProgressBarsCouple()
 		self.__is_main = False
 		self.message_template = message_template
 
@@ -277,13 +277,10 @@ class Progress(object):
 	@property
 	def bars(self):
 		"""
-		Tuple of **pymel.core.uitypes.MainProgressBar** UI items
+		Tuple of **ProgressBarTuple** items
 		the current progress is displayed in.
-
-		It's tuple for the case of the main progress displayed simultaneously
-		in the status bar and the multi-progress window.
 		"""
-		return self.__p_bars
+		return tuple(x for x in self.__p_bars)
 
 	def __set_max_displayed(self, value):
 		if isinstance(value, int):
@@ -439,12 +436,11 @@ class Progress(object):
 
 	def __setup_main(self):
 		bar = _w.getMainProgressBar()
-		p_bar = ProgressBarTuple(True, bar)
 		bar.setIsInterruptable(True)
-		all_bars = self.__p_bars + (p_bar,)
-		self.__p_bars = all_bars
+		p_bars = self.__p_bars
+		p_bars.main = bar
 		self.__is_main = True
-		map(self.__update_progress_bar, all_bars)
+		map(self.__update_progress_bar, p_bars)
 
 	# TODO: setup window, regular progress-bar, auto-setup any UI for self
 
