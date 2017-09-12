@@ -13,6 +13,14 @@ class ProgressError(Exception):
 ProgressBarTuple = _c.namedtuple('ProgressBarTuple', 'is_main bar')
 
 
+def _get_bar_asserted(p_bar):
+	assert isinstance(p_bar, ProgressBarTuple)
+	bar = p_bar.bar
+	assert isinstance(bar, _ui.ProgressBar)
+	return bar
+
+
+
 class ProgressBarsCouple(object):
 	"""
 	Custom iterable class containing the set of two possible progress bars:
