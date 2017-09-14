@@ -484,7 +484,7 @@ class Progress(object):
 			if not is_main
 		)
 		map(
-			partial(self.__update_background, is_main=True),
+			partial(self._update_background, is_main=False),
 			bars_in_window
 		)
 
@@ -546,7 +546,7 @@ class Progress(object):
 
 	# region Update UI properties
 
-	def __update_background(self, is_main, bar):
+	def _update_background(self, is_main, bar):
 		"""
 		:type is_main: bool
 		:type bar: ui.ProgressBar
@@ -561,19 +561,19 @@ class Progress(object):
 		bar.setEnableBackground()
 		bar.setBackgroundColor(bg)
 
-	def __update_min(self, bar):
+	def _update_min(self, bar):
 		"""
 		:type bar: ui.ProgressBar
 		"""
 		bar.setMinValue(self.min)
 
-	def __update_max(self, bar):
+	def _update_max(self, bar):
 		"""
 		:type bar: ui.ProgressBar
 		"""
 		bar.setMaxValue(self.max)
 
-	def __update_current(self, bar):
+	def _update_current(self, bar):
 		"""
 		:type bar: ui.ProgressBar
 		"""
@@ -599,7 +599,7 @@ class Progress(object):
 		"""
 		bar.setStatus(self.message())
 
-	def __update_message(self, is_main, bar):
+	def _update_message(self, is_main, bar):
 		"""
 		:type is_main: bool
 		:type bar: ui.ProgressBar
@@ -610,10 +610,11 @@ class Progress(object):
 
 	def __update_progress_bar(self, p_bar):
 		is_main, bar = p_bar
-		self.__update_min(bar)
-		self.__update_max(bar)
-		self.__update_message(is_main, bar)
-		self.__update_background(is_main, bar)
+		self._update_min(bar)
+		self._update_max(bar)
+		self._update_current(bar)
+		self._update_message(is_main, bar)
+		self._update_background(is_main, bar)
 
 	# TODO: update any other properties
 
