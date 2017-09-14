@@ -244,13 +244,6 @@ class Progress(object):
 	):
 		super(Progress, self).__init__()
 
-		# ensuring the class has the required common variables.
-		# sic: Progress is called explicitly instead of self.__class__:
-		# this way all the child classes will use the same common values,
-		# unless explicitly overridden
-		Progress.__get_progresses()
-		Progress.__get_window()
-
 		# Progress instance properties:
 		self.__is_main = False
 		self.__p_bars = ProgressBarsCouple()
@@ -261,6 +254,9 @@ class Progress(object):
 		self.__min_value = 0  # type: Union(int, float)
 		self.__max_value = 100  # type: Union(int, float)
 		self.__cur_value = 0  # type: Union(int, float)
+		self._min_can_change = False
+		self._max_can_change = False
+		self._cur_can_change = True
 
 		# message properties (for formatting):
 		self._template_items = {  # could be overridden in child classes
@@ -274,21 +270,35 @@ class Progress(object):
 		}
 		self._default_message_template = 'Progress [{cur}/{max}]'
 		self._default_title_template = 'Progress: {percent}%'
+		self.__message_changing = False
+		self.__title_changing = False
 		self.__message_template = ''
 		self.__title_template = ''
 		self.__get_message = lambda: self.__message_template
 		self.__get_title = lambda: self.__title_template
-		self.__set_message_template(message_template)
-		self.__set_title_template(title_template)
 
 		# Background:
 		self.__background = None  # type: Tuple[Union(int, float)]
-		self.__set_background_with_check(background)
+		self._background_can_change = False
 
 		# annotation-update chooser:
 		self.__update_annotation = dict()  # type: Dict[bool, Callable[[ui.ProgressBar]]]
 		self.__update_annotation[True] = self.__update_status_in_main_bar
 		self.__update_annotation[False] = self.__update_annotation_in_window
+
+		self._update_progress = self._update_progress_bar
+
+		# ensuring the class has the required common variables.
+		# sic: Progress is called explicitly instead of self.__class__:
+		# this way all the child classes will use the same common values,
+		# unless explicitly overridden
+		Progress.__get_progresses()
+		Progress.__get_window()
+
+		# after all the default values defined, finally initialize it with the actual arguments:
+		self.__set_message_template(message_template)
+		self.__set_title_template(title_template)
+		self.__set_background_with_check(background)
 
 
 	# region Common class values
@@ -442,8 +452,10 @@ class Progress(object):
 				self.__message_template,
 				**_get_kwargs(self._template_items)
 			)
+			self.__message_changing = True
 		else:
 			self.__get_message = lambda: self.__message_template
+			self.__message_changing = False
 
 	def __set_title_template(self, val):
 		"""
@@ -462,8 +474,10 @@ class Progress(object):
 				self.__title_template,
 				**_get_kwargs(self._template_items)
 			)
+			self.__title_changing = True
 		else:
 			self.__get_title = lambda: self.__title_template
+			self.__title_changing = False
 
 	def __set_background_with_check(self, val):
 		"""
@@ -504,6 +518,9 @@ class Progress(object):
 		:type value: str | unicode | None
 		"""
 		self.__set_message_template(value)
+		self._gen_update_f()
+		for is_main, bar in self.bars:
+			self._update_message(is_main, bar)
 
 	def message(self):
 		return self.__get_message()
@@ -522,6 +539,9 @@ class Progress(object):
 		:type value: str | unicode | None
 		"""
 		self.__set_title_template(value)
+		self._gen_update_f()
+		for is_main, bar in self.bars:
+			self._update_title(is_main)
 
 	def title(self):
 		return self.__get_title()
@@ -541,10 +561,12 @@ class Progress(object):
 		:type value: tuple[int|float] | int | float | None
 		"""
 		self.__set_background_with_check(value)
+		for is_main, bar in self.bars:
+			self._update_background(is_main, bar)
 
 	# endregion
 
-	# region Update UI properties
+	# region Update individual UI components methods
 
 	def _update_background(self, is_main, bar):
 		"""
@@ -606,29 +628,96 @@ class Progress(object):
 		"""
 		self.__update_annotation[bool(is_main)](bar)
 
-	# TODO: __update_title
+	def _update_title(self, is_main_bar):
+		"""
+		:type is_main_bar: bool
+		"""
+		if is_main_bar:
+			return
 
-	def __update_progress_bar(self, p_bar):
+		window = self.__get_window()
+		if not isinstance(window, ui.Window):
+			raise ProgressError(
+				'Trying to modify a non-existent window. <ui.Window> expected. Got: {}'.format(repr(window))
+			)
+		window.setTitle(self.title())
+
+	# endregion
+
+	# region Update the entire ProgressBar UI
+
+	def _all_update_functions(self):
+		"""
+		This method should be overridden by child classes, adding all the extra UI-update methods.
+		It returns a tuple containing tuples of two functions:
+
+			*
+				() -> bool:
+
+				Called only once, during the **update function** generation.
+				It specifies whether the 2nd function should be called
+				when updating UI during progress.
+			*
+				(is_main: bool, bar: ui.ProgressBar) -> None:
+
+				It's called to actually update the UI.
+
+		:rtype: tuple[tuple[() -> bool, (bool, ui.ProgressBar) -> None]]
+		"""
+		return (
+			(lambda: self._min_can_change, lambda is_main, bar: self._update_min(bar)),
+			(lambda: self._max_can_change, lambda is_main, bar: self._update_max(bar)),
+			(lambda: self._cur_can_change, lambda is_main, bar: self._update_current(bar)),
+			(lambda: self.__title_changing, lambda is_main, bar: self._update_title(is_main)),
+			(lambda: self.__message_changing, self._update_message),
+			(lambda: self._background_can_change, self._update_background)
+		)
+
+	def _gen_update_f(self):
+		"""
+		This method re-generates the function used to update the Progress-Bar.
+
+		This function is called internally on each IsMainProgressBar at each progress increment.
+		"""
+		funcs = [  # type: List[Callable[[bool, ui.ProgressBar]]]
+			f for changing, f in self._all_update_functions() if changing()
+		]
+
+		def update(p_bar):
+			"""
+			:type p_bar: IsMainProgressBar
+			"""
+			is_main, bar = p_bar
+			for func in funcs:
+				func(is_main, bar)
+
+		self._update_progress = update
+		# TODO: use it ^
+
+	def _update_progress_bar(self, p_bar):
+		"""
+		This method updates ALL the ProgressBar UI properties.
+
+		:type p_bar: IsMainProgressBar
+		"""
+		funcs = (f for changing, f in self._all_update_functions())
 		is_main, bar = p_bar
-		self._update_min(bar)
-		self._update_max(bar)
-		self._update_current(bar)
-		self._update_message(is_main, bar)
-		self._update_background(is_main, bar)
+		for func in funcs:
+			func(is_main, bar)
 
-	# TODO: update any other properties
+	# TODO: set/update window properties (height, width)
 
 	# endregion
 
 	# region Generate UI
 
-	def __setup_main(self):
+	def __setup_main_progress_bar(self):
 		bar = _w.getMainProgressBar()
 		bar.setIsInterruptable(True)
 		p_bars = self.__p_bars
 		p_bars.main = bar
 		self.__is_main = True
-		map(self.__update_progress_bar, p_bars)
+		map(self._update_progress_bar, p_bars)
 
 	# TODO: setup window, regular progress-bar, auto-setup any UI for self
 
