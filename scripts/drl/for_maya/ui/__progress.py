@@ -1,7 +1,11 @@
 __author__ = 'DRL'
 
-import collections as _c
-from pymel.core import ui as _ui, windows as _w
+
+
+from pymel.core import (
+	uitypes as _ui,
+	windows as _w
+)
 
 _str_t = (str, unicode)
 
@@ -10,32 +14,44 @@ class ProgressError(Exception):
 	pass
 
 
-ProgressBarTuple = _c.namedtuple('ProgressBarTuple', 'is_main bar')
+# region IsMainProgressBar named-tuple
+
+try:
+	# no actual Python 3.x support. Just to allow type hinting:
+	from typing import *
+	IsMainProgressBar = NamedTuple(
+		'IsMainProgressBar',
+		[
+			('is_main', bool),
+			('bar', _ui.ProgressBar),
+		]
+	)
+except ImportError:
+	import collections as __c
+	IsMainProgressBar = __c.namedtuple('IsMainProgressBar', 'is_main bar')
+
+# endregion
 
 
-def _get_bar_asserted(p_bar):
-	assert isinstance(p_bar, ProgressBarTuple)
-	bar = p_bar.bar
-	assert isinstance(bar, _ui.ProgressBar)
-	return bar
-
-
+# region ProgressBarsCouple class
 
 class ProgressBarsCouple(object):
 	"""
-	* When iterated, ProgressBarTuple is returned for each item.
+	* When iterated, IsMainProgressBar is returned for each item.
 	* When setting one of the properties themself, a <None/_ui.ProgressBar> is expected.
 
 	Custom iterable class containing the set of two possible progress bars:
 
+	:type main: _ui.ProgressBar
 	:param main: Main (global) progress bar.
+	:type in_window: _ui.ProgressBar
 	:param in_window: The bar in window.
 	"""
 	def __init__(self, main=None, in_window=None):
 		super(ProgressBarsCouple, self).__init__()
-		self.__main = None
-		self.__in_window = None
-		self.__both = tuple()
+		self.__main = None  # type: _ui.ProgressBar
+		self.__in_window = None  # type: _ui.ProgressBar
+		self.__both = tuple()  # type: Tuple[IsMainProgressBar]
 		self.__n = 0
 		self.__total = 0
 
@@ -45,38 +61,56 @@ class ProgressBarsCouple(object):
 
 		self.__next__ = self.next
 
+
 	def __update_both(self):
+		"""
+		Re-generate cached "both" tuple.
+		"""
 		self.__both = tuple(
-			ProgressBarTuple(is_main, bar)
+			IsMainProgressBar(is_main, bar)
 			for is_main, bar in ((True, self.__main), (False, self.__in_window))
 			if not (bar is None)
 		)
 
 	def __set_main(self, val):
+		"""
+		:type val: _ui.ProgressBar
+		"""
 		self.__main = val or None
 
 	def __set_in_window(self, val):
+		"""
+		:type val: _ui.ProgressBar
+		"""
 		self.__in_window = val or None
 
 	@property
 	def main(self):
-		bar = self.__main
-		assert bar is None or isinstance(bar, _ui.ProgressBar)
-		return bar
+		"""
+		:rtype: None | _ui.ProgressBar
+		"""
+		return self.__main
 
 	@main.setter
 	def main(self, value):
+		"""
+		:type value: None | _ui.ProgressBar
+		"""
 		self.__set_main(value)
 		self.__update_both()
 
 	@property
 	def in_window(self):
-		bar = self.__in_window
-		assert bar is None or isinstance(bar, _ui.ProgressBar)
-		return bar
+		"""
+		:rtype: None | _ui.ProgressBar
+		"""
+		return self.__in_window
 
 	@in_window.setter
 	def in_window(self, value):
+		"""
+		:type value: None | _ui.ProgressBar
+		"""
 		self.__set_in_window(value)
 		self.__update_both()
 
@@ -86,10 +120,12 @@ class ProgressBarsCouple(object):
 		return self
 
 	def next(self):
+		"""
+		:rtype: IsMainProgressBar
+		"""
 		n = self.__n
 		if n < self.__total:
 			bar = self.__both[n]
-			assert isinstance(bar, ProgressBarTuple)
 			self.__n = n + 1
 			return bar
 		else:
@@ -97,25 +133,29 @@ class ProgressBarsCouple(object):
 
 	def iter_bars_only(self):
 		"""
-		Normally, this class is iterated as ProgressBarTuple.
+		Normally, this class is iterated as IsMainProgressBar.
 		Using this method, you can generate the bars themselves.
-
-		:return: <generator>
 		"""
-		return (_get_bar_asserted(x) for x in self)
+		return (x.bar for x in self)
 
 	def __len__(self):
 		return len(self.__both)
 
 	def __getitem__(self, item):
-		bar = (self.__main, self.__in_window)[item]
-		assert (bar is None or isinstance(bar, _ui.ProgressBar))
-		return bar
+		"""
+		:type item: int
+		:rtype: None | _ui.ProgressBar
+		"""
+		return (self.__main, self.__in_window)[item]
 
 	def __contains__(self, item):
 		return item in self.__both
 
-	def __get_str_repr(self, pattern=u'', children_repr_f=None):
+	def __get_str_repr(self, pattern, children_repr_f):
+		"""
+		:type pattern: str | unicode
+		:rtype: str | unicode
+		"""
 		return pattern.format(
 			n=self.__class__.__name__,
 			id=hex(id(self)),
@@ -135,12 +175,14 @@ class ProgressBarsCouple(object):
 	def __unicode__(self):
 		return self.__get_str_repr(u'{n}({m}, {w})', unicode)
 
+# endregion
 
 
 def _set_str_prop(set_f, val):
 	"""
 	Sets a property value in a unified way. I.e., ensures it's value is None/str/unicode.
 
+	:type set_f: callable
 	:param set_f: the function that takes the value and sets the property to it
 	:param val: the value
 	"""
@@ -277,7 +319,7 @@ class Progress(object):
 	@property
 	def bars(self):
 		"""
-		Tuple of **ProgressBarTuple** items
+		Tuple of **IsMainProgressBar** items
 		the current progress is displayed in.
 		"""
 		return tuple(x for x in self.__p_bars)
