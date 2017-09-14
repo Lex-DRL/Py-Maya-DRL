@@ -274,6 +274,9 @@ class Progress(object):
 
 	@property
 	def window(self):
+		"""
+		:rtype: ui.Window | None
+		"""
 		return Progress.__get_window()
 
 	@staticmethod
@@ -322,8 +325,7 @@ class Progress(object):
 	@property
 	def bars(self):
 		"""
-		Tuple of **IsMainProgressBar** items
-		the current progress is displayed in.
+		Tuple of progress-bars the current progress is displayed in.
 		"""
 		return tuple(x for x in self.__p_bars)
 
@@ -347,19 +349,33 @@ class Progress(object):
 
 	# endregion
 
-	# region UI properties
+	# region read-only UI properties
 
 	@property
 	def min(self):
+		"""
+		:rtype: int | float
+		"""
 		return self.__min_value
 
 	@property
 	def max(self):
+		"""
+		:rtype: int | float
+		"""
 		return self.__max_value
 
 	@property
 	def current(self):
+		"""
+		:rtype: int | float
+		"""
 		return self.__cur_value
+
+	# endregion
+
+
+	# region Writeable property setters
 
 	def __set_annotation_with_check(self, val):
 		"""
@@ -369,26 +385,13 @@ class Progress(object):
 			self.__annotation = v
 		_set_str_prop(_set, val)
 
-	@property
-	def annotation(self):
+	def __set_window_title(self, val):
 		"""
-		:rtype: str | unicode | None
+		:type val: str | unicode | None
 		"""
-		return self.__annotation
-
-	@annotation.setter
-	def annotation(self, value):
-		"""
-		:type value: str | unicode | None
-		"""
-		self.__set_annotation_with_check(value)
-
-	def annotation_with_progress(self, default='Progress'):
-		"""
-		:rtype: str | unicode
-		"""
-		m = self.annotation or self.window_title or default
-		return self.message_template.format(msg=m, cur=self.current, max=self.max)
+		def _set(v):
+			self.__window_title = v
+		_set_str_prop(_set, val)
 
 	def __set_background_with_check(self, val):
 		"""
@@ -413,27 +416,30 @@ class Progress(object):
 			bars_in_window
 		)
 
+	# endregion
+
+	# region Writeable properties
+
 	@property
-	def background(self):
+	def annotation(self):
 		"""
-		:rtype: tuple[int|float] | None
+		:rtype: str | unicode | None
 		"""
-		return self.__background
+		return self.__annotation
 
-	@background.setter
-	def background(self, value):
+	@annotation.setter
+	def annotation(self, value):
 		"""
-		:type value: tuple[int|float] | int | float | None
+		:type value: str | unicode | None
 		"""
-		self.__set_background_with_check(value)
+		self.__set_annotation_with_check(value)
 
-	def __set_window_title(self, val):
+	def annotation_with_progress(self, default='Progress'):
 		"""
-		:type val: str | unicode | None
+		:rtype: str | unicode
 		"""
-		def _set(v):
-			self.__window_title = v
-		_set_str_prop(_set, val)
+		m = self.annotation or self.window_title or default
+		return self.message_template.format(msg=m, cur=self.current, max=self.max)
 
 	@property
 	def window_title(self):
@@ -460,6 +466,20 @@ class Progress(object):
 			return unicode(self.message_template).format(
 				msg=m, cur=self.current, max=self.max
 			)
+
+	@property
+	def background(self):
+		"""
+		:rtype: tuple[int|float] | None
+		"""
+		return self.__background
+
+	@background.setter
+	def background(self, value):
+		"""
+		:type value: tuple[int|float] | int | float | None
+		"""
+		self.__set_background_with_check(value)
 
 	# endregion
 
