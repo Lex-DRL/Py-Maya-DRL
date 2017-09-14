@@ -1,9 +1,10 @@
 __author__ = 'DRL'
 
-
+from itertools import izip
+from functools import partial
 
 from pymel.core import (
-	uitypes as _ui,
+	uitypes as ui,
 	windows as _w
 )
 
@@ -23,7 +24,7 @@ try:
 		'IsMainProgressBar',
 		[
 			('is_main', bool),
-			('bar', _ui.ProgressBar),
+			('bar', ui.ProgressBar),
 		]
 	)
 except ImportError:
@@ -38,19 +39,19 @@ except ImportError:
 class ProgressBarsCouple(object):
 	"""
 	* When iterated, IsMainProgressBar is returned for each item.
-	* When setting one of the properties themself, a <None/_ui.ProgressBar> is expected.
+	* When setting one of the properties themself, a <None/ui.ProgressBar> is expected.
 
 	Custom iterable class containing the set of two possible progress bars:
 
-	:type main: _ui.ProgressBar
+	:type main: ui.ProgressBar
 	:param main: Main (global) progress bar.
-	:type in_window: _ui.ProgressBar
+	:type in_window: ui.ProgressBar
 	:param in_window: The bar in window.
 	"""
 	def __init__(self, main=None, in_window=None):
 		super(ProgressBarsCouple, self).__init__()
-		self.__main = None  # type: _ui.ProgressBar
-		self.__in_window = None  # type: _ui.ProgressBar
+		self.__main = None  # type: ui.ProgressBar
+		self.__in_window = None  # type: ui.ProgressBar
 		self.__both = tuple()  # type: Tuple[IsMainProgressBar]
 		self.__n = 0
 		self.__total = 0
@@ -74,27 +75,27 @@ class ProgressBarsCouple(object):
 
 	def __set_main(self, val):
 		"""
-		:type val: _ui.ProgressBar
+		:type val: ui.ProgressBar
 		"""
 		self.__main = val or None
 
 	def __set_in_window(self, val):
 		"""
-		:type val: _ui.ProgressBar
+		:type val: ui.ProgressBar
 		"""
 		self.__in_window = val or None
 
 	@property
 	def main(self):
 		"""
-		:rtype: None | _ui.ProgressBar
+		:rtype: None | ui.ProgressBar
 		"""
 		return self.__main
 
 	@main.setter
 	def main(self, value):
 		"""
-		:type value: None | _ui.ProgressBar
+		:type value: None | ui.ProgressBar
 		"""
 		self.__set_main(value)
 		self.__update_both()
@@ -102,14 +103,14 @@ class ProgressBarsCouple(object):
 	@property
 	def in_window(self):
 		"""
-		:rtype: None | _ui.ProgressBar
+		:rtype: None | ui.ProgressBar
 		"""
 		return self.__in_window
 
 	@in_window.setter
 	def in_window(self, value):
 		"""
-		:type value: None | _ui.ProgressBar
+		:type value: None | ui.ProgressBar
 		"""
 		self.__set_in_window(value)
 		self.__update_both()
@@ -144,7 +145,7 @@ class ProgressBarsCouple(object):
 	def __getitem__(self, item):
 		"""
 		:type item: int
-		:rtype: None | _ui.ProgressBar
+		:rtype: None | ui.ProgressBar
 		"""
 		return (self.__main, self.__in_window)[item]
 
@@ -184,7 +185,7 @@ def _set_str_prop(set_f, val):
 
 	:type set_f: callable
 	:param set_f: the function that takes the value and sets the property to it
-	:param val: the value
+	:type val: str | unicode | None
 	"""
 	if not val:
 		set_f(None)
@@ -207,6 +208,7 @@ class Progress(object):
 		message_template='{msg} [{cur}/{max}]'
 	):
 		super(Progress, self).__init__()
+
 		# ensuring the class has the required common variables.
 		# sic: Progress is called explicitly instead of self.__class__:
 		# this way all the child classes will use the same common values,
@@ -216,20 +218,20 @@ class Progress(object):
 
 		# Progress instance properties:
 		self.__max_displayed = 3
-		self.__set_max_displayed(max_displayed)
+		self.__max_displayed = int(max_displayed)
 		self.__p_bars = ProgressBarsCouple()
 		self.__is_main = False
 		self.message_template = message_template
 
 		# ProgressBar UI read-only properties:
-		self.__min_value = 0
-		self.__max_value = 100
-		self.__cur_value = 0
+		self.__min_value = 0  # type: Union(int, float)
+		self.__max_value = 100  # type: Union(int, float)
+		self.__cur_value = 0  # type: Union(int, float)
 
 		# ProgressBar UI accessible properties:
-		self.__annotation = None
-		self.__window_title = None
-		self.__background = None
+		self.__annotation = None  # type: Union(str, unicode)
+		self.__window_title = None  # type: Union(str, unicode)
+		self.__background = None  # type: Tuple[Union(int, float)]
 
 		self.__set_annotation_with_check(annotation)
 		self.__set_window_title(window_title)
@@ -246,10 +248,11 @@ class Progress(object):
 	@staticmethod
 	def __get_window():
 		"""
-		Ensures there's a common private <__window> property and returns it value:
+		Ensures there's a common private <__window> property and returns it's value:
 			* None: no window created yet
-			* <pymel.core.uitypes.Window> The main multi-level progresses window.
-		:return:
+			* <ui.Window> The main multi-level progresses window.
+
+		:rtype: ui.Window | None
 		"""
 		try:
 			return Progress.__window_obj
@@ -264,6 +267,9 @@ class Progress(object):
 
 	@__window.setter
 	def __window(self, value):
+		"""
+		:type value: ui.Window
+		"""
 		Progress.__window_obj = value
 
 	@property
@@ -274,17 +280,11 @@ class Progress(object):
 	def __get_progresses():
 		"""
 		Ensures there's a common private <__progresses_list> property and returns it value:
-			* None: no window created yet
-			* <pymel.core.uitypes.Window> The main multi-level progresses window.
-		On the current class (including inherited), creates <__progresses_list>
-		if it doesn't exist yet, and returns it.
-
-		:return: <list>
 		"""
 		try:
-			return Progress.__progresses_list
+			return Progress.__progresses_list  # type: List[Progress]
 		except AttributeError:
-			nu = []
+			nu = []  # type: List[Progress]
 			Progress.__progresses_list = nu
 			return nu
 
@@ -300,11 +300,14 @@ class Progress(object):
 
 	@__progresses.setter
 	def __progresses(self, value):
+		"""
+		:type value: list[Progress]
+		"""
 		Progress.__progresses_list = value
 
 	@property
 	def progresses(self):
-		return tuple(Progress.__get_progresses())
+		return tuple(Progress.__get_progresses())  # type: Tuple[Progress]
 
 	# endregion
 
@@ -324,17 +327,9 @@ class Progress(object):
 		"""
 		return tuple(x for x in self.__p_bars)
 
-	def __set_max_displayed(self, value):
-		if isinstance(value, int):
-			self.__max_displayed = value
-			return
-		self.__max_displayed = int(value)
-
 	@property
 	def max_displayed(self):
 		"""
-		<int>
-
 		Determines how much progress bars could be shown:
 
 		* 0 or less: no limit, show all of them.
@@ -348,7 +343,7 @@ class Progress(object):
 
 	@max_displayed.setter
 	def max_displayed(self, value):
-		self.__set_max_displayed(value)
+		self.__max_displayed = int(value)
 
 	# endregion
 
@@ -367,65 +362,117 @@ class Progress(object):
 		return self.__cur_value
 
 	def __set_annotation_with_check(self, val):
+		"""
+		:type val: str | unicode | None
+		"""
 		def _set(v):
 			self.__annotation = v
 		_set_str_prop(_set, val)
 
 	@property
 	def annotation(self):
+		"""
+		:rtype: str | unicode | None
+		"""
 		return self.__annotation
 
 	@annotation.setter
 	def annotation(self, value):
+		"""
+		:type value: str | unicode | None
+		"""
 		self.__set_annotation_with_check(value)
 
 	def annotation_with_progress(self, default='Progress'):
+		"""
+		:rtype: str | unicode
+		"""
 		m = self.annotation or self.window_title or default
 		return self.message_template.format(msg=m, cur=self.current, max=self.max)
 
 	def __set_background_with_check(self, val):
+		"""
+		:type val: tuple[int | float] | int | float | None
+		"""
 		def _set(v):
-			self.__background = v
-			map(self.__update_background, self.bars)
+			if v is None:
+				self.__background = None
+				return
+			if isinstance(v, (int, float)):
+				v = (v,) * 3
+			self.__background = tuple(v)
 
-		if val is None:
-			_set(None)
-			return
-		if isinstance(val, (int, float)):
-			val = (val,) * 3
 		_set(val)
+
+		bars_in_window = tuple(
+			bar for is_main, bar in self.bars
+			if not is_main
+		)
+		map(
+			partial(self.__update_background, is_main=True),
+			bars_in_window
+		)
 
 	@property
 	def background(self):
+		"""
+		:rtype: tuple[int|float] | None
+		"""
 		return self.__background
 
 	@background.setter
 	def background(self, value):
+		"""
+		:type value: tuple[int|float] | int | float | None
+		"""
 		self.__set_background_with_check(value)
 
 	def __set_window_title(self, val):
+		"""
+		:type val: str | unicode | None
+		"""
 		def _set(v):
 			self.__window_title = v
 		_set_str_prop(_set, val)
 
 	@property
 	def window_title(self):
+		"""
+		:rtype: str | unicode | None
+		"""
 		return self.__window_title
 
 	@window_title.setter
 	def window_title(self, value):
+		"""
+		:type value: str | unicode | None
+		"""
 		self.__set_window_title(value)
 
 	def window_title_with_progress(self, default='Progress'):
+		"""
+		:type default: str | unicode
+		"""
 		m = self.window_title or self.annotation or default
-		return self.message_template.format(msg=m, cur=self.current, max=self.max)
+		try:
+			return self.message_template.format(msg=m, cur=self.current, max=self.max)
+		except UnicodeError:
+			return unicode(self.message_template).format(
+				msg=m, cur=self.current, max=self.max
+			)
 
 	# endregion
 
 	# region Update UI properties
 
-	def __update_background(self, bar):
-		assert isinstance(bar, _ui.ProgressBar)
+	def __update_background(self, is_main, bar):
+		"""
+		:type is_main: bool
+		:type bar: ui.ProgressBar
+		"""
+		if is_main:
+			return
+
 		bg = self.background
 		if bg is None:
 			bar.noBackground()
@@ -434,12 +481,21 @@ class Progress(object):
 		bar.setBackgroundColor(bg)
 
 	def __update_min(self, bar):
+		"""
+		:type bar: ui.ProgressBar
+		"""
 		bar.setMinValue(self.min)
 
 	def __update_max(self, bar):
+		"""
+		:type bar: ui.ProgressBar
+		"""
 		bar.setMaxValue(self.max)
 
 	def __update_current(self, bar):
+		"""
+		:type bar: ui.ProgressBar
+		"""
 		bar.setProgress(self.current)
 
 	def __update_annotation_in_window(self, bar):
@@ -447,6 +503,8 @@ class Progress(object):
 		Just a one-case function, with no check. Instead of this, use:
 
 		self.__update_annotation[is_main]
+
+		:type bar: ui.ProgressBar
 		"""
 		bar.setAnnotation(self.annotation_with_progress())
 
@@ -455,11 +513,18 @@ class Progress(object):
 		Just a one-case function, with no check. Instead of this, use:
 
 		self.__update_annotation[is_main]
+
+		:type bar: ui.ProgressBar
 		"""
 		bar.setStatus(self.annotation_with_progress())
 
 	def __update_message(self, is_main, bar):
-		self.__update_annotation[is_main](bar)
+		"""
+		:type is_main: bool
+		:type bar: ui.ProgressBar
+		"""
+		self.__update_annotation[bool(is_main)](bar)
+
 
 
 	def __update_progress_bar(self, p_bar):
@@ -467,8 +532,7 @@ class Progress(object):
 		self.__update_min(bar)
 		self.__update_max(bar)
 		self.__update_message(is_main, bar)
-		if not is_main:
-			self.__update_background(bar)
+		self.__update_background(is_main, bar)
 
 	# TODO: update any other properties
 
