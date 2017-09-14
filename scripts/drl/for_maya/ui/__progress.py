@@ -179,33 +179,68 @@ class ProgressBarsCouple(object):
 # endregion
 
 
-def _set_str_prop(set_f, val):
-	"""
-	Sets a property value in a unified way. I.e., ensures it's value is None/str/unicode.
+# region Functions for formatted template properties
 
-	:type set_f: callable
-	:param set_f: the function that takes the value and sets the property to it
+
+def _prepare_template_prop(val, default):
+	"""
+	Error-checks property value before setting it. Ensures it's a string.
+
 	:type val: str | unicode | None
+	:type default: str | unicode
 	"""
-	if not val:
-		set_f(None)
-		return
-	if isinstance(val, _str_t):
-		set_f(val)
-		return
+	if val and isinstance(val, _str_t):
+		return val
+	if not (default and isinstance(val, _str_t)):
+		raise ProgressError(
+			'Default value has to be a string. Got: {}'.format(repr(default))
+		)
+	return default
 
+
+def _is_template_formatted(template, replacements):
+	"""
+	Checks if the given template contains any of patterns for string formatting.
+
+	:type template: str | unicode
+	:type replacements: dict[str, () -> object]
+	:rtype: bool
+	"""
+	for k in replacements.iterkeys():
+		pattern = '{' + k  # with no trailing bracket - to also find some styled patterns
+		if pattern in template:
+			return True
+	return False
+
+
+def _format_pattern(template, **kwargs):
+	"""
+	:type template: str | unicode
+	:type kwargs: dict[str, object]
+	:rtype: str | unicode
+	"""
 	try:
-		gen_str = str(val)
+		return template.format(**kwargs)
 	except UnicodeError:
-		gen_str = unicode(val)
-	set_f(gen_str)
+		return unicode(template).format(**kwargs)
+
+
+def _get_kwargs(getters_dict):
+	"""
+	:type getters_dict: dict[str, () -> object]
+	:rtype: dict[str, object]
+	"""
+	return {k: f() for k, f in getters_dict.iteritems()}
+
+# endregion
 
 
 class Progress(object):
 	def __init__(
-		self, max_displayed=3,
-		annotation=None, window_title=None, background=None,
-		message_template='{msg} [{cur}/{max}]'
+		self,
+		message_template='Progress [{cur}/{max}]',
+		title_template='Progress: {percent}%',
+		max_displayed=3, background=None
 	):
 		super(Progress, self).__init__()
 
@@ -217,28 +252,41 @@ class Progress(object):
 		Progress.__get_window()
 
 		# Progress instance properties:
+		self.__is_main = False
+		self.__p_bars = ProgressBarsCouple()
 		self.__max_displayed = 3
 		self.__max_displayed = int(max_displayed)
-		self.__p_bars = ProgressBarsCouple()
-		self.__is_main = False
-		self.message_template = message_template
 
 		# ProgressBar UI read-only properties:
 		self.__min_value = 0  # type: Union(int, float)
 		self.__max_value = 100  # type: Union(int, float)
 		self.__cur_value = 0  # type: Union(int, float)
 
-		# ProgressBar UI accessible properties:
-		self.__annotation = None  # type: Union(str, unicode)
-		self.__window_title = None  # type: Union(str, unicode)
-		self.__background = None  # type: Tuple[Union(int, float)]
+		# message properties (for formatting):
+		self._template_items = {  # could be overridden in child classes
+			'cur': lambda: self.__cur_value,
+			'min': lambda: self.__min_value,
+			'max': lambda: self.__max_value,
+			'percent': lambda: format(
+				100.0 * (self.__cur_value - self.__min_value) / self.__max_value,
+				'.2f'
+			)
+		}
+		self._default_message_template = 'Progress [{cur}/{max}]'
+		self._default_title_template = 'Progress: {percent}%'
+		self.__message_template = ''
+		self.__title_template = ''
+		self.__get_message = lambda: self.__message_template
+		self.__get_title = lambda: self.__title_template
+		self.__set_message_template(message_template)
+		self.__set_title_template(title_template)
 
-		self.__set_annotation_with_check(annotation)
-		self.__set_window_title(window_title)
+		# Background:
+		self.__background = None  # type: Tuple[Union(int, float)]
 		self.__set_background_with_check(background)
 
 		# annotation-update chooser:
-		self.__update_annotation = dict()
+		self.__update_annotation = dict()  # type: Dict[bool, Callable[[ui.ProgressBar]]]
 		self.__update_annotation[True] = self.__update_status_in_main_bar
 		self.__update_annotation[False] = self.__update_annotation_in_window
 
@@ -377,21 +425,45 @@ class Progress(object):
 
 	# region Writeable property setters
 
-	def __set_annotation_with_check(self, val):
+	def __set_message_template(self, val):
 		"""
-		:type val: str | unicode | None
-		"""
-		def _set(v):
-			self.__annotation = v
-		_set_str_prop(_set, val)
+		Setter for **message template**. It also sets up the proper getter.
 
-	def __set_window_title(self, val):
-		"""
+		I.e., the message formatting is performed only if
+		the template contains any of the replacement patterns.
+
 		:type val: str | unicode | None
 		"""
-		def _set(v):
-			self.__window_title = v
-		_set_str_prop(_set, val)
+		template = _prepare_template_prop(val, self._default_message_template)
+		self.__message_template = template
+
+		if _is_template_formatted(template, self._template_items):
+			self.__get_message = lambda: _format_pattern(
+				self.__message_template,
+				**_get_kwargs(self._template_items)
+			)
+		else:
+			self.__get_message = lambda: self.__message_template
+
+	def __set_title_template(self, val):
+		"""
+		Setter for **title template**. It also sets up the proper getter.
+
+		I.e., the message formatting is performed only if
+		the template contains any of the replacement patterns.
+
+		:type val: str | unicode | None
+		"""
+		template = _prepare_template_prop(val, self._default_title_template)
+		self.__title_template = template
+
+		if _is_template_formatted(template, self._template_items):
+			self.__get_title = lambda: _format_pattern(
+				self.__title_template,
+				**_get_kwargs(self._template_items)
+			)
+		else:
+			self.__get_title = lambda: self.__title_template
 
 	def __set_background_with_check(self, val):
 		"""
@@ -421,51 +493,40 @@ class Progress(object):
 	# region Writeable properties
 
 	@property
-	def annotation(self):
-		"""
-		:rtype: str | unicode | None
-		"""
-		return self.__annotation
+	def message_template(self):
+		return self.__message_template
 
-	@annotation.setter
-	def annotation(self, value):
+	@message_template.setter
+	def message_template(self, value):
 		"""
+		When **None** is provided, the template is reset to the default one.
+
 		:type value: str | unicode | None
 		"""
-		self.__set_annotation_with_check(value)
+		self.__set_message_template(value)
 
-	def annotation_with_progress(self, default='Progress'):
-		"""
-		:rtype: str | unicode
-		"""
-		m = self.annotation or self.window_title or default
-		return self.message_template.format(msg=m, cur=self.current, max=self.max)
+	def message(self):
+		return self.__get_message()
+
+
 
 	@property
-	def window_title(self):
-		"""
-		:rtype: str | unicode | None
-		"""
-		return self.__window_title
+	def title_template(self):
+		return self.__title_template
 
-	@window_title.setter
-	def window_title(self, value):
+	@title_template.setter
+	def title_template(self, value):
 		"""
+		When **None** is provided, the template is reset to the default one.
+
 		:type value: str | unicode | None
 		"""
-		self.__set_window_title(value)
+		self.__set_title_template(value)
 
-	def window_title_with_progress(self, default='Progress'):
-		"""
-		:type default: str | unicode
-		"""
-		m = self.window_title or self.annotation or default
-		try:
-			return self.message_template.format(msg=m, cur=self.current, max=self.max)
-		except UnicodeError:
-			return unicode(self.message_template).format(
-				msg=m, cur=self.current, max=self.max
-			)
+	def title(self):
+		return self.__get_title()
+
+
 
 	@property
 	def background(self):
@@ -526,7 +587,7 @@ class Progress(object):
 
 		:type bar: ui.ProgressBar
 		"""
-		bar.setAnnotation(self.annotation_with_progress())
+		bar.setAnnotation(self.message())
 
 	def __update_status_in_main_bar(self, bar):
 		"""
@@ -536,7 +597,7 @@ class Progress(object):
 
 		:type bar: ui.ProgressBar
 		"""
-		bar.setStatus(self.annotation_with_progress())
+		bar.setStatus(self.message())
 
 	def __update_message(self, is_main, bar):
 		"""
@@ -545,7 +606,7 @@ class Progress(object):
 		"""
 		self.__update_annotation[bool(is_main)](bar)
 
-
+	# TODO: __update_title
 
 	def __update_progress_bar(self, p_bar):
 		is_main, bar = p_bar
