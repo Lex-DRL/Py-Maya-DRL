@@ -291,7 +291,7 @@ class Progress(object):
 		self.__get_title = lambda: self.__title_template
 
 		# Background:
-		self.__background = None  # type: Tuple[Union(int, float)]
+		self.__background = None  # type: Optional[Tuple[Union(int, float)]]
 		self._background_can_change = False
 
 		# annotation-update chooser:
@@ -450,9 +450,10 @@ class Progress(object):
 	@property
 	def bars(self):
 		"""
-		Tuple of progress-bars the current progress is displayed in.
+		(possible) Couple of progress-bars the current progress is displayed in.
 		"""
-		return tuple(x for x in self.__p_bars)
+		bars = self.__p_bars
+		return ProgressBarsCouple(main=bars.main, in_window=bars.in_window)
 
 	@property
 	def max_displayed(self):
@@ -638,26 +639,16 @@ class Progress(object):
 
 	def __set_background_with_check(self, val):
 		"""
+		Sets background property value, but doesn't update it in UI.
+
 		:type val: tuple[int | float] | int | float | None
 		"""
-		def _set(v):
-			if v is None:
-				self.__background = None
-				return
-			if isinstance(v, (int, float)):
-				v = (v,) * 3
-			self.__background = tuple(v)
-
-		_set(val)
-
-		bars_in_window = tuple(
-			bar for is_main, bar in self.bars
-			if not is_main
-		)
-		map(
-			partial(self._update_background, is_main=False),
-			bars_in_window
-		)
+		if val is None:
+			self.__background = None
+			return
+		if isinstance(val, (int, float)):
+			val = (val,) * 3
+		self.__background = tuple(val)
 
 	def __set_id(self, val):
 		"""
@@ -749,27 +740,27 @@ class Progress(object):
 		:type value: tuple[int|float] | int | float | None
 		"""
 		self.__set_background_with_check(value)
-		for is_main, bar in self.bars:
-			self._update_background(is_main, bar)
+		self._update_background()
 
 	# endregion
 
 	# region Update individual UI components methods
 
-	def _update_background(self, is_main, bar):
+	def _update_background(self):
 		"""
 		:type is_main: bool
 		:type bar: ui.ProgressBar
 		"""
-		if is_main:
+		layout = self._layout
+		if not layout:
 			return
 
 		bg = self.background
 		if bg is None:
-			bar.noBackground()
+			layout.noBackground(True)
 			return
-		bar.setEnableBackground()
-		bar.setBackgroundColor(bg)
+		layout.setEnableBackground(True)
+		layout.setBackgroundColor(bg)
 
 	def _update_min(self, bar):
 		"""
@@ -890,7 +881,7 @@ class Progress(object):
 			),
 			(  # background:
 				lambda: self._background_can_change,
-				self._update_background
+				lambda is_main, bar: self._update_background()
 			),
 			(  # window width:
 				lambda: self._width_can_change,
