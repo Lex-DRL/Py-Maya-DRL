@@ -719,6 +719,9 @@ class Progress(object):
 			self._update_message(is_main, bar)
 
 	def message(self):
+		"""
+		Generate formatted progress message.
+		"""
 		return self.__get_message()
 
 
@@ -740,6 +743,9 @@ class Progress(object):
 			self._update_title(is_main)
 
 	def title(self):
+		"""
+		Generate formatted window title with the template from the current Progress.
+		"""
 		return self.__get_title()
 
 
