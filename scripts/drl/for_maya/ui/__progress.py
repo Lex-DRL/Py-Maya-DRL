@@ -362,16 +362,19 @@ class Progress(object):
 			Progress.__window_obj = nu
 			return nu
 
-	@property
-	def __window(self):
-		return Progress.__get_window()
-
-	@__window.setter
-	def __window(self, value):
+	@staticmethod
+	def __set_window(val):
 		"""
-		:type value: ui.Window
+		:type val: ui.Window | None
 		"""
-		Progress.__window_obj = value
+		if not val:
+			Progress.__window_obj = None
+			return
+		if not isinstance(val, ui.Window):
+			raise ProgressError(
+				"Internal window should be <ui.Window>. Got: {}".format(repr(val))
+			)
+		Progress.__window_obj = val
 
 	@property
 	def window(self):
@@ -379,6 +382,7 @@ class Progress(object):
 		:rtype: ui.Window | None
 		"""
 		return Progress.__get_window()
+
 
 	@staticmethod
 	def __get_progresses():
@@ -395,22 +399,14 @@ class Progress(object):
 			Progress.__progresses_list = nu
 			return nu
 
-	@property
-	def __progresses(self):
+	@staticmethod
+	def __set_progresses(val):
 		"""
-		Raw list, for low-level access ONLY.
-
-		It has setter, too. So it allows to modify the list itself,
-		and so you need to be **EXTREMELY CAUTIOUS** with it.
+		:type val: list[Progress]
 		"""
-		return Progress.__get_progresses()
-
-	@__progresses.setter
-	def __progresses(self, value):
-		"""
-		:type value: list[Progress]
-		"""
-		Progress.__progresses_list = value
+		if not val:
+			Progress.__progresses_list = []
+		Progress.__progresses_list = val
 
 	@property
 	def progresses(self):
@@ -759,7 +755,7 @@ class Progress(object):
 		if is_main_bar:
 			return
 
-		window = self.__get_window()
+		window = self.window
 		if not isinstance(window, ui.Window):
 			raise ProgressError(
 				'Trying to modify a non-existent window. '
@@ -773,13 +769,12 @@ class Progress(object):
 		Takes the width from the main progress, not from the current one.
 		"""
 		all_progresses = self.__get_progresses()
-		window = self.__get_window()
+		window = self.window
 		if not(all_progresses and window):
 			return
 
 		main_progress = all_progresses[0]  # type: Progress
 		window.setWidth(main_progress.width)
-
 
 	# endregion
 
@@ -908,7 +903,7 @@ class Progress(object):
 		Finish current progress and all of it's children. Remove them from progresses list.
 		If they're not completed, interrupt them.
 		"""
-		pr = self.__progresses
+		pr = self.__get_progresses()
 		if not(self in pr):
 			self.__interrupt()
 			return
@@ -918,7 +913,7 @@ class Progress(object):
 		left = pr[:i]  # current progress and all the rest
 		for p in removed:
 			p.__interrupt()
-		self.__progresses = left
+		self.__set_progresses(left)
 
 	def __interrupt(self):
 		"""
