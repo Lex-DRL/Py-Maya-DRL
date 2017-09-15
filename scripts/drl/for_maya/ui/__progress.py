@@ -415,6 +415,28 @@ class Progress(object):
 	def progresses(self):
 		return tuple(Progress.__get_progresses())  # type: Tuple[Progress]
 
+	def _get_main_progress_or_this(self, attach_this=True):
+		"""
+		Service getter-method, which guarantees you get a proper Progress object.
+		Either a main Progress (if the overall progresses list is not empty),
+		or the current one.
+
+		:type attach_this: bool
+		:param attach_this:
+			If True, the current Progress is guaranteed to be added to the progresses lest.
+			So, it could become a main progress if there was none.
+
+			Otherwise, the function may return self, but it won't be added to the list.
+		:rtype: Progress
+		"""
+		progresses = Progress.__get_progresses()
+		if not(self in progresses) and attach_this:
+			progresses.append(self)
+		if progresses:
+			return progresses[0]
+		return self
+
+
 	# endregion
 
 	# region Progress properties
