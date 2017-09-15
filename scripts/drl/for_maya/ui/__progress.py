@@ -1,8 +1,5 @@
 __author__ = 'DRL'
 
-from itertools import izip
-from functools import partial
-
 from pymel.core import (
 	uitypes as ui,
 	windows as _w
