@@ -242,6 +242,7 @@ class Progress(object):
 		self,
 		message_template='Progress [{cur}/{max}]',
 		title_template='Progress: {percent}%',
+		width=400,
 		max_displayed=3, background=None
 	):
 		super(Progress, self).__init__()
@@ -251,6 +252,8 @@ class Progress(object):
 		self.__p_bars = ProgressBarsCouple()
 		self.__max_displayed = 3
 		self.__max_displayed = int(max_displayed)
+		self.__width = int(width)
+		self._width_can_change = False
 
 		# ProgressBar UI read-only properties:
 		self.__min_value = 0  # type: Union(int, float)
@@ -536,6 +539,25 @@ class Progress(object):
 	# region Writeable properties
 
 	@property
+	def width(self):
+		"""
+		Width of the progress-window, **if this progress is main**.
+
+		Otherwise, the width is taken from the corresponding main progress' property.
+
+		:rtype: int
+		"""
+		return self.__width
+
+	@width.setter
+	def width(self, value):
+		value = int(value)
+		self.__width = value
+		self._update_window_width()
+
+
+
+	@property
 	def message_template(self):
 		return self.__message_template
 
@@ -672,6 +694,20 @@ class Progress(object):
 			)
 		window.setTitle(self.title())
 
+	def _update_window_width(self):
+		"""
+		Updates the active progress-window if it exists.
+		Takes the width from the main progress, not from the current one.
+		"""
+		all_progresses = self.__get_progresses()
+		window = self.__get_window()
+		if not(all_progresses and window):
+			return
+
+		main_progress = all_progresses[0]  # type: Progress
+		window.setWidth(main_progress.width)
+
+
 	# endregion
 
 	# region Update the entire ProgressBar UI
@@ -719,6 +755,10 @@ class Progress(object):
 			(  # background:
 				lambda: self._background_can_change,
 				self._update_background
+			),
+			(  # window width:
+				lambda: self._width_can_change,
+				lambda is_main, bar: self._update_window_width()
 			)
 		)
 
