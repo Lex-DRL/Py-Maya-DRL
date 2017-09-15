@@ -748,8 +748,16 @@ class Progress(object):
 
 	def _update_background(self):
 		"""
-		:type is_main: bool
-		:type bar: ui.ProgressBar
+		If current Progress' layout is present, update it's background.
+
+		It's called automatically from:
+			* background property setter
+			* progress-bar initializer
+			*
+				if background is set to changeable in child class,
+				it's also updated at each progress change
+
+		But you may also need to call it manually from child classes, in special cases.
 		"""
 		layout = self._layout
 		if not layout:
