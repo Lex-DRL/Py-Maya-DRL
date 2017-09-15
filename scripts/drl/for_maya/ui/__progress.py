@@ -242,7 +242,7 @@ class Progress(object):
 		self,
 		message_template='Progress [{cur}/{max}]',
 		title_template='Progress: {percent}%',
-		width=400,
+		width=400, id=None,
 		max_displayed=3, background=None
 	):
 		super(Progress, self).__init__()
@@ -254,6 +254,8 @@ class Progress(object):
 		self.__max_displayed = int(max_displayed)
 		self.__width = int(width)
 		self._width_can_change = False
+		self.__id = None  # type: Optional[str]
+		self.__set_id(id)  # can be here, since it doesn't depend on anything
 
 		# ProgressBar UI read-only properties:
 		self.__min_value = 0  # type: Union(int, float)
@@ -443,6 +445,33 @@ class Progress(object):
 		return self.__cur_value
 
 	@property
+	def id(self):
+		"""
+		The ID of this progress that's used for the window internal name.
+			* if specified, the window's ID will be '{class name}_{id}'
+			* otherwise, it will be just "{class name}".
+
+		The property is read-only and is specified only at initialisation time.
+
+		:rtype: str | None
+		"""
+		return self.__id
+
+	def window_id(self):
+		"""
+		Generates the internal name (aka id) of the progress window.
+		It has to be ASCII-compliant, so use only alphanumeric characters and underscores.
+			* if **id** property is specified, the window's ID will be: '{class name}_{id}'
+			* otherwise, it will be just "{class name}".
+
+		:rtype: str
+		"""
+		return '_'.join(
+			x for x in (self.__class__.__name__, self.id)
+			if x
+		)
+
+	@property
 	def formatting_patterns(self):
 		"""
 		The tuple of possible patterns for message/title string formatting.
@@ -459,7 +488,7 @@ class Progress(object):
 	# endregion
 
 
-	# region Writeable property setters
+	# region property setters
 
 	def __set_message_template(self, val):
 		"""
@@ -533,6 +562,18 @@ class Progress(object):
 			partial(self._update_background, is_main=False),
 			bars_in_window
 		)
+
+	def __set_id(self, val):
+		"""
+		:type val: str | None
+		"""
+		if not val:
+			self.__id = None
+			return
+		if isinstance(val, str):
+			self.__id = val
+
+		self.__id = str(val)
 
 	# endregion
 
