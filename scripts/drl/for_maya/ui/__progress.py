@@ -200,20 +200,19 @@ def _prepare_template_prop(val, default):
 	return default
 
 
-def _is_template_formatted(template, replacements):
+def _patterns_in_template(template, patterns):
 	"""
 	Checks if the given template contains any of patterns for string formatting.
 
 	:type template: str | unicode
-	:type replacements: dict[str, () -> object]
-	:rtype: bool
+	:type patterns: dict[str, () -> object]
+	:rtype: dict[str, () -> object]
+	:return: The dictionary of patterns present in the template.
 	"""
-	for k in replacements.iterkeys():
-		# with no trailing bracket - to also find some styled patterns:
-		pattern = '{' + k
-		if pattern in template:
-			return True
-	return False
+	return {
+		k: v for k, v in patterns.iteritems()
+		if ('{' + k) in template
+	}
 
 
 def _format_pattern(template, **kwargs):
@@ -262,17 +261,20 @@ class Progress(object):
 		self._cur_can_change = True
 
 		# message properties (for formatting):
-		self._template_items = {  # could be overridden in child classes
+		self._format_patterns = {  # could be overridden in child classes
 			'cur': lambda: self.__cur_value,
 			'min': lambda: self.__min_value,
 			'max': lambda: self.__max_value,
 			'percent': lambda: format(
 				100.0 * (self.__cur_value - self.__min_value) / self.__max_value,
 				'.2f'
-			)
+			),
+			'class': lambda: self.__class__.__name__
 		}
-		self._default_message_template = 'Progress [{cur}/{max}]'
-		self._default_title_template = 'Progress: {percent}%'
+		self.__message_patterns = self._format_patterns  # type: Dict[str, () -> object]
+		self.__title_patterns = self._format_patterns  # type: Dict[str, () -> object]
+		self._default_message_template = '{class} [{cur}/{max}]'
+		self._default_title_template = '{class}: {percent}%'
 		self.__message_changing = False
 		self.__title_changing = False
 		self.__message_template = ''
@@ -437,6 +439,20 @@ class Progress(object):
 		"""
 		return self.__cur_value
 
+	@property
+	def formatting_patterns(self):
+		"""
+		The tuple of possible patterns for message/title string formatting.
+		Each patter should be used as regular formatting in string.
+
+		I.e.: '{pattern}'.
+
+		:rtype: tuple[str]
+		"""
+		return tuple(sorted(
+			self._format_patterns.iterkeys()
+		))
+
 	# endregion
 
 
@@ -453,14 +469,17 @@ class Progress(object):
 		"""
 		template = _prepare_template_prop(val, self._default_message_template)
 		self.__message_template = template
+		contained_patterns = _patterns_in_template(template, self._format_patterns)
 
-		if _is_template_formatted(template, self._template_items):
+		if contained_patterns:
+			self.__message_patterns = contained_patterns
 			self.__get_message = lambda: _format_pattern(
 				self.__message_template,
-				**_get_kwargs(self._template_items)
+				**_get_kwargs(self.__message_patterns)
 			)
 			self.__message_changing = True
 		else:
+			self.__message_patterns = {}
 			self.__get_message = lambda: self.__message_template
 			self.__message_changing = False
 
@@ -475,14 +494,17 @@ class Progress(object):
 		"""
 		template = _prepare_template_prop(val, self._default_title_template)
 		self.__title_template = template
+		contained_patterns = _patterns_in_template(template, self._format_patterns)
 
-		if _is_template_formatted(template, self._template_items):
+		if contained_patterns:
+			self.__title_patterns = contained_patterns
 			self.__get_title = lambda: _format_pattern(
 				self.__title_template,
-				**_get_kwargs(self._template_items)
+				**_get_kwargs(self.__title_patterns)
 			)
 			self.__title_changing = True
 		else:
+			self.__title_patterns = {}
 			self.__get_title = lambda: self.__title_template
 			self.__title_changing = False
 
