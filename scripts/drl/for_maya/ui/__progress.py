@@ -253,7 +253,7 @@ class Progress(object):
 		self.__max_displayed = 3
 		self.__max_displayed = int(max_displayed)
 		self.__width = int(width)
-		self._width_can_change = False
+		self._width_can_change = False  # TODO: update if parent has it enabled + _gen_update_f
 		self.__id = None  # type: Optional[str]
 		self.__set_id(id)  # can be here, since it doesn't depend on anything
 
