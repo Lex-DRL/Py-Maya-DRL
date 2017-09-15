@@ -696,27 +696,27 @@ class Progress(object):
 		:rtype: tuple[tuple[() -> bool, (bool, ui.ProgressBar) -> None]]
 		"""
 		return (
-			(
+			(  # min:
 				lambda: self._min_can_change,
 				lambda is_main, bar: self._update_min(bar)
 			),
-			(
+			(  # max:
 				lambda: self._max_can_change,
 				lambda is_main, bar: self._update_max(bar)
 			),
-			(
+			(  # current:
 				lambda: self._cur_can_change,
 				lambda is_main, bar: self._update_current(bar)
 			),
-			(
+			(  # title:
 				lambda: self.__title_changing,
 				lambda is_main, bar: self._update_title(is_main)
 			),
-			(
+			(  # message:
 				lambda: self.__message_changing,
 				self._update_message
 			),
-			(
+			(  # background:
 				lambda: self._background_can_change,
 				self._update_background
 			)
