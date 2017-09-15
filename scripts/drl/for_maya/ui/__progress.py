@@ -347,7 +347,7 @@ class Progress(object):
 	def __get_progresses():
 		"""
 		Ensures there's a common private <__progresses_list> property
-		and returns it value.
+		and returns it's value.
 
 		:rtype: list[Progress]
 		"""
