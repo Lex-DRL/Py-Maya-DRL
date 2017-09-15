@@ -983,6 +983,38 @@ class Progress(object):
 
 	# TODO: setup window, regular progress-bar, auto-setup any UI for self
 
+	@staticmethod
+	def __delete_window():
+		# TODO
+		pass
+
+	def __generate_layout_in_window(self):
+		# TODO
+		self._update_window_width()
+
+	def __generate_window(self):
+		main_progress = self._get_main_progress_or_this(attach_this=True)
+		if self.window:
+			self.__delete_window()
+
+		w = _w.window(
+			main_progress.window_id(),
+			maximizeButton=0,
+			minimizeButton=0,
+			resizeToFitChildren=1,
+			sizeable=0,  # disables the window resize by user, still possible via script
+			# iconify=1,  # minimize window
+			titleBarMenu=0,  # 0: also disables 'cross' button
+			# titleBar=0,
+			title=main_progress.title(),
+			# visible=1,
+			# height=100,
+			width=main_progress.width
+		)
+		self.__set_window(w)
+		self.__generate_layout_in_window()
+		w.show()
+
 	# endregion
 
 	def start(self):
