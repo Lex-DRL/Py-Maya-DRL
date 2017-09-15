@@ -39,7 +39,9 @@ except ImportError:
 class ProgressBarsCouple(object):
 	"""
 	* When iterated, IsMainProgressBar is returned for each item.
-	* When setting one of the properties themself, a <None/ui.ProgressBar> is expected.
+	*
+		When setting one of the properties themselves,
+		a <None/ui.ProgressBar> is expected.
 
 	Custom iterable class containing the set of two possible progress bars:
 
@@ -207,7 +209,8 @@ def _is_template_formatted(template, replacements):
 	:rtype: bool
 	"""
 	for k in replacements.iterkeys():
-		pattern = '{' + k  # with no trailing bracket - to also find some styled patterns
+		# with no trailing bracket - to also find some styled patterns:
+		pattern = '{' + k
 		if pattern in template:
 			return True
 	return False
@@ -295,7 +298,8 @@ class Progress(object):
 		Progress.__get_progresses()
 		Progress.__get_window()
 
-		# after all the default values defined, finally initialize it with the actual arguments:
+		# after all the default values defined,
+		# finally initialize it with the actual arguments:
 		self.__set_message_template(message_template)
 		self.__set_title_template(title_template)
 		self.__set_background_with_check(background)
@@ -340,12 +344,15 @@ class Progress(object):
 	@staticmethod
 	def __get_progresses():
 		"""
-		Ensures there's a common private <__progresses_list> property and returns it value:
+		Ensures there's a common private <__progresses_list> property
+		and returns it value.
+
+		:rtype: list[Progress]
 		"""
 		try:
-			return Progress.__progresses_list  # type: List[Progress]
+			return Progress.__progresses_list
 		except AttributeError:
-			nu = []  # type: List[Progress]
+			nu = []
 			Progress.__progresses_list = nu
 			return nu
 
@@ -638,7 +645,8 @@ class Progress(object):
 		window = self.__get_window()
 		if not isinstance(window, ui.Window):
 			raise ProgressError(
-				'Trying to modify a non-existent window. <ui.Window> expected. Got: {}'.format(repr(window))
+				'Trying to modify a non-existent window. '
+				'<ui.Window> expected. Got: {}'.format(repr(window))
 			)
 		window.setTitle(self.title())
 
@@ -648,7 +656,8 @@ class Progress(object):
 
 	def _all_update_functions(self):
 		"""
-		This method should be overridden by child classes, adding all the extra UI-update methods.
+		This method should be overridden by child classes,
+		adding all the extra UI-update methods.
 		It returns a tuple containing tuples of two functions:
 
 			*
@@ -665,19 +674,38 @@ class Progress(object):
 		:rtype: tuple[tuple[() -> bool, (bool, ui.ProgressBar) -> None]]
 		"""
 		return (
-			(lambda: self._min_can_change, lambda is_main, bar: self._update_min(bar)),
-			(lambda: self._max_can_change, lambda is_main, bar: self._update_max(bar)),
-			(lambda: self._cur_can_change, lambda is_main, bar: self._update_current(bar)),
-			(lambda: self.__title_changing, lambda is_main, bar: self._update_title(is_main)),
-			(lambda: self.__message_changing, self._update_message),
-			(lambda: self._background_can_change, self._update_background)
+			(
+				lambda: self._min_can_change,
+				lambda is_main, bar: self._update_min(bar)
+			),
+			(
+				lambda: self._max_can_change,
+				lambda is_main, bar: self._update_max(bar)
+			),
+			(
+				lambda: self._cur_can_change,
+				lambda is_main, bar: self._update_current(bar)
+			),
+			(
+				lambda: self.__title_changing,
+				lambda is_main, bar: self._update_title(is_main)
+			),
+			(
+				lambda: self.__message_changing,
+				self._update_message
+			),
+			(
+				lambda: self._background_can_change,
+				self._update_background
+			)
 		)
 
 	def _gen_update_f(self):
 		"""
 		This method re-generates the function used to update the Progress-Bar.
 
-		This function is called internally on each IsMainProgressBar at each progress increment.
+		This function is called internally on each IsMainProgressBar
+		at each progress increment.
 		"""
 		funcs = [  # type: List[Callable[[bool, ui.ProgressBar]]]
 			f for changing, f in self._all_update_functions() if changing()
