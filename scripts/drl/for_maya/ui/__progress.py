@@ -304,6 +304,7 @@ class Progress(object):
 		# unless explicitly overridden
 		Progress.__get_progresses()
 		Progress.__get_window()
+		Progress.__get_layout_main()
 
 		# after all the default values defined,
 		# finally initialize it with the actual arguments:
@@ -313,6 +314,37 @@ class Progress(object):
 
 
 	# region Common class values
+
+	@staticmethod
+	def __get_layout_main():
+		"""
+		Ensures there's a common private <__layout_main> property and returns it's value:
+			* None: no primary layout created yet
+			* <ui.Window> The primary layout for the main multi-level progresses window.
+
+		:rtype: ui.ColumnLayout | None
+		"""
+		try:
+			return Progress.__layout_main
+		except AttributeError:
+			nu = None
+			Progress.__layout_main = nu
+			return nu
+
+	@staticmethod
+	def __set_layout_main(val):
+		"""
+		:type val: ui.ColumnLayout | None
+		"""
+		if not val:
+			Progress.__layout_main = None
+			return
+		if not isinstance(val, ui.ColumnLayout):
+			raise ProgressError(
+				"Main layout should be <ui.ColumnLayout>. Got: {}".format(repr(val))
+			)
+		Progress.__layout_main = val
+
 
 	@staticmethod
 	def __get_window():
