@@ -837,16 +837,22 @@ class Progress(object):
 
 	def _update_window_width(self):
 		"""
-		Updates the active progress-window if it exists.
+		Recursively updates the active progress-window and all of it's contents.
+
 		Takes the width from the main progress, not from the current one.
 		"""
-		all_progresses = self.__get_progresses()
-		window = self.window
-		if not(all_progresses and window):
-			return
+		width = self._get_main_progress_or_this(attach_this=False).width  # type: int
 
-		main_progress = all_progresses[0]  # type: Progress
-		window.setWidth(main_progress.width)
+		updated_items = [  # some items may be None, they're filtered out later
+			self.window,
+			self.__get_layout_main()
+		]
+		extend = updated_items.extend
+		for p in self.__get_progresses():
+			extend([p._layout, p._label, p.bars.in_window])
+
+		for item in filter(None, updated_items):
+			item.setWidth(width)
 
 	# endregion
 
