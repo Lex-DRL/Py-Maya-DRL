@@ -347,6 +347,24 @@ class Progress(object):
 			)
 		Progress.__layout_main = val
 
+	@staticmethod
+	def __generate_main_layout_name():
+		"""
+		Creates a (hopefully) unique name for the main window layout.
+
+		Template: "L_{short window name}"
+
+		:rtype: str
+		"""
+		w = Progress.__get_window()
+		if not w:
+			raise ProgressError(
+				"Layout name can be generated only with a proper window specified. "
+				"Expected: <ui.Window>. Got: {}".format(repr(w))
+			)
+		w_name = w.name().split('|')[-1]  # type: str
+		return 'L_' + w_name
+
 
 	@staticmethod
 	def __get_window():
@@ -577,6 +595,10 @@ class Progress(object):
 		It has to be ASCII-compliant, so use only alphanumeric characters and underscores.
 			* if **id** property is specified, the window's ID will be: '{class name}_{id}'
 			* otherwise, it will be just "{class name}".
+
+		The generated name corresponds to self, not to the main progress bar.
+
+		It's automatically used to create main window and for each progress' UI elements.
 
 		:rtype: str
 		"""
