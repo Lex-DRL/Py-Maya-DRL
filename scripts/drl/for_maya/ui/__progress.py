@@ -294,7 +294,7 @@ class Progress(object):
 		# annotation-update chooser:
 		self.__update_annotation = dict()  # type: Dict[bool, Callable[[ui.ProgressBar]]]
 		self.__update_annotation[True] = self.__update_status_in_main_bar
-		self.__update_annotation[False] = self.__update_annotation_in_window
+		self.__update_annotation[False] = self.__update_message_in_window
 
 		self._update_progress = self._update_progress_bar
 
@@ -785,15 +785,23 @@ class Progress(object):
 		"""
 		bar.setProgress(self.current)
 
-	def __update_annotation_in_window(self, bar):
+	def __update_message_in_window(self, bar):
 		"""
 		Just a one-case function, with no check. Instead of this, use:
 
 		self.__update_annotation[is_main]
 
+		It updates message and annotation for in-window progress bar, layout and label.
+
 		:type bar: ui.ProgressBar
 		"""
-		bar.setAnnotation(self.message())
+		message = self.message()
+		label = self._label
+		updated_items = (x for x in (bar, self._layout, label) if x)
+		for ui_element in updated_items:
+			ui_element.setAnnotation(message)
+		if label:
+			label.setLabel(message)
 
 	def __update_status_in_main_bar(self, bar):
 		"""
