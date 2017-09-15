@@ -257,6 +257,9 @@ class Progress(object):
 		self.__id = None  # type: Optional[str]
 		self.__set_id(id)  # can be here, since it doesn't depend on anything
 
+		self.__layout_own = None  # type: Optional(ui.ColumnLayout)
+		self.__label = None  # type: Optional(ui.Text)
+
 		# ProgressBar UI read-only properties:
 		self.__min_value = 0  # type: Union(int, float)
 		self.__max_value = 100  # type: Union(int, float)
@@ -446,6 +449,49 @@ class Progress(object):
 	@max_displayed.setter
 	def max_displayed(self, value):
 		self.__max_displayed = int(value)
+
+	@property
+	def _layout(self):
+		"""
+		The ColumnLayout of the current progress-bar, contained be the
+		main Window layout.
+
+		:rtype: ui.ColumnLayout | None
+		"""
+		return self.__layout_own
+
+	@_layout.setter
+	def _layout(self, value):
+		"""
+		:type value: ui.ColumnLayout | None
+		"""
+		if not value:
+			self.__layout_own = None
+		if not isinstance(value, ui.ColumnLayout):
+			raise ProgressError(
+				"Progress' layout should be <ui.ColumnLayout>. Got: {}".format(repr(value))
+			)
+		self.__layout_own = value
+
+	@property
+	def _label(self):
+		"""
+		:rtype: ui.Text | None
+		"""
+		return self.__label
+
+	@_label.setter
+	def _label(self, value):
+		"""
+		:type value: ui.Text | None
+		"""
+		if not value:
+			self.__label = None
+		if not isinstance(value, ui.Text):
+			raise ProgressError(
+				"Progress' label should be <ui.Text>. Got: {}".format(repr(value))
+			)
+		self.__label = value
 
 	# endregion
 
