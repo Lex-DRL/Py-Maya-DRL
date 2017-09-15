@@ -239,7 +239,7 @@ class Progress(object):
 		self,
 		message_template='Progress [{cur}/{max}]',
 		title_template='Progress: {percent}%',
-		width=400, id=None,
+		width=400, progresses_spacing=15, label_spacing=5, id=None,
 		max_displayed=3, background=None
 	):
 		super(Progress, self).__init__()
@@ -253,6 +253,8 @@ class Progress(object):
 		self._width_can_change = False
 		self.__id = None  # type: Optional[str]
 		self.__set_id(id)  # can be here, since it doesn't depend on anything
+		self.__progresses_spacing = int(progresses_spacing)
+		self.__label_spacing = int(label_spacing)
 
 		self.__layout_own = None  # type: Optional(ui.ColumnLayout)
 		self.__label = None  # type: Optional(ui.Text)
@@ -469,6 +471,24 @@ class Progress(object):
 	@max_displayed.setter
 	def max_displayed(self, value):
 		self.__max_displayed = int(value)
+
+	@property
+	def progresses_spacing(self):
+		"""
+		The distance (in pixels) between different progresses, in the window.
+
+		This setting is used only if the current progress is main.
+		"""
+		return self.__progresses_spacing
+
+	@property
+	def label_spacing(self):
+		"""
+		The distance (in pixels) between a progress and it's label, in the window.
+
+		This setting is used only if the current progress is main.
+		"""
+		return self.__label_spacing
 
 	@property
 	def _layout(self):
