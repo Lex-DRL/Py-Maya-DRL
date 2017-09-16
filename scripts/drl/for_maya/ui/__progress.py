@@ -511,7 +511,7 @@ class Progress(object):
 	@property
 	def _layout(self):
 		"""
-		The ColumnLayout of the current progress-bar, contained be the
+		The ColumnLayout of the current progress-bar, contained by the
 		main Window layout.
 
 		:rtype: ui.ColumnLayout | None
