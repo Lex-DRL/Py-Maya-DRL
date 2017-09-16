@@ -347,24 +347,6 @@ class Progress(object):
 			)
 		Progress.__layout_main = val
 
-	@staticmethod
-	def __generate_main_layout_name():
-		"""
-		Creates a (hopefully) unique name for the main window layout.
-
-		Template: "L_{short window name}"
-
-		:rtype: str
-		"""
-		w = Progress.__get_window()
-		if not w:
-			raise ProgressError(
-				"Layout name can be generated only with a proper window specified. "
-				"Expected: <ui.Window>. Got: {}".format(repr(w))
-			)
-		w_name = w.name().split('|')[-1]  # type: str
-		return 'L_' + w_name
-
 
 	@staticmethod
 	def __get_window():
@@ -603,8 +585,7 @@ class Progress(object):
 		:rtype: str
 		"""
 		return '_'.join(
-			x for x in (self.__class__.__name__, self.id)
-			if x
+			filter(None, (self.__class__.__name__, self.id))
 		)
 
 	@property
@@ -1001,18 +982,114 @@ class Progress(object):
 		p_bars = self.__p_bars
 		p_bars.main = bar
 		self.__is_main = True
+		self._gen_update_f()
 		map(self._update_progress_bar, p_bars)
 
-	# TODO: setup window, regular progress-bar, auto-setup any UI for self
+	# TODO: auto-setup any UI for self
+
+	def __remove_progress_from_window(self):
+		# TODO
+		pass
+
+	def __attach_progress_to_window(self):
+		self.__remove_progress_from_window()
+		main_layout = self.__get_layout_main()
+		if not main_layout:
+			raise ProgressError(
+				"Can't create progress {pr} because no main layout created. "
+				"Expected (as parent layout): <ui.ColumnLayout>. Got: {layout}".format(
+					pr=repr(self), layout=main_layout
+				)
+			)
+
+		# get required common data:
+		main_progress = self._get_main_progress_or_this(attach_this=True)
+		width = main_progress.width
+		progress_id = self.window_id()
+		message = self.message()
+
+		layout = _w.columnLayout(
+			'pl_' + progress_id,
+			parent=main_layout,
+			adjustableColumn=1,  # snap both ends of children to column
+			columnAlign='left',
+			rowSpacing=main_progress.label_spacing,
+			columnWidth=width,
+			width=width
+		)
+		self._layout = layout
+
+		self._label = _w.text(
+			'lbl_' + progress_id,
+			parent=layout,
+			annotation=message,
+			label=message,
+			wordWrap=1,
+			recomputeSize=1,
+			width=width
+		)
+
+		bar = _w.progressBar(
+			'bar_' + progress_id,
+			parent=layout,
+			annotation=message,
+			min=self.min,
+			max=self.max,
+			progress=self.current,
+			width=width
+		)
+		self.__p_bars.in_window = bar
+
+		self._gen_update_f()
+		self._update_progress_bar(IsMainProgressBar(is_main=False, bar=bar))
+
+
+	@staticmethod
+	def __delete_main_layout():
+		# TODO
+		pass
+
+	@staticmethod
+	def __generate_main_layout():
+		w = Progress.__get_window()
+		if not w:
+			raise ProgressError(
+				"Layout name can be generated only with a proper window specified. "
+				"Expected: <ui.Window>. Got: {}".format(repr(w))
+			)
+
+		progresses = Progress.__get_progresses()
+		if not progresses:
+			raise ProgressError(
+				"Can't generate a main window layout since there's no main progress yet. "
+				"Expected: list[Progress]. Got: {}".format(repr(progresses))
+			)
+
+		if Progress.__get_layout_main():
+			Progress.__delete_main_layout()
+
+		main_progress = progresses[0]
+		width = main_progress.width
+		w_name = w.name()  # type: str
+
+		layout = _w.columnLayout(
+			'L_' + w_name.split('|')[-1],
+			parent=w,
+			adjustableColumn=1,  # snap both ends of children to column
+			columnAlign='left',
+			rowSpacing=main_progress.progresses_spacing,
+			columnWidth=width,
+			width=width
+		)
+		Progress.__set_layout_main(layout)
+		for pr in progresses:
+			pr.__attach_progress_to_window()
+		main_progress._update_window_width()
 
 	@staticmethod
 	def __delete_window():
 		# TODO
 		pass
-
-	def __generate_layout_in_window(self):
-		# TODO
-		self._update_window_width()
 
 	def __generate_window(self):
 		main_progress = self._get_main_progress_or_this(attach_this=True)
@@ -1034,7 +1111,7 @@ class Progress(object):
 			width=main_progress.width
 		)
 		self.__set_window(w)
-		self.__generate_layout_in_window()
+		self.__generate_main_layout()
 		w.show()
 
 	# endregion
