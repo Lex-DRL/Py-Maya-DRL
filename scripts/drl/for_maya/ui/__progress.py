@@ -976,6 +976,8 @@ class Progress(object):
 
 	# region Generate UI
 
+	# TODO: un-setup main progress bar
+
 	def __setup_main_progress_bar(self):
 		bar = _w.getMainProgressBar()
 		bar.setIsInterruptable(True)
