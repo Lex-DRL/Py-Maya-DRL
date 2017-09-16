@@ -988,8 +988,17 @@ class Progress(object):
 	# TODO: auto-setup any UI for self
 
 	def __remove_progress_from_window(self):
-		# TODO
-		pass
+		for ui_cmd, el in (
+			(_w.progressBar, self.__p_bars.in_window),
+			(_w.text, self._label),
+			(_w.layout, self._layout)
+		):
+			if el and ui_cmd(el, q=1, ex=1):
+				el.delete()
+
+		self.__p_bars.in_window = None
+		self._label = None
+		self._layout = None
 
 	def __attach_progress_to_window(self):
 		self.__remove_progress_from_window()
@@ -1046,8 +1055,14 @@ class Progress(object):
 
 	@staticmethod
 	def __delete_main_layout():
-		# TODO
-		pass
+		for pr in reversed(Progress.__get_progresses()):
+			pr.__remove_progress_from_window()
+		layout = Progress.__get_layout_main()
+		if not(layout and _w.layout(layout, q=1, ex=1)):
+			return
+
+		layout.delete()
+		Progress.__set_layout_main(None)
 
 	@staticmethod
 	def __generate_main_layout():
@@ -1070,10 +1085,9 @@ class Progress(object):
 
 		main_progress = progresses[0]
 		width = main_progress.width
-		w_name = w.name()  # type: str
 
 		layout = _w.columnLayout(
-			'L_' + w_name.split('|')[-1],
+			'L_' + w.shortName(),
 			parent=w,
 			adjustableColumn=1,  # snap both ends of children to column
 			columnAlign='left',
@@ -1088,13 +1102,17 @@ class Progress(object):
 
 	@staticmethod
 	def __delete_window():
-		# TODO
-		pass
+		Progress.__delete_main_layout()
+		w = Progress.__get_window()
+		if not(w and _w.window(w, q=1, ex=1)):
+			return
+
+		w.delete()
+		Progress.__set_window(None)
 
 	def __generate_window(self):
+		Progress.__delete_window()
 		main_progress = self._get_main_progress_or_this(attach_this=True)
-		if self.window:
-			self.__delete_window()
 
 		w = _w.window(
 			main_progress.window_id(),
