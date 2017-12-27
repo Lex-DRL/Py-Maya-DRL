@@ -4,6 +4,7 @@ from pymel import core as pm
 from drl_common import errors as err
 
 from . import dialogs
+from .__grid import Grid
 from .__progress import Progress
 from .__progress_window import ProgressWindow
 
