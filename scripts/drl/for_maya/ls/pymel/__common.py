@@ -465,17 +465,25 @@ def to_shapes(
 			If transform/component is given, they're converted to their shapes,
 			if they match given type.
 
+	If no flags limiting a shape type are enabled, shapes of any type are returned.
+
 	:param items: source nodes/components
 	:param selection_if_none: whether to use selection if <items> is None
+	:type selection_if_none: bool
 	:param geo_surface: Whether we're checking if the node is Geo-shape.
+	:type geo_surface: bool
 	:param any_geo:
 		Whether we're checking if the node is any Geo-shape.
 
 		Including Geo-Surfaces,
 		but also including any other renderable geo: particles, fluids, etc.
+	:type any_geo: bool
 	:param light: Whether we're checking if the node is Light-shape.
+	:type light: bool
 	:param camera: Whether we're checking if the node is Camera-shape.
+	:type camera: bool
 	:param exact_type: A PyNode subclass to check for.
+	:type exact_type: None | _pm.PyNode
 	:param remove_duplicates:
 		When multiple components provided as input, they can cause their shape
 		to appear multiple times in result (as well as their children).
@@ -484,9 +492,12 @@ def to_shapes(
 
 		Leave it as is if you don't care of objects order
 		(and can just turn result to a set).
+	:type remove_duplicates: bool
 	:param include_intermediate:
 		Also list shapes that aren't displayed but used in history.
-	:return: <list of PyNodes> Shapes.
+	:type include_intermediate: bool
+	:return: Shapes
+	:rtype: list[_pm.PyNode]
 	"""
 	items = _def.handle_input(items, selection_if_none)
 

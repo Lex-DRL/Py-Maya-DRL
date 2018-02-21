@@ -34,42 +34,38 @@ def __find_targets_for_single_source(src, match_regex=default_regex):
 	]
 
 
-def __replace_shapes_with_object(src_object, targets, pre_update_f=None):
+def __replace_shapes_with_object(
+	src_object, targets, pre_update_f=None, geo_shape_only=True
+):
 	"""
 		Replace all the shapes and children with the ones from a given single object.
 
-		:param src_object: <PyNode> Source object, transform.
-		:param targets:
-			<list of PyNode transforms>
-
-			Objects to replace their shapes/children.
+		:param src_object: Source object, transform.
+		:type src_object: pm.PyNode
+		:param targets: Objects to replace their shapes/children.
+		:type targets: list[pm.nt.Transform]
 		:param pre_update_f:
-			<callable>
-
 			Optional function that's called before removing current target's children
 			and adding instances.
 
-			It needs to have the following signature:
-
-			:param arg: <PyNode, Transform> Current target
-			:return:
-				<PyNode, Transform>
-				Current target - in case it was modified
-				(just pass through the source one if it's not changed)
+			It takes the current target and returns it, too (in case it was modified).
+			If it wasn't modified, just pass it through.
+		:type pre_update_f: (pm.nt.PyNode | pm.nt.Transform) -> (pm.nt.PyNode | pm.nt.Transform)
+		:param geo_shape_only: Whether to look only for a geo-shape of the source object.
+		:type geo_shape_only: bool
 		:return:
-			<list of PyNodes>
-
 			List of newly instanced shapes and children.
 				* immediate shapes are instances.
 				*
 					immediate children are created the same way Maya's "instantiate" works.
 					i.e., the created child's transform is is a "full" object,
 					while all of it's own children (both transforms and shapes) are instances.
+		:rtype: list[pm.PyNode]
 	"""
 	from drl.for_maya import geo
 	from drl.for_maya.ls import pymel as ls
 
-	src_shape = ls.to_shapes(src_object, False, geo_surface=True)[0]
+	src_shape = ls.to_shapes(src_object, False, geo_surface=geo_shape_only)[0]
 	children = pm.listRelatives(src_object, children=1, type='transform')
 	res = list()
 	res_append = res.append
@@ -214,7 +210,9 @@ def from_many_sources_with_offset(match_regex=None):
 	return res
 
 
-def source_to_targets(targets=None, source=None, selection_if_none=True):
+def source_to_targets(
+	targets=None, source=None, selection_if_none=True, geo_shape_only=False
+):
 	"""
 	Replace given targets' shapes and children with the ones from given source.
 
@@ -226,17 +224,20 @@ def source_to_targets(targets=None, source=None, selection_if_none=True):
 			selection is used, last item is source.
 		* nothing processed, empty list returned.
 
-	:param targets: <list of strings/PyNodes/None> Target objects (transforms).
-	:param source: <string/PyNode/None> Source object
+	:param targets: Target objects (transforms).
+	:type targets: list[None | string | pm.PyNode]
+	:param source: Source object
+	:type source: None | string | pm.PyNode
+	:param geo_shape_only: Whether to look only for a geo-shape of the source object.
+	:type geo_shape_only: bool
 	:return:
-		<list of PyNodes>
-
 		List of newly instanced shapes and children.
 			* immediate shapes are instances.
 			*
 				immediate children are created the same way Maya's "instantiate" works.
 				i.e., the created child's transform is is a "full" object,
 				while all of it's own children (both transforms and shapes) are instances.
+	:rtype: list[pm.PyNode]
 	"""
 	from drl.for_maya.ls.pymel import default_input
 	targets = default_input.handle_input(targets, selection_if_none)
@@ -251,4 +252,4 @@ def source_to_targets(targets=None, source=None, selection_if_none=True):
 		if not targets:
 			return list()
 
-	return __replace_shapes_with_object(source, targets)
+	return __replace_shapes_with_object(source, targets, geo_shape_only=geo_shape_only)

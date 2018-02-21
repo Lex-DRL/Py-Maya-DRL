@@ -13,7 +13,7 @@ def update_duplicated_with_offset():
 
 
 def replace_shapes_with():
-	return _avk.replace_shapes.source_to_targets(selection_if_none=True)
+	return _avk.replace_shapes.source_to_targets()
 
 
 def export_buildings(map1_res=2048):
