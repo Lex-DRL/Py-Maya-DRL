@@ -28,11 +28,10 @@ class ItemsProcessorBase(object):
 		passing only those items that match the given type.
 
 		Anything else won't go to the <items> list.
-	:param to_hierarchy:
-		<bool>
-
+	:param hierarchy:
 		Specifies whether to process children, grandchildren etc. It doesn't change
 		the actual <items> list. However, the methods will work with respect to that.
+	:type hierarchy: bool
 	"""
 	def __init__(self, allowed_py_node_types=None, hierarchy=False):
 		super(ItemsProcessorBase, self).__init__()
@@ -105,7 +104,7 @@ class ItemsProcessorBase(object):
 
 		The actual <items> list is intact. Only the returned list is generated.
 
-		:return: <list of PyNodes>
+		:rtype: list[_pnt.PyNode]
 		"""
 		from drl.for_maya.ls import pymel as _ls
 		# we can't import it ^ in the top of the module, it will cause recursive import
@@ -183,11 +182,12 @@ class PolyItemsProcessorBase(ItemsProcessorBase):
 	It overrides the constructor, specifying the allowed PyNode types for the input,
 	so only poly items will be processed.
 
-	:param to_hierarchy:
-		<bool> During any PolyConversions, how to convert transforms with children:
+	:param hierarchy:
+		During any PolyConversions, how to convert transforms with children:
 			* True - each Transform is converted to the components of the entire hierarchy.
 			* False - only the "direct" children's components are in the result.
 		It affects only transforms in the items list.
+	:type hierarchy: bool
 	"""
 	def __init__(self, items=None, selection_if_none=True, hierarchy=False):
 		super(PolyItemsProcessorBase, self).__init__(
