@@ -332,8 +332,8 @@ def short_item_name(item):
 	"""
 	Returns simple string name of object/component itself (without preceding path).
 
-	:param item: <string or PyNode>
-	:return: string
+	:type item: string|unicode|_pm.PyNode
+	:rtype: string|unicode
 	"""
 	if isinstance(item, (list, tuple, set)) and len(item) == 1:
 		item = [x for x in item][0]
