@@ -16,8 +16,10 @@ def replace_shapes_with():
 	return _avk.replace_shapes.source_to_targets()
 
 
-def export_buildings(map1_res=2048):
-	return _avk.export.Buildings().export(map1_res=map1_res)
+def export_buildings(map1_res=2048, kept_colors_regexps=None):
+	return _avk.export.Buildings().export(
+		map1_res=map1_res, kept_colors_regexps=kept_colors_regexps
+	)
 
 
 def export_pve_islands(map1_res=2048):
