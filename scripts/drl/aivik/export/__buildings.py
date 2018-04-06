@@ -101,7 +101,7 @@ class Buildings(BaseExport):
 
 		kept_fs = get_re_fs(kept_regexps)
 		get_obj_name = (  # function converting PyNode to name
-			lambda x: ls.short_item_name(x).lower()
+			(lambda x: ls.short_item_name(x).lower())
 			if lowercase
 			else ls.short_item_name
 		)
@@ -122,7 +122,7 @@ class Buildings(BaseExport):
 
 		match_all = re.compile('.*')
 		name_check_f = (
-			lambda x: True
+			(lambda x: True)
 			if any(fm == match_all for fm in kept_fs)
 			else does_name_match
 		)
