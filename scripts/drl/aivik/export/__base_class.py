@@ -190,7 +190,7 @@ class BaseExport(object):
 		:param kept_sets_rule: e.g.: (1, ('LM_out', 'LM'), 'windUVs')
 		"""
 		if kept_sets_rule is None:
-			kept_sets_rule = (1, ('LM_out', 'LM'), 'windUVs')
+			kept_sets_rule = (1, ('LM_color', 'LM_out', 'LM'), 'windUVs')
 		if not kept_sets_rule:
 			return self
 

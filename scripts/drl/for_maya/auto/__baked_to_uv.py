@@ -96,7 +96,7 @@ class BakedToUVs(PolyObjectsProcessorBase):
 		"""
 		Rule to detect target UV-set.
 		"""
-		return self.__uv_set_rule  # type: _Rule
+		return self.__uv_set_rule  # type: Rule
 
 	@uv_set_rule.setter
 	def uv_set_rule(self, value):
