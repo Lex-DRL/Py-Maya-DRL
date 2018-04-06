@@ -44,7 +44,9 @@ def handle_input(items=None, selection_if_none=True, flatten=False, **ls_sel_arg
 		* expands included sets/lists/tuples to the actual elements.
 		* ensures eah element is PyNode object.
 
-	:return: list of PyNodes
+	:type items:
+		str|unicode|pm.PyNode|list[str|unicode|pm.PyNode]|tuple[str|unicode|pm.PyNode]
+	:rtype: list[PyNode]
 	"""
 	if items is None or not items:
 		if selection_if_none:

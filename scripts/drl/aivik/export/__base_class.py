@@ -39,6 +39,10 @@ class BaseExport(object):
 			self.__save_changed_scene()  # requires ^ __batch_exporter to already be set
 		self.__set_objects(objects, selection_if_none)
 
+	@property
+	def batch_exporter(self):
+		return self.__batch_exporter
+
 	def _plugin(self):
 		return self.__batch_exporter.get_exporter().id
 

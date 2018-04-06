@@ -2,6 +2,7 @@ __author__ = 'DRL'
 
 
 import pymel.core as _pm
+from pymel.core import PyNode
 
 from . import default_input as _def
 
@@ -19,7 +20,8 @@ _t_comp_any = _pnt.comp.any
 def all_objects(no_shapes=True, **ls_args):
 	"""
 	Lists all the DAG objects in the scene, possibly without their shapes.
-	:return:
+
+	:rtype: list[PyNode]
 	"""
 	all_objs = _pm.ls(dag=True, **ls_args)
 	is_shape_f = is_shape_checker_f()
@@ -29,7 +31,8 @@ def all_objects(no_shapes=True, **ls_args):
 def to_objects_filter(items=None, selection_if_none=True, no_shapes=True):
 	"""
 	Filters given items list to only objects(their transforms)
-	:return:
+
+	:rtype: list[PyNode]
 	"""
 	all_objs = all_objects(no_shapes)
 	items = _def.handle_input(items, selection_if_none)
@@ -65,17 +68,18 @@ def to_objects(
 		Leave it as is if you don't care of objects order
 		(and can just turn result to a set).
 	:param include_intermediate:
-		<bool>
 			* When **True**, also list shapes that aren't displayed but used in history.
 			*
 				When **False** (default), such intermediate nodes (shapes/transforms)
 				will be excluded from the result, even if they were in the source list.
-	:return: <list of PyNodes> Transforms or Shapes.
+	:return: Transforms or Shapes.
+	:rtype: list[PyNode]
 	"""
 	items = _def.handle_input(items, selection_if_none)
-	comp_to_node_f = lambda c: c.node()
-	if not component_to_shape:
-		comp_to_node_f = lambda c: c.node().parent(0)
+	comp_to_node_f = (
+		(lambda c: c.node()) if component_to_shape
+		else lambda c: c.node().parent(0)
+	)
 
 	res = list()
 
@@ -106,8 +110,9 @@ def all_object_sets(exclude_default_sets=True):
 	All object sets in the scene.
 
 	:param exclude_default_sets:
-		If True, the default Maya sets are not included to the result.
-	:return: <list of PyNodes> ObjectSets
+		If **True**, the default Maya sets are not included to the result.
+	:return: ObjectSets
+	:rtype: list[PyNode]
 	"""
 	all_sets = [
 		x for x in _pm.ls(type='objectSet')
@@ -143,7 +148,7 @@ def all_shapes(include_intermediate=False):
 
 	:param include_intermediate:
 		Also list shapes that aren't displayed but used in history.
-	:return: list of PyNodes
+	:rtype: list[PyNode]
 	"""
 	return _pm.ls(dag=True, shapes=True, noIntermediate=not include_intermediate)
 
@@ -156,7 +161,7 @@ def all_parents(objects=None, selection_if_none=True, include_current_transforms
 	:param selection_if_none: whether to use selection if <objects> is None
 	:param include_current_transforms:
 		if True, objects(not shapes) from <objects> will be added to result
-	:return: list of PyNodes
+	:rtype: list[PyNode]
 	"""
 	objects = _def.handle_input(objects, selection_if_none)
 	parents = _pm.listRelatives(objects, allParents=True)
@@ -173,6 +178,8 @@ def to_parent(objects=None, selection_if_none=True, shape_as_object=False):
 	But since you could provide multiple objects at once, list is always returned.
 
 	:param objects: objects to list parents for
+	:type objects:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <objects> is None
 	:param shape_as_object:
 		if True, the provided shape/component is considered as object.
@@ -180,7 +187,7 @@ def to_parent(objects=None, selection_if_none=True, shape_as_object=False):
 		I.e., instead of returning shape's immediate transform,
 		it's parent transform is returned
 		(a parent transform of shape's transform).
-	:return: list of PyNodes
+	:rtype: list[PyNode]
 	"""
 	kw_args = dict(
 		shape_to_object=False,
@@ -211,6 +218,8 @@ def to_hierarchy(
 	As a 1st step, given list is converted to objects (transforms).
 
 	:param items: source parents.
+	:type items:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <items> is None
 	:param from_shape_transforms:
 		When true, source shapes are considered as their parent objects.
@@ -231,7 +240,7 @@ def to_hierarchy(
 		(and can just turn result to a set).
 	:param include_intermediate:
 		Also list shapes that aren't displayed but used in history.
-	:return: <list of PyNodes>
+	:rtype: list[PyNode]
 	"""
 	items = to_objects(
 		items, selection_if_none,
@@ -261,14 +270,16 @@ def to_geo_nodes(
 	I.e., to either shapes or transforms.
 
 	:param items: source list
+	:type items:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <items> is None
 	:param include_intermediate:
-		<bool>
 			* When **True**, also list shapes that aren't displayed but used in history.
 			*
 				When **False** (default), such intermediate nodes (shapes/transforms)
 				will be excluded from the result, even if they were in the source list.
-	:return: <list of PyNodes> Transforms or Shapes.
+	:return: Transforms or Shapes.
+	:rtype: list[PyNode]
 	"""
 	return to_objects(
 		items, selection_if_none,
@@ -288,6 +299,8 @@ def to_children(
 	As a 1st step, given list is converted to objects (transforms).
 
 	:param items: source parents.
+	:type items:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <items> is None
 	:param from_shape_transforms:
 		When true, source shapes are considered as their parent objects.
@@ -307,7 +320,7 @@ def to_children(
 		(and can just turn result to a set).
 	:param include_intermediate:
 		Also list shapes that aren't displayed but used in history.
-	:return: <list of PyNodes>
+	:rtype: list[PyNode]
 	"""
 	items = to_objects(
 		items, selection_if_none,
@@ -332,12 +345,12 @@ def short_item_name(item):
 	"""
 	Returns simple string name of object/component itself (without preceding path).
 
-	:type item: string|unicode|_pm.PyNode
+	:type item: string|unicode|PyNode
 	:rtype: string|unicode
 	"""
 	if isinstance(item, (list, tuple, set)) and len(item) == 1:
 		item = [x for x in item][0]
-	if isinstance(item, _pm.PyNode):
+	if isinstance(item, PyNode):
 		item = _err.WrongTypeError(
 			item, (_pm.nt.DependNode, _t_comp_any), 'item'
 		).raise_if_needed()
@@ -354,8 +367,8 @@ def long_item_name(item):
 
 	The name is long (i.e., full path).
 
-	:param item: <string or PyNode>
-	:return: string
+	:type item: string|unicode|PyNode
+	:rtype: string|unicode
 	"""
 	if isinstance(item, (list, tuple, set)) and len(item) == 1:
 		item = [x for x in item][0]
@@ -367,7 +380,7 @@ def long_item_name(item):
 			raise _err.WrongValueError(item, 'item', 'existing Maya item (node/component)')
 		item = item[0]
 
-	item = _err.WrongTypeError(item, _pm.PyNode, 'item').raise_if_needed()
+	item = _err.WrongTypeError(item, PyNode, 'item').raise_if_needed()
 
 	extra = ''
 	if isinstance(item, _t_comp_any):
@@ -398,8 +411,8 @@ def is_shape_checker_f(
 	:return: function, taking 1 argument and checking whether it is a shape.
 	"""
 	def _attach_exact_type(out_arr, checked_type):
-		if not issubclass(checked_type, _pm.PyNode):
-			raise _err.WrongTypeError(checked_type, var_name='exact_type', types_name='subclass of <_pm.PyNode>')
+		if not issubclass(checked_type, PyNode):
+			raise _err.WrongTypeError(checked_type, var_name='exact_type', types_name='subclass of <PyNode>')
 		out_arr.append(checked_type)
 
 	nt = _t_shape_any
@@ -435,6 +448,7 @@ def is_shape(
 	Otherwise, the node is checked to be any of the given types.
 
 	:param node: checked object
+	:type node: string|unicode|PyNode
 	:param geo_surface: Whether we're checking if the node is Geo-shape.
 	:param any_geo:
 		Whether we're checking if the node is any Geo-shape.
@@ -444,7 +458,7 @@ def is_shape(
 	:param light: Whether we're checking if the node is Light-shape.
 	:param camera: Whether we're checking if the node is Camera-shape.
 	:param exact_type: A PyNode subclass to check for.
-	:return: <bool>
+	:rtype: bool
 	"""
 	# first, generate a function-checker with the given shape-type arguments:
 	checker = is_shape_checker_f(geo_surface, any_geo, light, camera, exact_type)
@@ -468,6 +482,8 @@ def to_shapes(
 	If no flags limiting a shape type are enabled, shapes of any type are returned.
 
 	:param items: source nodes/components
+	:type items:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <items> is None
 	:type selection_if_none: bool
 	:param geo_surface: Whether we're checking if the node is Geo-shape.
@@ -483,7 +499,7 @@ def to_shapes(
 	:param camera: Whether we're checking if the node is Camera-shape.
 	:type camera: bool
 	:param exact_type: A PyNode subclass to check for.
-	:type exact_type: None | _pm.PyNode
+	:type exact_type: None|PyNode
 	:param remove_duplicates:
 		When multiple components provided as input, they can cause their shape
 		to appear multiple times in result (as well as their children).
@@ -497,7 +513,7 @@ def to_shapes(
 		Also list shapes that aren't displayed but used in history.
 	:type include_intermediate: bool
 	:return: Shapes
-	:rtype: list[_pm.PyNode]
+	:rtype: list[PyNode]
 	"""
 	items = _def.handle_input(items, selection_if_none)
 
@@ -528,14 +544,14 @@ def object_set_exists(set_node, node_type='objectSet'):
 	"""
 	Checks whether a maya set with the given name exists.
 
-	:param set_node: string or PyNode
+	:type set_node: string|unicode|PyNode
 	:param node_type: the name of Maya's object type for set. Default: 'objectSet'
-	:return: bool
+	:rtype: bool
 	"""
 	from maya import cmds
 	_err.NotStringError(node_type, 'node_type').raise_if_needed()
 	_err.WrongTypeError(
-		set_node, (_pm.PyNode, str, unicode), 'set_node'
+		set_node, (PyNode, str, unicode), 'set_node'
 	).raise_if_needed()
 	node = short_item_name(set_node)
 	if _pm.objExists(node):
@@ -559,10 +575,12 @@ def un_flatten_components(items=None, selection_if_none=True):
 	In each range, duplicates are removed.
 
 	:param items: nodes/components
+	:type items:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <items> is None
 	:return:
-		<list of PyNodes>
 		Un-flattened objects, with sequences of components merged into a single item.
+	:rtype: list[PyNode]
 	"""
 	import itertools
 
@@ -622,7 +640,7 @@ def un_flatten_components(items=None, selection_if_none=True):
 		for start, end in index_ranges:
 			template = '[{0}]' if start == end else '[{0}:{1}]'
 			item_str = key + template.format(start, end)
-			res_append(_pm.PyNode(item_str))
+			res_append(PyNode(item_str))
 
 
 	def _item_id(itm):
@@ -652,9 +670,11 @@ def un_flatten_components(items=None, selection_if_none=True):
 def sorted_items(items=None, selection_if_none=True, remove_duplicates=True):
 	"""
 	:param items: nodes/components
+	:type items:
+		str|unicode|PyNode|list[str|unicode|PyNode]|tuple[str|unicode|PyNode]
 	:param selection_if_none: whether to use selection if <items> is None
 	:param remove_duplicates: when True (default), ensures each item appears only once in the result.
-	:return: <list of PyNodes>
+	:rtype: list[PyNode]
 	"""
 	items = _def.handle_input(items, selection_if_none)
 	if not items:
