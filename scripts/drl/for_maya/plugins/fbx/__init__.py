@@ -371,16 +371,24 @@ class Exporter(_ImportExportBase):
 				* 0 - don't overwrite (an error is thrown if file already exist)
 				* 1 - overwrite
 				* 2 - confirmation dialog will pop up if file already exist
-		:rtype: str|unicode
+		:return:
+			3 results:
+				*
+					Cleaned-up path on success.
+					I.e., unix-style slashes, removed extra trailing/leading slashes.
+				* Whether the path was cleaned-up (removed folder/file at this path)
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen to cancel overwrite process
+					(i.e., path was **not** cleaned).
 		"""
 		err.NotStringError(fbx_file, 'fbx_file').raise_if_needed_or_empty()
-		fbx_file = fs.to_unix_path(fbx_file, trailing_slash=0)
+		fbx_file = fs.to_unix_path(fbx_file, trailing_slash=False)
 		while '//' in fbx_file:
 			fbx_file = fbx_file.replace('//', '/')
 		if not fbx_file.lower().endswith('.fbx'):
 			fbx_file += '.fbx'
-		fbx_file = fs.clean_path_for_file(fbx_file, 2, overwrite)
-		return fbx_file
+		return fs.clean_path_for_file(fbx_file, 2, overwrite)
 
 	@staticmethod
 	def export_scene(fbx_file, overwrite=2):
@@ -391,21 +399,28 @@ class Exporter(_ImportExportBase):
 
 		:param fbx_file: path to the file.
 		:type fbx_file: str|unicode
-		:param overwrite: whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: the exported file path (the string could be cleaned up).
-		:rtype: str|unicode
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
-		fbx_file = Exporter.cleanup_fbx_file_path(fbx_file, overwrite)
-
-		sel = pm.ls(sl=1)
-		pm.select(cl=1)
-		pm.mel.FBXExport(f=fbx_file)
-		pm.select(sel, r=1, ne=1)
-		return fbx_file
+		fbx_file, removed, cancelled = Exporter.cleanup_fbx_file_path(
+			fbx_file, overwrite
+		)
+		if not cancelled:
+			sel = pm.ls(sl=1)
+			pm.select(cl=1)
+			pm.mel.FBXExport(f=fbx_file)
+			pm.select(sel, r=1, ne=1)
+		return fbx_file, removed, cancelled
 
 	def export_objects(self, fbx_file, overwrite=2):
 		"""
@@ -417,13 +432,18 @@ class Exporter(_ImportExportBase):
 
 		:param fbx_file: path to the file.
 		:type fbx_file: str|unicode
-		:param overwrite: whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: the exported file path (the string could be cleaned up).
-		:rtype: str|unicode
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		if not self.__objects:
 			raise errors.NothingToExportError(self.__id)
@@ -431,13 +451,15 @@ class Exporter(_ImportExportBase):
 		objects = self.get_objects_with_children()
 		if not objects:
 			raise errors.NothingToExportError(self.__id)
-		fbx_file = Exporter.cleanup_fbx_file_path(fbx_file, overwrite)
-
-		sel = pm.ls(sl=1)
-		pm.select(objects, r=1, ne=1)
-		pm.mel.FBXExport(f=fbx_file, s=1)
-		pm.select(sel, r=1, ne=1)
-		return fbx_file
+		fbx_file, removed, cancelled = Exporter.cleanup_fbx_file_path(
+			fbx_file, overwrite
+		)
+		if not cancelled:
+			sel = pm.ls(sl=1)
+			pm.select(objects, r=1, ne=1)
+			pm.mel.FBXExport(f=fbx_file, s=1)
+			pm.select(sel, r=1, ne=1)
+		return fbx_file, removed, cancelled
 
 
 
@@ -561,8 +583,13 @@ class BatchExporter(object):
 				* 0 - don't overwrite (an error is thrown if file already exist)
 				* 1 - overwrite
 				* 2 - confirmation dialog will pop up if file already exist
-		:return: the exported file path (the string could be cleaned up).
-		:rtype: str|unicode
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		nm = ls.short_item_name(gr)
 		path = self.__folder
@@ -571,8 +598,7 @@ class BatchExporter(object):
 		path = fs.clean_path_for_folder(path, 2).rstrip('/')
 		self.__folder = path
 		path += '/%s.fbx' % nm
-		path = self._exporter.set_objects(gr).export_objects(path, overwrite)
-		return path
+		return self._exporter.set_objects(gr).export_objects(path, overwrite)
 
 	def _get_folder_dialog(self, start_path=None, raise_error_if_cancelled=True):
 		"""
@@ -625,7 +651,13 @@ class BatchExporter(object):
 			* 0 - don't overwrite (an error is thrown if file already exist)
 			* 1 - overwrite
 			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		err.WrongTypeError(x, int, 'index').raise_if_needed()
 		groups = self.__parent_groups
@@ -638,13 +670,20 @@ class BatchExporter(object):
 		Export the group at the given index (start from 0).
 		The path is specified in process by opening file chooser dialog window.
 
-		:param x: <int> the index of a group (in the groups list).
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:param x: the index of a group (in the groups list).
+		:type x: int
+		:param overwrite:
+			Whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		err.WrongTypeError(x, int, 'index').raise_if_needed()
 		groups = self.__parent_groups
@@ -659,29 +698,33 @@ class BatchExporter(object):
 		"""
 		Export all the groups.
 
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <list of strings> the paths of the exported files (each string could be cleaned up).
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return: the paths of the exported files (each string could be cleaned up).
 		"""
 		groups = self.__parent_groups
 		if not groups:
 			raise errors.NothingToExportError(self._exporter.name)
-		return [self.__export_as_group(gr, overwrite) for gr in groups]
+		return [
+			path for path, replaced, cancelled in
+			(self.__export_as_group(gr, overwrite) for gr in groups)
+			if not cancelled
+		]
 
 	def export_all_groups_dialog(self, overwrite=2):
 		"""
 		Export all the groups.
 		The path is specified in process by opening file chooser dialog window.
 
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <list of strings> the paths of the exported files (each string could be cleaned up).
+		:param overwrite:
+			Whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return: The paths of the exported files (each string could be cleaned up).
 		"""
 		groups = self.__parent_groups
 		if not groups:
@@ -689,4 +732,8 @@ class BatchExporter(object):
 
 		folder_path = self._get_folder_dialog()
 		self.set_folder(folder_path)
-		return [self.__export_as_group(gr, overwrite) for gr in groups]
+		return [
+			path for path, replaced, cancelled in
+			(self.__export_as_group(gr, overwrite) for gr in groups)
+			if not cancelled
+		]
