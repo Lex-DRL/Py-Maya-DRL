@@ -4,7 +4,7 @@ from .cleanup import UVSetsRule as Rule
 from drl.for_maya.ls import pymel as ls
 from drl.for_maya.base_class import PolyObjectsProcessorBase
 from drl_common import errors as err
-from drl_common.srgb import linear_to_srgb as to_srgb
+from drl_common.srgb import linear_to_srgb as to_srgb, srgb_to_linear as from_srgb
 
 
 class BakedToUVs(PolyObjectsProcessorBase):
@@ -225,13 +225,16 @@ class BakedToUVs(PolyObjectsProcessorBase):
 		pm.polySelectConstraint(m=2, t=0x8000, w=2, sm=1)  # keep only hard edges
 		pm.polySelectConstraint(disable=1, m=0)
 		hard_edges = pm.ls(sl=1)
-		pm.polyMapCut(hard_edges, ch=0)
+		if hard_edges:
+			pm.polyMapCut(hard_edges, ch=0)
 
 		pm.select(pre_sel, r=1)
 		return shape, target_set
 
 	@staticmethod
-	def __transfer_to_uv(shape, color_set, uv_set, mtx, get_color_f):
+	def __transfer_to_uv(
+		shape, color_set, uv_set, mtx, to_cspace_f, from_cspace_f
+	):
 		"""
 		For each UV in given UV-set of the shape:
 			*
@@ -243,6 +246,17 @@ class BakedToUVs(PolyObjectsProcessorBase):
 			* pass resulting XY coordinates as UVs
 		This function is generic for color-transform either in linear or sRGB space.
 		"""
+		color_set = (
+			err.NotStringError(color_set, 'color_set').raise_if_needed_or_empty()
+		)
+		if color_set not in shape.getColorSetNames():
+			raise ValueError("Shape {sh} doesn't have <{cs}> color set".format(
+				sh=shape, cs=color_set
+			))
+		if uv_set not in shape.getUVSetNames():
+			raise ValueError("Shape {sh} doesn't have <{uv}> UV-set".format(
+				sh=shape, uv=uv_set
+			))
 		shape.setCurrentColorSetName(color_set)
 		shape.setCurrentUVSetName(uv_set)
 		uvs = shape.map
@@ -252,10 +266,12 @@ class BakedToUVs(PolyObjectsProcessorBase):
 				continue
 			vfs = pm.ls(vfs, fl=1)  # flatten
 			avg_clr = sum(
-				Vector(get_color_f(vf))
+				Vector(to_cspace_f(
+					pm.polyColorPerVertex(vf, q=1, rgb=1, notUndoable=1)
+				))
 				for vf in vfs
 			) / len(vfs)  # type: Vector
-			pm.polyColorPerVertex(vfs, rgb=avg_clr, notUndoable=1)
+			pm.polyColorPerVertex(vfs, rgb=from_cspace_f(avg_clr), notUndoable=1)
 			# transform to UV space:
 			avg_clr = mtx * avg_clr  # type: Vector
 			u, v = avg_clr[:2]
@@ -272,9 +288,11 @@ class BakedToUVs(PolyObjectsProcessorBase):
 		:param mtx: RGB-to-UV transformation matrix.
 		:type mtx: Matrix
 		"""
+		def pass_value(val):
+			return val
 		BakedToUVs.__transfer_to_uv(
 			shape, color_set, uv_set, mtx,
-			lambda vf: pm.polyColorPerVertex(vf, q=1, rgb=1, notUndoable=1)
+			to_cspace_f=pass_value, from_cspace_f=pass_value
 		)
 
 	@staticmethod
@@ -290,7 +308,7 @@ class BakedToUVs(PolyObjectsProcessorBase):
 		"""
 		BakedToUVs.__transfer_to_uv(
 			shape, color_set, uv_set, mtx,
-			lambda vf: to_srgb(pm.polyColorPerVertex(vf, q=1, rgb=1, notUndoable=1))
+			to_cspace_f=to_srgb, from_cspace_f=from_srgb
 		)
 
 	def transfer(self):
