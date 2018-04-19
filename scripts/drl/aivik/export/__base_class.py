@@ -30,7 +30,10 @@ _maya_default_objects = (
 # * (maybe) auto-detect texture resolution for map1 sewing
 # * remove shadow-caster objects
 class BaseExport(object):
-	def __init__(self, objects=None, selection_if_none=True, save_scene_warning=True, **kwargs_exporter):
+	def __init__(
+		self, objects=None, selection_if_none=True, save_scene_warning=True,
+		**kwargs_exporter
+	):
 		super(BaseExport, self).__init__()
 		self._objects = list()
 		self.__batch_exporter = fbx.BatchExporter(**kwargs_exporter)
