@@ -361,13 +361,16 @@ def short_item_name(item):
 	return item
 
 
-def long_item_name(item):
+def long_item_name(item, keep_comp=True):
 	"""
 	Returns simple string name of object/component itself.
 
 	The name is long (i.e., full path).
 
 	:type item: string|unicode|PyNode
+	:param keep_comp:
+		* When enabled (default), also keeps the actual component (i.e., `.vtx[0]`).
+		* When False, truncates the output name to the shape this comp belongs to.
 	:rtype: string|unicode
 	"""
 	if isinstance(item, (list, tuple, set)) and len(item) == 1:
@@ -384,7 +387,8 @@ def long_item_name(item):
 
 	extra = ''
 	if isinstance(item, _t_comp_any):
-		extra = '.' + item.name().split('.')[-1]
+		if keep_comp:
+			extra = '.' + item.name().split('.')[-1]
 		item = item.node()
 
 	item = _err.WrongTypeError(item, _pm.nt.DependNode, 'item').raise_if_needed()

@@ -28,3 +28,6 @@ Rule('LM_color').kept_sets_for_object()
 
 from drl.for_maya.auto import BakedToUVs
 BakedToUVs().transfer()
+
+
+drl_btn.curves.del_cv()
