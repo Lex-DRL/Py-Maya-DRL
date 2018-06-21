@@ -190,10 +190,10 @@ class BaseExport(object):
 			* ensures the 1st set is named "map1".
 			* Removes all the extra sets, which don't match to the <kept_sets_rule> definition.
 
-		:param kept_sets_rule: e.g.: (1, ('LM_out', 'LM'), 'windUVs')
+		:param kept_sets_rule: e.g.: (1, ('LM_out', 'LM'), 'windUVs', 'arrayID')
 		"""
 		if kept_sets_rule is None:
-			kept_sets_rule = (1, ('LM_color', 'LM_out', 'LM'), 'windUVs')
+			kept_sets_rule = (1, ('LM_color', 'LM_out', 'LM'), 'windUVs', 'arrayID')
 		if not kept_sets_rule:
 			return self
 
