@@ -31,3 +31,5 @@ BakedToUVs().transfer()
 
 
 drl_btn.curves.del_cv()
+drl_btn.transform.reset_pivot()
+drl_btn.poly.separate(combine_parts=False)
