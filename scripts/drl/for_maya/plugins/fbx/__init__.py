@@ -594,7 +594,7 @@ class BatchExporter(object):
 		nm = ls.short_item_name(gr)
 		path = self.__folder
 		if not path:
-			raise fs.errors.EmptyPathError(path, 'FBX root folder is not specified')
+			raise fs.errors.EmptyPath(path, 'FBX root folder is not specified')
 		path = fs.clean_path_for_folder(path, 2).rstrip('/')
 		self.__folder = path
 		path += '/%s.fbx' % nm
