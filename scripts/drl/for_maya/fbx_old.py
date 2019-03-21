@@ -6,7 +6,7 @@ import os
 
 from pymel import core as pm
 
-from drl_common.strings import str_types
+from drl_common.strings import str_t
 from drl.for_maya import ls
 from . import info as inf
 
@@ -31,7 +31,7 @@ class Preset(object):
 		self.__set_type(is_export)
 
 	def __set_name(self, name):
-		if not isinstance(name, str_types):
+		if not isinstance(name, str_t):
 			raise Exception('Wrong type for <name>. String expected, got: ' + repr(name))
 		if name == '':
 			raise Exception('Empty string provided as preset name.')
@@ -127,7 +127,7 @@ class Export(object):
 		self._objects = objects
 
 	def __set_path(self, path):
-		if not isinstance(path, str_types):
+		if not isinstance(path, str_t):
 			raise Exception('Wrong type for <path> property. String expected, got: ' + repr(path))
 		if not path:
 			raise Exception('Empty string is given as <path> property.')
