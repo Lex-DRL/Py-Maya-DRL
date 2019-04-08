@@ -30,7 +30,10 @@ _maya_default_objects = (
 # * (maybe) auto-detect texture resolution for map1 sewing
 # * remove shadow-caster objects
 class BaseExport(object):
-	def __init__(self, objects=None, selection_if_none=True, save_scene_warning=True, **kwargs_exporter):
+	def __init__(
+		self, objects=None, selection_if_none=True, save_scene_warning=True,
+		**kwargs_exporter
+	):
 		super(BaseExport, self).__init__()
 		self._objects = list()
 		self.__batch_exporter = fbx.BatchExporter(**kwargs_exporter)
@@ -38,6 +41,10 @@ class BaseExport(object):
 		if save_scene_warning:
 			self.__save_changed_scene()  # requires ^ __batch_exporter to already be set
 		self.__set_objects(objects, selection_if_none)
+
+	@property
+	def batch_exporter(self):
+		return self.__batch_exporter
 
 	def _plugin(self):
 		return self.__batch_exporter.get_exporter().id
@@ -183,10 +190,10 @@ class BaseExport(object):
 			* ensures the 1st set is named "map1".
 			* Removes all the extra sets, which don't match to the <kept_sets_rule> definition.
 
-		:param kept_sets_rule: e.g.: (1, ('LM_out', 'LM'), 'windUVs')
+		:param kept_sets_rule: e.g.: (1, ('LM_out', 'LM'), 'windUVs', 'arrayID')
 		"""
 		if kept_sets_rule is None:
-			kept_sets_rule = (1, ('LM_out', 'LM'), 'windUVs')
+			kept_sets_rule = (1, ('LM_color', 'LM_out', 'LM'), 'windUVs', 'arrayID')
 		if not kept_sets_rule:
 			return self
 

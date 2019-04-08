@@ -18,3 +18,9 @@ def skip_shapes():
 
 def create_normals_layer():
 	return _cl.create_debug_normals_layer_if_needed()
+
+
+def sew_extra_seams(resolution=2048, pixel_fraction=0.6, uv_set=0):
+	return _cl.UVs(
+		None, hierarchy=False, uv_set=uv_set
+	).sew_extra_seams(resolution, pixel_fraction).items

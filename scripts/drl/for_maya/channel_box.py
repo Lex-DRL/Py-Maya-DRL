@@ -1,7 +1,7 @@
 __author__ = 'DRL'
 
 from pymel import core as pm
-from drl_common.strings import str_types
+from drl_common.strings import str_t
 
 
 class ChannelBoxData(object):
@@ -32,7 +32,7 @@ class ChannelBoxData(object):
 
 		if not val:
 			val = ChannelBoxData.main_box_ui_name()
-		elif not isinstance(val, str_types):
+		elif not isinstance(val, str_t):
 			raise Exception(
 				'The <channel_box> property needs to be either string or uitypes.ChannelBox. Got: ' + repr(val)
 			)

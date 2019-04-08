@@ -51,7 +51,7 @@ class FBX(plugins.Plugin):
 		"""
 		The version of FBX used for settings. By default, it's the current plugin's version.
 
-		:return: <str>
+		:rtype: str|unicode
 		"""
 		return self.__version
 
@@ -66,7 +66,7 @@ class FBX(plugins.Plugin):
 		Whether this class will try to load plugin automatically if needed.
 
 		If False, the error is thrown when the module try to access the plugin's data.
-		:return: <bool>
+		:rtype: bool
 		"""
 		return self.__load
 
@@ -77,9 +77,11 @@ class FBX(plugins.Plugin):
 
 	def presets_path(self):
 		"""
-		Returns path to the default Maya's FBX presets folder for the current FBX plugin version.
+		Returns path to the default Maya's FBX presets folder
+		for the current FBX plugin version.
 
-		:return: <string> absolute folder path, with unix-style slashes. No trailing slash.
+		:return: absolute folder path, with unix-style slashes. No trailing slash.
+		:rtype: str|unicode
 		"""
 		app_dir = inf.get_maya_app_dir()
 
@@ -108,7 +110,8 @@ class _ImportExportBase(FBX):
 		"""
 		Returns path to the folder containing presets.
 
-		:return: <string> absolute folder path, with unix-style slashes. No trailing slash.
+		:return: absolute folder path, with unix-style slashes. No trailing slash.
+		:rtype: str|unicode
 		"""
 		return '/'.join([super(_ImportExportBase, self).presets_path(), self.__path_postfix])
 
@@ -128,7 +131,9 @@ class _ImportExportBase(FBX):
 
 		It ensures the given <preset> is a string and, if necessary, converts the short name to a full path.
 
+		:type preset: str|unicode
 		:return: full path to the preset file
+		:rtype: str|unicode
 		"""
 		_ImportExportBase._check_preset_name(preset)
 		preset = preset.replace('\\', '/').rstrip('/')
@@ -146,6 +151,9 @@ class _ImportExportBase(FBX):
 
 		No name-to-path conversion performed, it's your responsibility to make sure
 		you're providing a full path.
+
+		:type preset_path: str|unicode
+		:rtype: bool
 		"""
 		_ImportExportBase._check_preset_name(preset_path)
 		preset_path = preset_path.replace('\\', '/').rstrip('/')
@@ -164,6 +172,9 @@ class _ImportExportBase(FBX):
 	def preset_exists(self, preset):
 		"""
 		Whether given preset file exists.
+
+		:type preset: str|unicode
+		:rtype: bool
 		"""
 		return _ImportExportBase._preset_exists(self.preset_path(preset))
 
@@ -171,8 +182,13 @@ class _ImportExportBase(FBX):
 		"""
 		Wrapper method. Loads the given preset with the given function.
 
-		:param preset: Preset name/path. If name is given, the full path is generated automatically.
-		:param load_f: Function which takes exactly one argument (path) and performs the preset loading.
+		:param preset:
+			Preset name/path.
+			If name is given, the full path is generated automatically.
+		:type preset: str|unicode
+		:param load_f:
+			Function which takes exactly one argument (path)
+			and performs the preset loading.
 		"""
 		preset_path = self.preset_path(preset)
 		_ImportExportBase._check_preset_exists(preset_path)
@@ -199,8 +215,11 @@ class Importer(_ImportExportBase):
 		"""
 		Loads given FBX-import preset.
 
-		:param preset: Preset name/path. If a short name is given, it's turned into the full path automatically.
-		:return: <Import> self
+		:param preset:
+			Preset name/path.
+			If a short name is given, it's turned into the full path automatically.
+		:type preset: str|unicode
+		:return: self
 		"""
 		self._load_preset(preset, lambda fl: pm.mel.FBXLoadImportPresetFile(f=fl))
 		return self
@@ -210,14 +229,18 @@ class Importer(_ImportExportBase):
 		"""
 		Performs the actual import.
 
-		The import settings need to be already specified. You can use load_preset() for that.
+		The import settings need to be already specified.
+		You can use `load_preset()` for that.
 
-		:param fbx_file: <str> path to the imported file.
-		:param take_index: the number of Take, imported from the file:
-		* 0 = No Animation
-		* -1 = the last take in the array.
-		* 1..N = Take at the given number, where N is the total number of takes
-		* if less then -1 or more then N, an error is thrown.
+		:param fbx_file: path to the imported file.
+		:type fbx_file: str|unicode
+		:param take_index:
+			the number of Take, imported from the file:
+				* 0 = No Animation
+				* -1 = the last take in the array.
+				* 1..N = Take at the given number, where N is the total number of takes
+				* if less then -1 or more then N, an error is thrown.
+		:type take_index: int
 		"""
 		err.NotStringError(fbx_file, 'fbx_file').raise_if_needed()
 		fbx_file = fbx_file.replace('\\', '/').rstrip('/')
@@ -231,7 +254,8 @@ class Exporter(_ImportExportBase):
 	"""
 	The class handling FBX export process.
 
-	Most methods return the called instance of this class itself (i.e. <self>), which allows you to just perform actions in chain.
+	Most methods return the called instance of this class itself (i.e. <self>),
+	which allows you to just perform actions in chain.
 	"""
 	def __init__(
 		self,
@@ -250,6 +274,9 @@ class Exporter(_ImportExportBase):
 		to a flat list, containing only PyMel's transforms and shapes.
 
 		Selected components are converted to their corresponding shapes.
+
+		:type objects:
+			str|unicode|pm.PyNode|list[str|unicode|pm.PyNode]|tuple[str|unicode|pm.PyNode]
 		"""
 		return [
 			(o.node() if isinstance(o, _t_comp_any) else o) for o in
@@ -258,6 +285,10 @@ class Exporter(_ImportExportBase):
 		]
 
 	def set_objects(self, objects):
+		"""
+		:type objects:
+			str|unicode|pm.PyNode|list[str|unicode|pm.PyNode]|tuple[str|unicode|pm.PyNode]
+		"""
 		self.__objects = Exporter._filter_objects(objects)
 		return self
 
@@ -268,7 +299,8 @@ class Exporter(_ImportExportBase):
 		Only transforms and shapes are included.
 		Given components are converted to their corresponding shapes.
 
-		:return: <Export> self
+		:type objects:
+			str|unicode|pm.PyNode|list[str|unicode|pm.PyNode]|tuple[str|unicode|pm.PyNode]
 		"""
 		self.__objects += Exporter._filter_objects(objects)
 		return self
@@ -279,8 +311,6 @@ class Exporter(_ImportExportBase):
 
 		Only transforms and shapes are included.
 		Given components are converted to their corresponding shapes.
-
-		:return: <Export> self
 		"""
 		self.__objects += Exporter._filter_objects(pm.ls(sl=1))
 		return self
@@ -290,7 +320,8 @@ class Exporter(_ImportExportBase):
 		Returns the exact list of objects marked for export.
 
 		All their hierarchy, grandchildren etc. will be exported.
-		:return: <list> of objects
+
+		:rtype: list[pm.PyNode]
 		"""
 		return self.__objects[:]
 
@@ -298,9 +329,14 @@ class Exporter(_ImportExportBase):
 		"""
 		Get the list of actual objects that will be exported.
 
-		I.e., all off the children, grand-children of the objects that were actually marked for export are also returned.
-		:param keep_order: Leave it to false if the order doesn't matter. It will work faster.
-		:return: list of transforms/shapes of the exported objects + all their child transforms.
+		I.e., all off the children, grand-children of the objects
+		that were actually marked for export are also returned.
+
+		:param keep_order:
+			Leave it to false if the order doesn't matter. It will work faster.
+		:return:
+			list of transforms/shapes of the exported objects
+			+ all their child transforms.
 		"""
 		if keep_order:
 			return ls.to_hierarchy(
@@ -315,8 +351,10 @@ class Exporter(_ImportExportBase):
 		"""
 		Loads given FBX-export preset.
 
-		:param preset: Preset name/path. If name is given, the full path is generated automatically.
-		:return: <Export> self
+		:param preset:
+			Preset name/path.
+			If name is given, the full path is generated automatically.
+		:type preset: str|unicode
 		"""
 		self._load_preset(preset, lambda fl: pm.mel.FBXLoadExportPresetFile(f=fl))
 		return self
@@ -326,22 +364,31 @@ class Exporter(_ImportExportBase):
 		"""
 		Error-check for the given file path during export.
 
-		:param fbx_file: <str> path to the file.
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str>
+		:param fbx_file: path to the file.
+		:type fbx_file: str|unicode
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				*
+					Cleaned-up path on success.
+					I.e., unix-style slashes, removed extra trailing/leading slashes.
+				* Whether the path was cleaned-up (removed folder/file at this path)
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen to cancel overwrite process
+					(i.e., path was **not** cleaned).
 		"""
 		err.NotStringError(fbx_file, 'fbx_file').raise_if_needed_or_empty()
-		fbx_file = fs.to_unix_path(fbx_file, trailing_slash=0)
+		fbx_file = fs.to_unix_path(fbx_file, trailing_slash=False)
 		while '//' in fbx_file:
 			fbx_file = fbx_file.replace('//', '/')
 		if not fbx_file.lower().endswith('.fbx'):
 			fbx_file += '.fbx'
-		fbx_file = fs.clean_path_for_file(fbx_file, 2, overwrite)
-		return fbx_file
+		return fs.clean_path_for_file(fbx_file, 2, overwrite)
 
 	@staticmethod
 	def export_scene(fbx_file, overwrite=2):
@@ -350,21 +397,30 @@ class Exporter(_ImportExportBase):
 
 		The export settings need to be already specified. You can use load_preset() for that.
 
-		:param fbx_file: <str>, path to the file.
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:param fbx_file: path to the file.
+		:type fbx_file: str|unicode
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
-		fbx_file = Exporter.cleanup_fbx_file_path(fbx_file, overwrite)
-
-		sel = pm.ls(sl=1)
-		pm.select(cl=1)
-		pm.mel.FBXExport(f=fbx_file)
-		pm.select(sel, r=1, ne=1)
-		return fbx_file
+		fbx_file, removed, cancelled = Exporter.cleanup_fbx_file_path(
+			fbx_file, overwrite
+		)
+		if not cancelled:
+			sel = pm.ls(sl=1)
+			pm.select(cl=1)
+			pm.mel.FBXExport(f=fbx_file)
+			pm.select(sel, r=1, ne=1)
+		return fbx_file, removed, cancelled
 
 	def export_objects(self, fbx_file, overwrite=2):
 		"""
@@ -374,13 +430,20 @@ class Exporter(_ImportExportBase):
 
 		The export settings need to be already specified. You can use load_preset() for that.
 
-		:param fbx_file: <str>, path to the file.
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:param fbx_file: path to the file.
+		:type fbx_file: str|unicode
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		if not self.__objects:
 			raise errors.NothingToExportError(self.__id)
@@ -388,13 +451,15 @@ class Exporter(_ImportExportBase):
 		objects = self.get_objects_with_children()
 		if not objects:
 			raise errors.NothingToExportError(self.__id)
-		fbx_file = Exporter.cleanup_fbx_file_path(fbx_file, overwrite)
-
-		sel = pm.ls(sl=1)
-		pm.select(objects, r=1, ne=1)
-		pm.mel.FBXExport(f=fbx_file, s=1)
-		pm.select(sel, r=1, ne=1)
-		return fbx_file
+		fbx_file, removed, cancelled = Exporter.cleanup_fbx_file_path(
+			fbx_file, overwrite
+		)
+		if not cancelled:
+			sel = pm.ls(sl=1)
+			pm.select(objects, r=1, ne=1)
+			pm.mel.FBXExport(f=fbx_file, s=1)
+			pm.select(sel, r=1, ne=1)
+		return fbx_file, removed, cancelled
 
 
 
@@ -512,22 +577,28 @@ class BatchExporter(object):
 		Performs the actual export of a group.
 
 		:param gr: PyNode transform, the group object.
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:type gr: pm.PyNode|pm.nodetypes.Transform
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		nm = ls.short_item_name(gr)
 		path = self.__folder
 		if not path:
-			raise fs.errors.EmptyPathError(path, 'FBX root folder is not specified')
+			raise fs.errors.EmptyPath(path, 'FBX root folder is not specified')
 		path = fs.clean_path_for_folder(path, 2).rstrip('/')
 		self.__folder = path
 		path += '/%s.fbx' % nm
-		path = self._exporter.set_objects(gr).export_objects(path, overwrite)
-		return path
+		return self._exporter.set_objects(gr).export_objects(path, overwrite)
 
 	def _get_folder_dialog(self, start_path=None, raise_error_if_cancelled=True):
 		"""
@@ -580,7 +651,13 @@ class BatchExporter(object):
 			* 0 - don't overwrite (an error is thrown if file already exist)
 			* 1 - overwrite
 			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		err.WrongTypeError(x, int, 'index').raise_if_needed()
 		groups = self.__parent_groups
@@ -593,13 +670,20 @@ class BatchExporter(object):
 		Export the group at the given index (start from 0).
 		The path is specified in process by opening file chooser dialog window.
 
-		:param x: <int> the index of a group (in the groups list).
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <str> the exported file path (the string could be cleaned up).
+		:param x: the index of a group (in the groups list).
+		:type x: int
+		:param overwrite:
+			Whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return:
+			3 results:
+				* the exported file path (the string could be cleaned up).
+				* Whether the path was overwritten by a new FBX
+				*
+					Whether interactive dialog was shown to a user
+					**AND** they have chosen **NOT** to overwrite existing file/folder.
 		"""
 		err.WrongTypeError(x, int, 'index').raise_if_needed()
 		groups = self.__parent_groups
@@ -614,29 +698,33 @@ class BatchExporter(object):
 		"""
 		Export all the groups.
 
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <list of strings> the paths of the exported files (each string could be cleaned up).
+		:param overwrite:
+			whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return: the paths of the exported files (each string could be cleaned up).
 		"""
 		groups = self.__parent_groups
 		if not groups:
 			raise errors.NothingToExportError(self._exporter.name)
-		return [self.__export_as_group(gr, overwrite) for gr in groups]
+		return [
+			path for path, replaced, cancelled in
+			(self.__export_as_group(gr, overwrite) for gr in groups)
+			if not cancelled
+		]
 
 	def export_all_groups_dialog(self, overwrite=2):
 		"""
 		Export all the groups.
 		The path is specified in process by opening file chooser dialog window.
 
-		:param overwrite: <int>, whether existing file is overwritten:
-
-			* 0 - don't overwrite (an error is thrown if file already exist)
-			* 1 - overwrite
-			* 2 - confirmation dialog will pop up if file already exist
-		:return: <list of strings> the paths of the exported files (each string could be cleaned up).
+		:param overwrite:
+			Whether existing file is overwritten:
+				* 0 - don't overwrite (an error is thrown if file already exist)
+				* 1 - overwrite
+				* 2 - confirmation dialog will pop up if file already exist
+		:return: The paths of the exported files (each string could be cleaned up).
 		"""
 		groups = self.__parent_groups
 		if not groups:
@@ -644,4 +732,8 @@ class BatchExporter(object):
 
 		folder_path = self._get_folder_dialog()
 		self.set_folder(folder_path)
-		return [self.__export_as_group(gr, overwrite) for gr in groups]
+		return [
+			path for path, replaced, cancelled in
+			(self.__export_as_group(gr, overwrite) for gr in groups)
+			if not cancelled
+		]
