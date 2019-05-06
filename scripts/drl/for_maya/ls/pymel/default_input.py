@@ -2,8 +2,21 @@ __author__ = 'DRL'
 
 
 from pymel import core as pm
+from drl_common.utils import flatten_gen as _flat
 
-from drl_common import errors as err
+try:
+	# support type hints in Python 3:
+	import typing as _t
+except ImportError:
+	pass
+from drl_common.py_2_3 import str_t, str_hint
+
+try:
+	_hint_item_single = _t.Union[str_hint, pm.PyNode]
+	_hint_item_mult = _t.Union[_hint_item_single, _t.Iterable[_hint_item_single]]
+
+except:
+	pass
 
 
 class NotMayaObjectBaseError(ValueError):
@@ -33,8 +46,11 @@ class NotComponentError(NotMayaObjectBaseError):
 		super(NotComponentError, self).__init__(node, message_template)
 
 
-
-def handle_input(items=None, selection_if_none=True, flatten=False, **ls_sel_args):
+def handle_input(
+	items=None,  # type: _t.Optional[_hint_item_mult]
+	selection_if_none=True, flatten=False,
+	**ls_sel_args
+):
 	"""
 	Pre-processes input objects/components. Can get current selection if nothing
 	is given as a first argument.
@@ -43,46 +59,30 @@ def handle_input(items=None, selection_if_none=True, flatten=False, **ls_sel_arg
 	I.e., it:
 		* expands included sets/lists/tuples to the actual elements.
 		* ensures eah element is PyNode object.
-
-	:type items:
-		str|unicode|pm.PyNode|list[str|unicode|pm.PyNode]|tuple[str|unicode|pm.PyNode]
-	:rtype: list[PyNode]
 	"""
 	if items is None or not items:
 		if selection_if_none:
 			items = pm.ls(sl=True, **ls_sel_args)
 		else:
-			return []
-
-	def flattened(itm, out_list):
-		if isinstance(itm, (list, tuple, set)):
-			for el in itm:
-				flattened(el, out_list)
-			return
-		out_list.append(itm)
-
-	res = list()
-	flattened(items, res)
-	items = res
-	del res
-	# now we're guaranteed to have a list in items
+			res = []  # type: _t.List[pm.PyNode]
+			return res
 
 	def make_py_mel(element):
 		if isinstance(element, pm.PyNode):
 			return element
-		if isinstance(element, (str, unicode)):
+		if isinstance(element, str_t):
 			return pm.PyNode(element)
 		try:
 			return pm.PyNode(element)
 		except:
 			raise NotNodeError(element, "Can't create PyNode from element: {0}")
 
-	items = map(make_py_mel, items)
+	res = map(make_py_mel, _flat(items))
 	# now we're guaranteed to have a list of PyNodes in items
 
 	if flatten:
-		items = pm.ls(items, fl=1)
-	return items
+		res = pm.ls(res, fl=1)
+	return res
 
 
 def handle_single_obj(obj=None, selection_if_none=True, show_errors=True, **ls_sel_args):
