@@ -2,11 +2,22 @@ __author__ = 'DRL'
 
 
 from pymel import core as pm
+from maya.api import OpenMaya as api
 
 from drl.for_maya.ls import pymel as ls
 from drl.for_maya.ls.convert import components as comp
 from drl.for_maya.ui import ProgressWindow
 
+try:
+	# support type hints in Python 3:
+	import typing as _t
+except ImportError:
+	pass
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_hint as _str_hint,
+	t_strict_unicode as _t_uni
+)
 
 
 def snap_point_to_point(
@@ -91,3 +102,20 @@ def snap_point_to_point(
 	ProgressWindow.end()
 
 	return res
+
+
+def planarize(items=None, selection_if_none=True):
+	prev_sel = pm.ls(sl=1)
+	verts = set(
+		comp.Poly(items, selection_if_none).to_vertices(flatten=True)
+	)
+
+	def vtx_pos_vector(
+		vertex  # type: pm.MeshVertex
+	):
+		pos_list = pm.xform(vertex, q=True, t=True, ws=True)  # type: _t.List[float]
+		# noinspection PyArgumentList
+		return api.MVector(pos_list)
+
+	positions = [vtx_pos_vector(vtx) for vtx in sorted(verts)]
+
