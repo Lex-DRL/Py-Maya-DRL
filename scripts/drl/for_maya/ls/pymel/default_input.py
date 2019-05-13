@@ -2,7 +2,6 @@ __author__ = 'DRL'
 
 
 from pymel import core as pm
-from drl_common.utils import flatten_gen as _flat
 
 try:
 	# support type hints in Python 3:
@@ -10,6 +9,10 @@ try:
 except ImportError:
 	pass
 from drl_common.py_2_3 import str_t, str_hint
+from collections import (
+	Iterable as _Iterable,
+	Iterator as _Iterator
+)
 
 try:
 	_hint_item_single = _t.Union[str_hint, pm.PyNode]
@@ -46,6 +49,38 @@ class NotComponentError(NotMayaObjectBaseError):
 		super(NotComponentError, self).__init__(node, message_template)
 
 
+def _flatten_items_gen(items, bruteforce=True, keep_strings=True):
+	"""
+	A variation of the common flatten_gen().
+	It's designed to keep PyNodes properly, not converting them to char sequences.
+	"""
+	if isinstance(items, pm.PyNode) or (
+			keep_strings and isinstance(items, str_t)
+	):
+		# kept string or a PyNode:
+		yield items
+		return
+
+	if bruteforce:
+		# we try to detect non-iterable by actually attempting to iterate over it:
+		try:
+			items = iter(items)
+		except TypeError:
+			yield items
+			return
+	else:
+		# only those classes inherited from built-in iterable classes
+		# are considered iterables:
+		if not isinstance(items, (_Iterable, _Iterator)):
+			yield items
+			return
+
+	# it is indeed an iterable:
+	for el in items:
+		for sub in _flatten_items_gen(el):
+			yield sub
+
+
 def handle_input(
 	items=None,  # type: _t.Optional[_hint_item_mult]
 	selection_if_none=True, flatten=False,
@@ -77,7 +112,7 @@ def handle_input(
 		except:
 			raise NotNodeError(element, "Can't create PyNode from element: {0}")
 
-	res = map(make_py_mel, _flat(items))
+	res = map(make_py_mel, _flatten_items_gen(items))
 	# now we're guaranteed to have a list of PyNodes in items
 
 	if flatten:
