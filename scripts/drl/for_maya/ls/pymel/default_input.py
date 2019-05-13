@@ -8,14 +8,17 @@ try:
 	import typing as _t
 except ImportError:
 	pass
-from drl_common.py_2_3 import str_t, str_hint
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_hint as _str_hint
+)
 from collections import (
 	Iterable as _Iterable,
 	Iterator as _Iterator
 )
 
 try:
-	_hint_item_single = _t.Union[str_hint, pm.PyNode]
+	_hint_item_single = _t.Union[_str_hint, pm.PyNode]
 	_hint_item_mult = _t.Union[_hint_item_single, _t.Iterable[_hint_item_single]]
 
 except:
@@ -55,7 +58,7 @@ def _flatten_items_gen(items, bruteforce=True, keep_strings=True):
 	It's designed to keep PyNodes properly, not converting them to char sequences.
 	"""
 	if isinstance(items, pm.PyNode) or (
-			keep_strings and isinstance(items, str_t)
+			keep_strings and isinstance(items, _str_t)
 	):
 		# kept string or a PyNode:
 		yield items
@@ -105,7 +108,7 @@ def handle_input(
 	def make_py_mel(element):
 		if isinstance(element, pm.PyNode):
 			return element
-		if isinstance(element, str_t):
+		if isinstance(element, _str_t):
 			return pm.PyNode(element)
 		try:
 			return pm.PyNode(element)
