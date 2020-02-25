@@ -78,3 +78,28 @@ class Resource(object):
 
 	def __unicode__(self):
 		return self.value()
+
+
+def dialog_str(title=None, msg=None, text=None, button=None, scrollable=False):
+	"""
+	A wrapper for promptDialog for querying an arbitrary text input.
+	"""
+	button = button if button else "OK"
+	kwargs = {
+		kw: v for (kw, v) in {
+			'title': title,
+			'message': msg,
+			'text': text,
+			'button': button,
+			'cancelButton': "Cancel",
+			'dismissString': "cancel",
+			'scrollableField': bool(scrollable),
+			'style': 'text'
+		}.iteritems() if v
+	}
+	if pm.promptDialog(**kwargs) != "OK":
+		return None
+
+	res = pm.promptDialog(q=True, text=True)  # type: str
+	return res
+
