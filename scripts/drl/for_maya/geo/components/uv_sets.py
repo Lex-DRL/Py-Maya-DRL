@@ -71,7 +71,7 @@ def __error_check_object_and_set(obj, uv_set, all_sets=None):
 	obj = __error_check_object(obj)
 
 	if not all_sets:
-		all_sets = get_all_sets(obj)
+		all_sets = get_object_sets(obj)
 
 	if isinstance(uv_set, int):
 		if uv_set > len(all_sets):
@@ -89,7 +89,7 @@ def __error_check_object_and_set(obj, uv_set, all_sets=None):
 	return obj, uv_set
 
 
-def get_all_sets(obj):
+def get_object_sets(obj):
 	obj = __error_check_object(obj)
 	return pm.polyUVSet(obj, q=1, allUVSets=1)
 
@@ -194,7 +194,7 @@ def copy_to_set(objects=None, to_set=1, from_set='', selection_if_none=True, **k
 		to_set = 1
 
 	def copy_single(obj):
-		all_sets = get_all_sets(obj)
+		all_sets = get_object_sets(obj)
 		current = get_current(obj)
 		to_name = get_set_name(obj, to_set, all_sets=all_sets)
 		from_name = get_set_name(obj, from_set, all_sets=all_sets)
@@ -331,7 +331,7 @@ def keep_only_main_set(objects=None, fix_default_set_name=True, selection_if_non
 	objects = ls.default_input.handle_input(objects, selection_if_none=selection_if_none)
 
 	def keep_single(obj):
-		all_sets = get_all_sets(obj)
+		all_sets = get_object_sets(obj)
 		current = get_set_name(obj, all_sets=all_sets)
 		main_set = get_set_name(obj, kept_set, all_sets=all_sets)
 		if current != main_set:

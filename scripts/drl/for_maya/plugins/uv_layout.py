@@ -111,7 +111,7 @@ def set_source_object(dup_obj, src_obj, uv_set_name=''):
 
 	if not uv_set_name:
 		uv_set_name = uv_sets.get_set_name(src)
-	elif not (uv_set_name in uv_sets.get_all_sets(src)):
+	elif not (uv_set_name in uv_sets.get_object_sets(src)):
 		raise uv_sets.NoSuchUVSetError(src, uv_set_name)
 	__src_uv_attr(dup).set(uv_set_name)
 
@@ -174,7 +174,7 @@ def __prepare_single_duplicate(src_obj, uv_set=''):
 	if (
 		bool(uv_set)
 		and uv_set != uv_sets.get_current(src_obj)
-		and (uv_set in uv_sets.get_all_sets(src_obj))
+		and (uv_set in uv_sets.get_object_sets(src_obj))
 	):
 		uv_sets.set_current_for_singe_obj(src_obj, uv_set)
 

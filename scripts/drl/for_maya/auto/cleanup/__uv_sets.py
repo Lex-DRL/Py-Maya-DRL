@@ -123,7 +123,7 @@ class UVSetsRule(object):
 		Get all matching sets of this rule, applied to a specific poly shape
 		"""
 		if all_sets is None:
-			all_sets = uv_sets.get_all_sets(shape)
+			all_sets = uv_sets.get_object_sets(shape)
 		num_sets = len(all_sets)
 
 		def _single_rule(single_rule):
@@ -169,7 +169,7 @@ class UVSetsRule(object):
 
 	def kept_sets_for_object(self, obj, selection_if_none=True):
 		shape = UVSetsRule.__checked_shape(obj, selection_if_none)
-		all_sets = uv_sets.get_all_sets(shape)
+		all_sets = uv_sets.get_object_sets(shape)
 		match = self.__get_matching_sets(shape, all_sets)
 		if self.is_keep:
 			return match
@@ -177,7 +177,7 @@ class UVSetsRule(object):
 
 	def removed_sets_for_object(self, obj, selection_if_none=True):
 		shape = UVSetsRule.__checked_shape(obj, selection_if_none)
-		all_sets = uv_sets.get_all_sets(shape)
+		all_sets = uv_sets.get_object_sets(shape)
 		match = self.__get_matching_sets(shape, all_sets)
 		if not self.is_keep:
 			return match
