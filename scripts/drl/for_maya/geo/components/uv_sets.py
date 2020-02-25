@@ -375,3 +375,41 @@ def keep_only_main_set(objects=None, fix_default_set_name=True, selection_if_non
 	for o in objects:
 		keep_single(o)
 	pm.select(objects, r=1)
+
+
+def filter_by_set(
+		items=None, selection_if_none=True, uv_set='map1', exclude=False
+):
+	"""Filter objects by either having or not a UV-set with a specific name."""
+	if not(uv_set and isinstance(uv_set, _str_t)):
+		return items
+
+	items = ls.to_objects(
+		items, selection_if_none, shape_to_object=False, component_to_shape=True,
+		remove_duplicates=True
+	)
+
+	def has_set(set_name, uv_sets):
+		return set_name in uv_sets
+
+	def doesnt_have_set(set_name, uv_sets):
+		return set_name not in uv_sets
+
+	is_kept = doesnt_have_set if exclude else has_set
+
+	def gen_kept(
+		objects  # type: _t.List[pm.PyNode]
+	):
+		for obj in objects:
+			try:
+				sets = get_sets(obj, False)
+				if is_kept(uv_set, sets):
+					yield obj
+			except MultipleShapesError:
+				shapes = ls.to_shapes(obj, False, geo_surface=True)
+				for shape in shapes:
+					sets = get_sets(obj, False)
+					if is_kept(uv_set, sets):
+						yield shape
+
+	return list(gen_kept(items))
