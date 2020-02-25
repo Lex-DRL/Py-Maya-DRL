@@ -4,6 +4,11 @@ from pymel import core as pm
 from drl.for_maya.ls import pymel as ls
 from drl_common import errors as err
 from drl_common import utils
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_hint as _str_h,
+	typing as _t
+)
 
 from drl.for_maya import py_node_types as _pnt
 _t_transform = _pnt.transform
@@ -11,9 +16,21 @@ _t_shape_any = _pnt.shape.any
 _t_shape_poly = _pnt.shape.poly
 
 
+class MultipleShapesError(RuntimeError):
+	def __init__(self, obj=None, formatted_message=None):
+		super(MultipleShapesError, self).__init__()
+		if not(
+			formatted_message and isinstance(formatted_message, _str_t)
+		):
+			formatted_message = 'Object has multiple shapes: {obj}'
+		message = formatted_message.format(obj=obj)
+		super(MultipleShapesError, self).__init__(message)
+		self.obj = obj
+
+
 class UVSetError(RuntimeError):
 	def __init__(self, obj, uv_set, formatted_message=None):
-		if not formatted_message or not isinstance(formatted_message, (str, unicode)):
+		if not formatted_message or not isinstance(formatted_message, _str_t):
 			formatted_message = 'Error while performing operation with uv-set <{uv_set}> on object: {obj}'
 		message = formatted_message.format(uv_set=uv_set, obj=obj)
 		super(UVSetError, self).__init__(message)
@@ -31,7 +48,7 @@ class UVSetCopyToItselfError(UVSetError):
 
 class NoSuchUVSetError(UVSetError):
 	def __init__(self, obj, uv_set, formatted_message=None):
-		if not formatted_message or not isinstance(formatted_message, (str, unicode)):
+		if not formatted_message or not isinstance(formatted_message, _str_t):
 			formatted_message = "UV-set <{uv_set}> not found in the object: {obj}"
 		super(NoSuchUVSetError, self).__init__(
 			obj, uv_set,
@@ -41,7 +58,7 @@ class NoSuchUVSetError(UVSetError):
 
 class NoSuchUVSetIndexError(NoSuchUVSetError):
 	def __init__(self, obj, uv_set_number, formatted_message=None):
-		if not formatted_message or not isinstance(formatted_message, (str, unicode)):
+		if not formatted_message or not isinstance(formatted_message, _str_t):
 			formatted_message = "Object {obj} doesn't have {uv_set} UV-sets."
 		super(NoSuchUVSetIndexError, self).__init__(
 			obj, uv_set_number,
@@ -77,21 +94,34 @@ def __error_check_object_and_set(obj, uv_set, all_sets=None):
 		if uv_set > len(all_sets):
 			raise NoSuchUVSetIndexError(obj, uv_set)
 		uv_set = all_sets[uv_set - 1]
-		err.WrongTypeError(uv_set, (str, unicode), 'all_sets', 'string').raise_if_needed()
-	elif isinstance(uv_set, (str, unicode)):
+		err.WrongTypeError(uv_set, _str_t, 'all_sets', 'string').raise_if_needed()
+	elif isinstance(uv_set, _str_t):
 		if not uv_set in all_sets:
 			raise NoSuchUVSetError(obj, uv_set)
 	else:
 		raise TypeError(
 			'Either int or string expected for <uv_set> argument. Got: ' + repr(uv_set)
 		)
-	assert isinstance(uv_set, (str, unicode))
+	assert isinstance(uv_set, _str_t)
 	return obj, uv_set
 
 
 def get_object_sets(obj):
+	"""Legacy only. Use `get_sets()` instead."""
 	obj = __error_check_object(obj)
 	return pm.polyUVSet(obj, q=1, allUVSets=1)
+
+
+def get_sets(item, selection_if_none=False):
+	"""List all UV-sets present on the given object."""
+	shapes = ls.to_shapes(item, selection_if_none, geo_surface=True)
+	res = list()  # type: _t.List[_str_h]
+	if not shapes:
+		return res
+	if len(shapes) != 1:
+		raise MultipleShapesError(item)
+	res = pm.polyUVSet(shapes[0], q=1, allUVSets=1)
+	return res
 
 
 def get_current(obj):
@@ -103,7 +133,7 @@ def get_current(obj):
 	"""
 	obj = __error_check_object(obj)
 	uv_set = pm.polyUVSet(obj, q=1, currentUVSet=1)[0]
-	assert isinstance(uv_set, (str, unicode))
+	assert isinstance(uv_set, _str_t)
 	return uv_set
 
 
