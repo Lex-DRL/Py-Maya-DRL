@@ -4,7 +4,7 @@ require:
 	OpenImageIO
 '''
 
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 
 import OpenImageIO.OpenImageIO as oiio

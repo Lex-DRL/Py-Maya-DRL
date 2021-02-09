@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import sys as __sys
 from pymel import core as pm
@@ -6,15 +6,21 @@ from pymel import core as pm
 from drl.for_maya.ls import pymel as ls
 from drl.for_maya.geo.components import uv_sets
 from drl.for_maya.base_class import PolyObjectsProcessorBase as __BaseProcessor
-from drl_common import errors as err
-from drl_common import utils
+
+from drl_common import (
+	errors as err,
+	utils,
+)
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from drl.for_maya import py_node_types as _pnt
 _t_shape_any = _pnt.shape.any
 
 _this = __sys.modules[__name__]
-_str_types = (str, unicode)
-_rule_types = (int, float, str, unicode)
+_rule_types = tuple([int, float] + list(_str_t))
 
 
 class UVSetsRule(object):

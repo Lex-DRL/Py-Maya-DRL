@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as pm
 from drl.for_maya.ls import pymel as ls

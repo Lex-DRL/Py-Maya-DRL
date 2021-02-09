@@ -1,6 +1,5 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
-import itertools
 from pymel import core as pm
 
 from .base_class import PolyCompConverter as Poly
@@ -10,6 +9,10 @@ from drl.for_maya.geo.components import uv_sets
 from drl.for_maya import ui
 
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	xrange as _xrange,
+	izip as _izip,
+)
 
 
 def _uv_shells_from_mesh(mesh, uv_set=None):
@@ -32,9 +35,9 @@ def _uv_shells_from_mesh(mesh, uv_set=None):
 		uv_set = uv_sets.get_set_name(mesh, uv_set)
 
 	shell_ids, num_sets = mesh.getUvShellsIds(uv_set)
-	res = tuple([list() for x in xrange(num_sets)])
+	res = tuple([list() for x in _xrange(num_sets)])
 
-	for uv, shell_id in itertools.izip(mesh.map[:], shell_ids):
+	for uv, shell_id in _izip(mesh.map[:], shell_ids):
 		res[shell_id].append(uv)
 
 	return res

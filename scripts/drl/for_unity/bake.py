@@ -1,6 +1,13 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from drl_common.strings import *
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+	t_strict_str as _str,
+	t_strict_unicode as _unicode,
+	xrange as _xrange,
+)
 from drl.for_maya import ls
 from pymel import core as pm
 import os, sys
@@ -54,9 +61,9 @@ class BatchRender(object):
 		self.__set_end(value)
 
 	def render_range(self):
-		for i in xrange(self.start_frame, self.end_frame + 1):
+		for i in _xrange(self.start_frame, self.end_frame + 1):
 			pm.currentTime(i)
-			print 'Rendering frame: ' + str(i)
+			print('Rendering frame: ' + str(i))
 			pm.runtime.RedoPreviousRender()
 
 	@staticmethod
@@ -108,7 +115,7 @@ class Turtle(object):
 				node = Turtle.__defaultNodeName
 		if not pm.objExists(node):
 			raise Exception("Given node doesn't exist: " + node)
-		if isinstance(node, (str, unicode)):
+		if isinstance(node, _str_t):
 			node = pm.PyNode(node)
 
 		assert isinstance(node, pm.PyNode)
@@ -120,7 +127,7 @@ class Turtle(object):
 	def get_instance(turtle_node=None):
 		if (
 			turtle_node is None or
-			isinstance(turtle_node, (pm.PyNode, str, unicode, list, tuple, set))
+			isinstance(turtle_node, (pm.PyNode, _str, _unicode, list, tuple, set))
 		):
 			turtle_node = Turtle(turtle_node)
 		assert isinstance(turtle_node, Turtle)
@@ -168,9 +175,9 @@ class Turtle(object):
 		from drl.for_maya import info
 
 		proj_dir = info.get_project_dir()
-		assert isinstance(proj_dir, (str, unicode))
+		assert isinstance(proj_dir, _str_t)
 		subpath = self.dir_attrib.get('')
-		assert isinstance(subpath, (str, unicode))
+		assert isinstance(subpath, _str_t)
 
 		# extra '' forces trailing slash
 		return os.path.join(proj_dir, subpath, '').replace('\\', '/')
@@ -200,7 +207,7 @@ class Turtle(object):
 		attr.set(new_val)
 		fs.clean_path_for_folder(self.bake_dir_abs_path(), overwrite=1)
 
-		print 'Waiting for %s seconds before starting render...' % sleep_time
+		print('Waiting for %s seconds before starting render...' % sleep_time)
 		time.sleep(sleep_time)
 
 	@staticmethod
@@ -225,7 +232,7 @@ class Turtle(object):
 			fs.clean_path_for_file(dir_path, overwrite_folders=1, remove_file=1)
 		attr.set(new_val)
 
-		print 'Waiting for %s seconds after render completion...' % sleep_time
+		print('Waiting for %s seconds after render completion...' % sleep_time)
 		time.sleep(sleep_time)
 
 	def post_frame(self, del_exr=False):
@@ -233,7 +240,7 @@ class Turtle(object):
 		if not Turtle.is_bake():
 			return
 
-		print 'Waiting for %s seconds before post-processing render...' % sleep_time
+		print('Waiting for %s seconds before post-processing render...' % sleep_time)
 		time.sleep(sleep_time)
 
 		bake_dir = self.bake_dir_abs_path()
@@ -252,13 +259,13 @@ class Turtle(object):
 			)
 			if res_png:
 				if not res:
-					print '\n'
+					print('\n')
 				res.append(res_png)
-				print 'Processed {cur} of {total}: "{path}"'.format(
+				print('Processed {cur} of {total}: "{path}"'.format(
 					cur=1+i, total=len_f, path=res_png
-				)
+				))
 		if res:
-			print '\nFinished!\n\n'
+			print('\nFinished!\n\n')
 
 	@staticmethod
 	def clean_filename(filename, shapes_to='Building', extra_replacements=None):
@@ -270,7 +277,7 @@ class Turtle(object):
 		:param extra_replacements: list of tuples (zip) for replacement: (from, to)
 		:return: string
 		"""
-		assert isinstance(filename, (str, unicode))
+		assert isinstance(filename, _str_t)
 		replacements = [
 			('tpIllumination', 'LM'),
 			('Shape', ''),
@@ -346,7 +353,9 @@ class Turtle(object):
 		if move_to_folder_after_completion:
 			moved_path = os.path.join(move_to_folder_after_completion, filename).replace('\\', '/')
 
-			print "Moving texture to new location:\n\t{0}\n\t->{1}".format(out_png_path, moved_path)
+			print(
+				"Moving texture to new location:\n\t{0}\n\t->{1}".format(out_png_path, moved_path)
+			)
 			fs.clean_path_for_file(moved_path, overwrite_folders=1, remove_file=1)
 
 			attempt = 1
@@ -357,7 +366,7 @@ class Turtle(object):
 			err_res = IOError()
 
 			while not success and delta_time < max_delta:
-				print "Attempt: " + str(attempt)
+				print("Attempt: " + str(attempt))
 				next_attempt_time = dt.datetime.now()
 				delta_time = next_attempt_time - start_attempt_time
 				try:
@@ -371,7 +380,7 @@ class Turtle(object):
 
 			if success:
 				out_png_path = moved_path
-				print "Successfully moved"
+				print("Successfully moved")
 			else:
 				raise err_res
 		return out_png_path
@@ -420,12 +429,12 @@ class BakeSet(object):
 		# unexpected argument datatype:
 		if not (
 			obj is None or
-			isinstance(obj, (pm.PyNode, str, unicode))
+			isinstance(obj, (pm.PyNode, _str, _unicode))
 		):
 			raise Exception('Wrong type for <obj> argument: ' + str(type(obj)))
 
 		# null or empty string:
-		if obj is None or (isinstance(obj, (str, unicode)) and not obj):
+		if obj is None or (isinstance(obj, _str_t) and not obj):
 			raise Exception('Empty <obj> is given of type: ' + str(type(obj)))
 
 		#endregion
@@ -475,7 +484,7 @@ class BakeSet(object):
 
 	@staticmethod
 	def get_instance(bake_set=None):
-		if bake_set is None or isinstance(bake_set, (pm.PyNode, str, unicode, list, tuple, set)):
+		if bake_set is None or isinstance(bake_set, (pm.PyNode, _str, _unicode, list, tuple, set)):
 			bake_set = BakeSet(bake_set)
 		assert isinstance(bake_set, BakeSet)
 		return bake_set
@@ -734,7 +743,7 @@ class BakeSet(object):
 		return extra.members()
 	@extra_objects.setter
 	def extra_objects(self, value):
-		assert isinstance(value, (pm.PyNode, str, unicode, list, tuple, set))
+		assert isinstance(value, (pm.PyNode, _str, _unicode, list, tuple, set))
 		extra = self.get_extra_node(False)
 		if not extra:
 			if not value:
@@ -807,7 +816,7 @@ class BakeSet(object):
 			return False
 
 		main_name = self.node.name()
-		assert isinstance(main_name, (str, unicode))
+		assert isinstance(main_name, _str_t)
 		return main_name.startswith(extra_start)
 
 	def common_extra_nodes(self):
@@ -825,7 +834,7 @@ class BakeSet(object):
 	#region resolution attributes
 
 	def __forced_delete_attrib(self, attr_name):
-		assert isinstance(attr_name, (str, unicode))
+		assert isinstance(attr_name, _str_t)
 		node = self.node
 		if node.hasAttr(attr_name):
 			node.attr(attr_name).delete()
@@ -860,7 +869,7 @@ class BakeSet(object):
 			writable=True,
 			keyable=True
 		)
-		for i in xrange(2):
+		for i in _xrange(2):
 			pm.addAttr(
 				node, parent=attr_nm, at='short',
 				ln=atr_names[i],
@@ -980,9 +989,9 @@ class BakeSet(object):
 		return self.node.hasAttr(BakeSet.__attrib_directory_name)
 
 	def __add_string_attrib(self, attr_name, lable='', default_value=''):
-		assert isinstance(attr_name, (str, unicode))
-		assert isinstance(lable, (str, unicode))
-		assert isinstance(default_value, (str, unicode))
+		assert isinstance(attr_name, _str_t)
+		assert isinstance(lable, _str_t)
+		assert isinstance(default_value, _str_t)
 		if not lable:
 			lable = attr_name
 		node = self.node
@@ -1042,7 +1051,7 @@ class BakeSet(object):
 		return self.file_attrib.get()
 	@file_name.setter
 	def file_name(self, value):
-		assert isinstance(value, (str, unicode))
+		assert isinstance(value, _str_t)
 		self.file_attrib.set(value)
 
 	@property
@@ -1050,7 +1059,7 @@ class BakeSet(object):
 		return self.directory_attrib.get()
 	@directory_path.setter
 	def directory_path(self, value):
-		assert isinstance(value, (str, unicode))
+		assert isinstance(value, _str_t)
 		self.directory_attrib.set(value)
 
 	#endregion
@@ -1120,7 +1129,7 @@ class BakeSet(object):
 				raise Exception("Selection isn't used, and no object is provided.")
 			objs = pm.ls(sl=True)
 
-		if isinstance(objs, (pm.PyNode, str, unicode)):
+		if isinstance(objs, (pm.PyNode, _str, _unicode)):
 			if not objs:
 				raise Exception('Empty object is given.')
 			objs = [objs]
@@ -1181,7 +1190,7 @@ class BakeSet(object):
 
 	@staticmethod
 	def add_objects_to_set_with_postfix(postfix, objs=None, selection_if_none=True):
-		assert isinstance(postfix, (str, unicode))
+		assert isinstance(postfix, _str_t)
 		if not postfix:
 			raise Exception('No <postfix> is provided.')
 		bs = BakeSet.add_objects_to_set(objs, selection_if_none)
@@ -1279,16 +1288,16 @@ class Sequence(object):
 	def bake_sets():
 		def sorting_f(set_obj):
 			def do_replace(src, from_str, to_str):
-				assert isinstance(src, (str, unicode))
-				assert isinstance(from_str, (str, unicode))
-				assert isinstance(to_str, (str, unicode))
+				assert isinstance(src, _str_t)
+				assert isinstance(from_str, _str_t)
+				assert isinstance(to_str, _str_t)
 				if src.endswith(from_str):
 					src = src[:-len(from_str)] + to_str
 				return src
 
 			set_obj = BakeSet.assert_set_node(set_obj)
 			key = set_obj.name()
-			assert isinstance(key, (str, unicode))
+			assert isinstance(key, _str_t)
 			key = key.lower()
 
 			reps = [
@@ -1401,7 +1410,7 @@ class Sequence(object):
 			match_obj = re.search('([0-9_-]+)$', group_name)
 			if match_obj:
 				nums = match_obj.groups()[-1]
-				assert isinstance(nums, (str, unicode))
+				assert isinstance(nums, _str_t)
 				# group_name = '--_--Barracks_1_2_q_1-3_--_'
 				group_name = group_name[:-len(nums)]
 				nums = nums.replace('_', '-').strip('-')
@@ -1449,7 +1458,7 @@ class Sequence(object):
 
 		if file_name == def_file or not file_name:
 			file_name = render_file
-		assert isinstance(file_name, (str, unicode))
+		assert isinstance(file_name, _str_t)
 		if not file_name.endswith('.$e'):
 			file_name = Sequence.__default_file
 
@@ -1578,7 +1587,7 @@ class Sequence(object):
 	def render_all_bake_sets(turtle_node=None, dir_from_parent_group=True, frames=None):
 		from pprint import pprint as pp
 		bake_sets = Sequence.bake_sets()
-		print '\n\n\n\n\t\tSets to render:'
+		print('\n\n\n\n\t\tSets to render:')
 		pp(bake_sets)
 		for bs in bake_sets:
 			Sequence.render_bake_set(bs, turtle_node, dir_from_parent_group, frames, False)

@@ -1,17 +1,25 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import os
 
 from pymel import core as pm
 
-from drl.for_maya import info as inf
-from drl.for_maya import plugins
+from drl.for_maya import (
+	info as inf,
+	plugins,
+)
 from drl.for_maya.ls import pymel as ls
 from drl.for_maya.ui import dialogs
 
-from drl_common import utils
-from drl_common import errors as err
-from drl_common import filesystem as fs
+from drl_common import (
+	errors as err,
+	filesystem as fs,
+	utils,
+)
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from . import errors
 from . import messages as m
@@ -23,7 +31,8 @@ _t_comp_any = _pnt.comp.any
 _tt_geo_any = (_pnt.transform, _pnt.shape.any, _pnt.comp.any)
 
 
-_is_str = lambda x: isinstance(x, (str, unicode))
+def _is_str(x):
+	return isinstance(x, _str_t)
 
 
 class FBX(plugins.Plugin):

@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import shutil as sh
 import warnings as wrn
@@ -17,7 +17,7 @@ def perform_combine_by_material(objects=None, prefix='', postfix=''):
 	objs = ls.unique_sort(objs)
 	matObj = ls.objects_by_material(objects)
 	res = []
-	for mat, objs in matObj.iteritems():
+	for mat, objs in matObj.items():
 		if len(objs) < 2:
 			combined = fix.duplicate(objs[0], rr=1)
 			if cmds.listRelatives(combined, fullPath=1, allParents=1):
@@ -95,7 +95,7 @@ def perform_move_files_to_final_dir(exports={}, exportDir=''):
 		'undel': []
 	}
 	moved = list()
-	for bs, fl in exports.iteritems():
+	for bs, fl in exports.items():
 		nuFl = os.path.join(exportDir, bs + '.fbx')
 		nuFl = nuFl.replace('\\', '/')
 		if os.path.isdir(nuFl):
@@ -151,11 +151,13 @@ def export_by_layer(
 	moved, err = perform_move_files_to_final_dir(exports, exportDir)
 
 	if err['dir']:
-		print '\n\n\n\tUnable to move the following files, because these paths are already taken by folders:'
-		for d in err['dir']: print d
+		print('\n\n\n\tUnable to move the following files, because these paths are already taken by folders:')
+		for d in err['dir']:
+			print(d)
 	if err['undel']:
-		print '\n\n\n\tUnable to replace the following files with the new ones:'
-		for u in err['undel']: print u
+		print('\n\n\n\tUnable to replace the following files with the new ones:')
+		for u in err['undel']:
+			print(u)
 	if err['dir'] or err['undel']:
 		msg = "\nSome exported files are failed to move to the destination directory. They're left in the following folder:\n" \
 					"%s" \

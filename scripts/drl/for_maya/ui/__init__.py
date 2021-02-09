@@ -1,15 +1,16 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as pm
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from . import dialogs
 from .__grid import Grid
 from .__progress import Progress
 from .__progress_window import ProgressWindow
-
-
-_str_types = (str, unicode)
 
 
 class ResIdNotExist(RuntimeError):
@@ -56,7 +57,7 @@ class Resource(object):
 			res = pm.mel.uiRes(self.__key)
 		except pm.MelError as exc:
 			raise ResIdNotExist(exc.message)
-		assert isinstance(res, _str_types)
+		assert isinstance(res, _str_t)
 		return res
 
 	def value_formatted(self, *args):
@@ -67,7 +68,7 @@ class Resource(object):
 		"""
 		val = self.value()
 		val = pm.format(val, stringArg=list(args))
-		assert isinstance(val, _str_types)
+		assert isinstance(val, _str_t)
 		return val
 
 	def __repr__(self):
@@ -95,7 +96,7 @@ def dialog_str(title=None, msg=None, text=None, button=None, scrollable=False):
 			'dismissString': "cancel",
 			'scrollableField': bool(scrollable),
 			'style': 'text'
-		}.iteritems() if v
+		}.items() if v
 	}
 	if pm.promptDialog(**kwargs) != "OK":
 		return None

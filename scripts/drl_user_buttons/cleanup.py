@@ -1,5 +1,6 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
+from drl_common.py_2_3 import reload
 from drl.for_maya.auto import cleanup as _cl
 reload(_cl)
 

@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 
 from pymel import core as pm
@@ -10,15 +10,15 @@ except ImportError:
 	pass
 from drl_common.py_2_3 import (
 	str_t as _str_t,
-	str_hint as _str_hint
+	str_hint as _str_h,
 )
 from collections import (
 	Iterable as _Iterable,
-	Iterator as _Iterator
+	Iterator as _Iterator,
 )
 
 try:
-	_hint_item_single = _t.Union[_str_hint, pm.PyNode]
+	_hint_item_single = _t.Union[_str_h, pm.PyNode]
 	_hint_item_mult = _t.Union[_hint_item_single, _t.Iterable[_hint_item_single]]
 
 except:
@@ -148,7 +148,7 @@ def handle_single_obj(obj=None, selection_if_none=True, show_errors=True, **ls_s
 			raise Exception("Single object expected. Multiple provided: " + repr(obj))
 		obj = obj[0]
 
-	if isinstance(obj, (str, unicode)):
+	if isinstance(obj, _str_t):
 		obj = pm.PyNode(obj)
 	assert isinstance(obj, pm.PyNode)
 	return obj

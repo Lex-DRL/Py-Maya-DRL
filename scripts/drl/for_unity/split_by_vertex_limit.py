@@ -1,10 +1,16 @@
 from drl_common import errors as err
 
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from maya import cmds
 import warnings as wrn
 
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+	t_strict_str as _str,
+	t_strict_unicode as _unicode,
+)
 from ..for_maya import ls
 from ..for_maya.geo.components.old.vertices import calc_unityCount as calc_vert
 from ..for_maya import transformations as tr
@@ -38,7 +44,7 @@ class CountedShape(object):
 			elif isinstance(shapePath, set):
 				raise Exception('CountedShape.set_shape(): Set provided instead of string')
 
-			if isinstance(shapePath, (str, unicode)):
+			if isinstance(shapePath, _str_t):
 				if shapePath == '':
 					raise Exception('CountedShape.set_shape(): Empty string is given')
 				# make sure this shape actually exist:
@@ -115,7 +121,7 @@ class ShapesGroup(object):
 		if not items is None: self.items = items
 
 	def find_shape(self, shape):
-		if not isinstance(shape, (CountedShape, str, unicode)):
+		if not isinstance(shape, (CountedShape, _str, _unicode)):
 			raise Exception('ShapesGroup.find_shape: string expected, received: %s' % shape)
 		if isinstance(shape, CountedShape):
 			shape = shape.shape
@@ -129,7 +135,7 @@ class ShapesGroup(object):
 				shape = list(shape)
 			for s in shape: self.add_shape(s)
 			return
-		if isinstance(shape, (str, unicode)):
+		if isinstance(shape, _str_t):
 			shape = CountedShape(shape)
 		elif not isinstance(shape, CountedShape):
 			raise Exception('ShapesGroup.add_shape: attempt to add an item of wrong type: %s' % shape)
@@ -153,7 +159,7 @@ class ShapesGroup(object):
 		# remove by shape path in the rest of cases:
 		if isinstance(shape, CountedShape):
 			shape = shape.shape
-		elif not isinstance(shape, (str, unicode)):
+		elif not isinstance(shape, _str_t):
 			raise Exception('ShapesGroup.remove_shape: a wrong type is provided: %s' % shape)
 		# make sure we delete all occurances even if they somehow got in the list:
 		while shape in [x.shape for x in self.__items]:
@@ -168,7 +174,7 @@ class ShapesGroup(object):
 		return self.__name
 	@name.setter
 	def name(self, value):
-		if not isinstance(value, (str, unicode, int)):
+		if not isinstance(value, (_str, _unicode, int)):
 			raise Exception('ShapesGroup.name can only be a string or int.')
 		self.__name = value
 	@name.deleter
@@ -180,7 +186,7 @@ class ShapesGroup(object):
 		return self.__items[:]
 	@items.setter
 	def items(self, value):
-		if not isinstance(value, (list, set, tuple, str, unicode, CountedShape)):
+		if not isinstance(value, (list, set, tuple, _str, _unicode, CountedShape)):
 			raise Exception('ShapesGroup.items: a wrong type is provided: %s' % value)
 		self.__items = list()
 		self.add_shape(value)
@@ -464,7 +470,7 @@ class Splitter(object):
 			new_obj = self.split_object(o)
 			if not new_obj is None:
 				self.result += new_obj
-			# print 'Finished: %s - %d of %d, %.2f' % (o, i+1, len_objs, (i+1.0)*100/len_objs) + '%'
+			# print('Finished: %s - %d of %d, %.2f' % (o, i+1, len_objs, (i+1.0)*100/len_objs) + '%')
 		errored = self.__errored_big + self.__errored_mat
 		if errored:
 			cmds.select(errored, r=1)

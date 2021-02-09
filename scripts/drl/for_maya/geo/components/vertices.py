@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 
 from pymel import core as pm
@@ -81,7 +81,7 @@ def snap_point_to_point(
 	while ProgressWindow.is_active():
 		itm = items[i]
 		msg = '{0}/{1}: {2}'.format(i + 1, num, itm.name())
-		print msg
+		print(msg)
 		# msg += '\nSnap to: {0}\nSpace: {1}'.format(src.name(), transfer_space)
 		ProgressWindow.message = msg
 		snap_item(itm, msg)

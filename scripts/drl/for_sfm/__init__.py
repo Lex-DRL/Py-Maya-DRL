@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import os
 from maya import cmds
@@ -47,11 +47,11 @@ def read_smd_files():
 	res = list()
 	for smd in smds:
 		cmds.file(f=1, new=1)
-		print mel.smdRead(smd, 0, axis_mode)
+		print(mel.smdRead(smd, 0, axis_mode))
 		_pm.select(cl=1)
 		maya_file = (os.path.splitext(smd)[0] + '.mb').replace("\\", '/')
 		cmds.file(rename=maya_file)
 		maya_file = cmds.file(force=1, save=1, options="v=0;", type="mayaBinary")
 		res.append(maya_file)
-		print "Exported scene:\n%s\n\n\n" % maya_file
+		print("Exported scene:\n%s\n\n\n" % maya_file)
 	return res

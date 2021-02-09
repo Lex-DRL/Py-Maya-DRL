@@ -1,8 +1,12 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import re
 
 from pymel import core as _pm
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 from drl.for_maya.ls import pymel as _ls
 from drl.for_maya.ls.convert import components as _conv_comp
 from drl.for_maya.auto.cleanup import history as _h
@@ -12,15 +16,14 @@ from drl.for_maya.transformations import reset_pivot as _reset
 try:
 	# support type hints:
 	import typing as _t
-	_t_str = _t.Union[str, unicode]
-	_t_node = _t.Union[_t_str, _pm.PyNode]
+	_h_node = _t.Union[_str_h, _pm.PyNode]
 	_t_face = _pm.general.MeshFace
 except ImportError:
 	pass
 
 
 def group_by_shape(
-	items=None,  # type: _t.Union[None, _t_node, _t.Iterable[_t_node]]
+	items=None,  # type: _t.Union[None, _h_node, _t.Iterable[_h_node]]
 	selection_if_none=True
 ):
 	"""
@@ -54,7 +57,7 @@ def group_by_shape(
 		cur_tuple[1].append(itm)
 
 	items_sorted = sorted(
-		items_sorted.itervalues(),
+		items_sorted.values(),
 		key=lambda x: x[0]
 	)  # type: _t.List[_t.Tuple[int, _t.List[_t_face]]]
 	items_sorted = [tpl[1] for tpl in items_sorted]  # type: _t.List[_t.List[_t_face]]
@@ -62,7 +65,7 @@ def group_by_shape(
 
 
 def separate(
-	items=None,  # type: _t.Union[None, _t_node, _t.Iterable[_t_node]]
+	items=None,  # type: _t.Union[None, _h_node, _t.Iterable[_h_node]]
 	selection_if_none=True,
 	combine_parts=False
 ):
@@ -99,7 +102,7 @@ def separate(
 		# iteratively process all the selected shapes:
 		shape = shape_faces[0].node()
 		orig_transform = shape.parent(0)
-		orig_name = orig_transform.nodeName()  # type: _t_str
+		orig_name = orig_transform.nodeName()  # type: _str_h
 		orig_was_part = bool(  # original mesh's name already ends with "_pt#"
 			re_part_name.match(orig_name.lower())
 		)
@@ -134,7 +137,7 @@ def separate(
 		_h.delete_smart(sep_objects + [sep_main], selection_if_none=False)
 
 		_pm.rename(sep_main, orig_name)
-		orig_name = sep_main.name()  # type: _t_str
+		orig_name = sep_main.name()  # type: _str_h
 		if orig_was_part:
 			pt_name = orig_name
 		else:

@@ -1,6 +1,6 @@
 from drl_common import errors as err
 
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import warnings as wrn
 

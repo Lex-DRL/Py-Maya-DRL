@@ -9,7 +9,7 @@ Indicate what the dialog is to return.
 * DIR_HIDE_FILES=3 - The name of a directory. Only directories are displayed in the dialog.
 * FILES_MULTIPLE=4 - Then names of one or more existing files.
 """
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 FILE_ANY = 0
 FILE_EXISTING = 1

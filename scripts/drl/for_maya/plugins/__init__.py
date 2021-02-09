@@ -1,9 +1,13 @@
 # coding=utf-8
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import os
 from pymel import core as pm
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 
 class PluginBaseError(Exception):
@@ -17,7 +21,7 @@ class PluginBaseError(Exception):
 		:param plugin: <str> plugin name or path.
 		"""
 		formatter = 'Error in plugin <%s>'
-		if not isinstance(plugin, (str, unicode)):
+		if not isinstance(plugin, _str_t):
 			plugin = repr(plugin)
 		msg = formatter % plugin
 		super(PluginBaseError, self).__init__(msg)
@@ -47,7 +51,7 @@ class PluginBaseError(Exception):
 
 		:param plugin: <str> plugin name or path.
 		"""
-		if not isinstance(plugin, (str, unicode)):
+		if not isinstance(plugin, _str_t):
 			plugin = repr(plugin)
 		self._plugin = plugin
 		self._update_message()

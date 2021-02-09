@@ -1,11 +1,12 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as _pm
 
+from drl_common.py_2_3 import reload
 from drl.for_maya import ui as _ui
 from drl.for_maya.geo.components import (
 	uvs as _uvs,
-	uv_sets as _uv_sets
+	uv_sets as _uv_sets,
 )
 reload(_ui)
 reload(_uvs)

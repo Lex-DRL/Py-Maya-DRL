@@ -1,11 +1,15 @@
 """
 Provides common listing methods ensuring behavior in functions.
 """
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
 
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 
 def items_list(items=None):
@@ -18,11 +22,11 @@ def items_list(items=None):
 		return []
 	if isinstance(items, (tuple, set)):
 		items = list(items)
-	elif isinstance(items, (str, unicode)):
+	elif isinstance(items, _str_t):
 		items = [items]
 	elif isinstance(items, dict):
 		res = list()
-		for k, v in items.iteritems():
+		for k, v in items.items():
 			res += items_list(v)
 		items = res
 	err.WrongTypeError(items, list, 'items', 'list of strings').raise_if_needed()

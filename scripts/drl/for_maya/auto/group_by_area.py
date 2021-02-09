@@ -1,9 +1,14 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from maya import cmds
 import warnings as wrn
 
 from drl.for_maya import ls
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+	xrange as _xrange,
+)
 
 
 class CountedObj(object):
@@ -100,7 +105,7 @@ class CountedObj(object):
 				objPath = None
 			else:
 				raise Exception(CountedObj.__errorstring('Set provided instead of string'))
-		elif not isinstance(objPath, (str, unicode)):
+		elif not isinstance(objPath, _str_t):
 			if selection_if_empty:
 				objPath = None
 			else:
@@ -134,7 +139,7 @@ class CountedObj(object):
 
 	@staticmethod
 	def obj_path(obj):
-		if isinstance(obj, (str, unicode)):
+		if isinstance(obj, _str_t):
 			objPath = ls.convert.hierarchy.to_full_paths(obj, False)[0]
 			if objPath:
 				return objPath
@@ -157,7 +162,7 @@ class ObjectGroup(object):
 				objs = ls.default_input.selection()
 			else:
 				objs = list()
-		elif isinstance(objs, (str, unicode)):
+		elif isinstance(objs, _str_t):
 			objs = [objs]
 		elif isinstance(objs, tuple):
 			objs = list(objs)
@@ -197,8 +202,10 @@ class ObjectGroup(object):
 			raise
 		return objPath in self.obj_paths()
 
+	__t_str_or_instance = tuple(list(_str_t) + [CountedObj])
+
 	def append(self, objs=None, selection_if_empty=True):
-		if isinstance(objs, (str, unicode, CountedObj)) and objs:
+		if isinstance(objs, self.__t_str_or_instance) and objs:
 			objs = [objs]
 		elif isinstance(objs, tuple):
 			objs = list(objs)
@@ -247,7 +254,7 @@ class GroupedObjects(object):
 		self.__ungrouped = ObjectGroup(objs, local_space, selection_if_empty)
 		self.__loc_space = local_space
 		self.__groups = list()
-		for i in xrange(groupNum):
+		for i in _xrange(groupNum):
 			self.add_group(None, False)
 
 	def add_group(self, objs=None, selection_if_empty=True):

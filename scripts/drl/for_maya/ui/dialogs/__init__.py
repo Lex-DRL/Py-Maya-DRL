@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from drl_common.is_maya import is_maya
 
@@ -7,8 +7,16 @@ if __maya:
 	from maya import cmds
 
 from . import confirm_icon, confirm_align, file_mode
-import drl_common.errors as err
-import drl_common.filesystem as fs
+from drl_common import (
+	errors as err,
+	filesystem as fs,
+)
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+	t_strict_str as _str,
+	t_strict_unicode as _unicode,
+)
 
 
 class Button(object):
@@ -63,7 +71,7 @@ class Button(object):
 		if not button:
 			raise err.EmptyStringError(button_name)
 
-		if isinstance(button, (str, unicode)):
+		if isinstance(button, _str_t):
 			return Button(button)
 		if isinstance(button, (tuple, list)):
 			return Button(
@@ -131,7 +139,7 @@ def confirm(
 		kw_args['parent_window'] = err.NotStringError(parent_window, 'parent_window').raise_if_needed()
 	if message_align:
 		kw_args['messageAlign'] = err.NotStringError(message_align, 'message_align').raise_if_needed_or_empty()
-	if icon and isinstance(icon, (str, unicode)):
+	if icon and isinstance(icon, _str_t):
 		kw_args['icon'] = icon
 
 	# color:
@@ -168,11 +176,11 @@ def confirm(
 			return [Button.cleanup_button_argument(b, 'extra_button') for b in extra_buttons]
 		if isinstance(extra_buttons, Button):
 			return [extra_buttons]
-		if isinstance(extra_buttons, (str, unicode)):
+		if isinstance(extra_buttons, _str_t):
 			return [Button.cleanup_button_argument(extra_buttons, 'extra_buttons')]
 		raise err.WrongTypeError(
 			extra_buttons,
-			(Button, str, unicode, list, tuple),
+			(Button, list, tuple, _str, _unicode),
 			'extra_buttons',
 			'list or tuple of Buttons / Button / string'
 		)

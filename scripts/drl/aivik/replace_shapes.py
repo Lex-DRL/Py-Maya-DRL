@@ -1,9 +1,14 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import re as _re
 from functools import partial as _partial
 
 from pymel import core as pm
+
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 default_regex = r'^.+_{}[_\d]*$'
 
@@ -119,7 +124,7 @@ def from_many_sources(match_regex=None):
 	src_objects = pm.ls(sl=1, tr=1)
 	# src = src_objects[0]
 
-	if match_regex is None or not isinstance(match_regex, (str, unicode)):
+	if match_regex is None or not isinstance(match_regex, _str_t):
 		match_regex = default_regex
 
 	res = list()
@@ -174,7 +179,7 @@ def from_many_sources_with_offset(match_regex=None):
 	src_objects = pm.ls(sl=1, tr=1)
 	# src = src_objects[0]
 
-	if match_regex is None or not isinstance(match_regex, (str, unicode)):
+	if match_regex is None or not isinstance(match_regex, _str_t):
 		match_regex = default_regex
 
 	res = list()

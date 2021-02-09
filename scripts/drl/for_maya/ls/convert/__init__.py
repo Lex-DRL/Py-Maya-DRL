@@ -1,7 +1,7 @@
 """
 Various listing-conversion methods.
 """
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 
 from . import hierarchy

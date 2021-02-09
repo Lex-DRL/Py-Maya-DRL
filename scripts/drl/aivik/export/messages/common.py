@@ -1,5 +1,5 @@
 # coding=utf-8
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from drl_common import module_string as __ms
 __mod = __ms(__name__)

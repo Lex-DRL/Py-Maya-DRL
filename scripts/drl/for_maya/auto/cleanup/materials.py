@@ -1,7 +1,12 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import sys as __sys
 from pymel import core as _pm
+
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from drl.for_maya.ls import pymel as _ls
 
@@ -14,7 +19,6 @@ _ls_sorted = _ls.sorted_items
 _mat = _ls.materials
 
 _this = __sys.modules[__name__]
-_str_types = (str, unicode)
 
 
 def all_faces_to_shape(items=None, selection_if_none=True):

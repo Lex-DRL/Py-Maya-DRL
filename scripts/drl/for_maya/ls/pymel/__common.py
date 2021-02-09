@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 
 import pymel.core as _pm
@@ -6,8 +6,14 @@ from pymel.core import PyNode
 
 from . import default_input as _def
 
-from drl_common import utils as _utils
-from drl_common import errors as _err
+from drl_common import (
+	errors as _err,
+	utils as _utils,
+)
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from drl.for_maya import py_node_types as _pnt
 _t_sg = _pnt.sg
@@ -15,6 +21,7 @@ _t_shape = _pnt.shape
 _t_transform = _pnt.transform
 _t_shape_any = _pnt.shape.any
 _t_comp_any = _pnt.comp.any
+_t_PyNode_or_str = tuple([PyNode] + list(_str_t))
 
 
 def all_objects(no_shapes=True, **ls_args):
@@ -357,7 +364,7 @@ def short_item_name(item):
 		item = item.name()
 	item = _err.NotStringError(item, 'item').raise_if_needed_or_empty()
 	item = item.split('|')[-1]
-	assert isinstance(item, (str, unicode))
+	assert isinstance(item, _str_t)
 	return item
 
 
@@ -376,7 +383,7 @@ def long_item_name(item, keep_comp=True):
 	if isinstance(item, (list, tuple, set)) and len(item) == 1:
 		item = [x for x in item][0]
 
-	if isinstance(item, (str, unicode)):
+	if isinstance(item, _str_t):
 		item = _err.NotStringError(item, 'item').raise_if_needed_or_empty()
 		item = _pm.ls(item)
 		if not item:
@@ -393,7 +400,7 @@ def long_item_name(item, keep_comp=True):
 
 	item = _err.WrongTypeError(item, _pm.nt.DependNode, 'item').raise_if_needed()
 	name = item.longName() + extra
-	assert isinstance(name, (str, unicode))
+	assert isinstance(name, _str_t)
 	return name
 
 
@@ -555,7 +562,7 @@ def object_set_exists(set_node, node_type='objectSet'):
 	from maya import cmds
 	_err.NotStringError(node_type, 'node_type').raise_if_needed()
 	_err.WrongTypeError(
-		set_node, (PyNode, str, unicode), 'set_node'
+		set_node, _t_PyNode_or_str, 'set_node'
 	).raise_if_needed()
 	node = short_item_name(set_node)
 	if _pm.objExists(node):

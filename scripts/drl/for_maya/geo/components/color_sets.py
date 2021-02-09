@@ -1,6 +1,10 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as pm
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 from drl.for_maya.ls import pymel as ls
 
 _mesh_type = pm.nt.Mesh
@@ -33,7 +37,7 @@ def get_current(obj=None, selection_if_none=True):
 	if not obj:
 		return ""
 	res = obj[0].getCurrentColorSetName()
-	assert isinstance(res, (str, unicode))
+	assert isinstance(res, _str_t)
 	return res
 
 

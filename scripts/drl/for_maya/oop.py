@@ -1,12 +1,20 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from maya import cmds
+
+
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
+
+_t_base_iterable_or_str = tuple(list(_str_t) + [list, tuple])
 
 
 class Node(object):
 	def __init__(self, node=''):
 		super(Node, self).__init__()
-		if not isinstance(node, (str, unicode)):
+		if not isinstance(node, _str_t):
 			raise Exception('<node> argument is of wrong type (string expected)')
 		if not node:
 			raise Exception('<node> argument is empty string')
@@ -24,7 +32,7 @@ class Node(object):
 		if isinstance(value, Node):
 			self.__full_path = value.full_path
 			return
-		if not isinstance(value, (str, unicode, list, tuple)):
+		if not isinstance(value, _t_base_iterable_or_str):
 			raise Exception('Node name(s) expected. Provided: ' + repr(value))
 		long_paths = cmds.ls(value, long=True)
 		if not (long_paths and cmds.objExists(value)):
@@ -46,7 +54,7 @@ class Node(object):
 class Attribute(object):
 	def __init__(self, node=None, attrib_name=''):
 		super(Attribute, self).__init__()
-		if not isinstance(attrib_name, (str, unicode)):
+		if not isinstance(attrib_name, _str_t):
 			raise Exception('<attrib_name> argument is of wrong type (string expected)')
 		if not attrib_name:
 			raise Exception('<attrib_name> argument is empty string')
