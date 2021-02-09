@@ -1,7 +1,7 @@
 """
 Provides various methods allowing to convert one hierarchical entity to another.
 """
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
 from drl_common import errors as err

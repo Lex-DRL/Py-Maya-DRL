@@ -1,7 +1,7 @@
 """
 Provides common listing methods ensuring behavior in functions.
 """
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
 

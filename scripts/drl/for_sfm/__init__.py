@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import os
 from maya import cmds

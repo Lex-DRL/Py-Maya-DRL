@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as pm
 from drl_common import errors as err

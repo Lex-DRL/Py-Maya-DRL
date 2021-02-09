@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from collections import defaultdict
 from pymel import core as pm

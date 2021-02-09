@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import re as _re
 from functools import partial as _partial

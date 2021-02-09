@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from drl_common.strings import *
 from drl_common.py_2_3 import (

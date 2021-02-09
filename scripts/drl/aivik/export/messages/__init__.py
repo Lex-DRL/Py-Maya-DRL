@@ -1,3 +1,3 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 from .import common, island

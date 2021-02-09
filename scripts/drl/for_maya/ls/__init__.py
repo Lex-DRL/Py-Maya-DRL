@@ -1,4 +1,4 @@
-__author__ = 'DRL'
+__author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
 from ..input_warn import items_input as wrn_items
