@@ -7,6 +7,7 @@ from drl.for_maya import ls
 from drl_common.py_2_3 import (
 	str_t as _str_t,
 	str_h as _str_h,
+	xrange as _xrange,
 )
 
 
@@ -253,7 +254,7 @@ class GroupedObjects(object):
 		self.__ungrouped = ObjectGroup(objs, local_space, selection_if_empty)
 		self.__loc_space = local_space
 		self.__groups = list()
-		for i in xrange(groupNum):
+		for i in _xrange(groupNum):
 			self.add_group(None, False)
 
 	def add_group(self, objs=None, selection_if_empty=True):

@@ -1,13 +1,14 @@
 __author__ = 'DRL'
 
-from itertools import izip as _i_zip
-
 from .. import __common as _ls
 from .. import default_input as _def
 
 from drl.for_maya import base_class as _bs
 from drl_common import utils as _utils
 from drl_common import errors as _err
+from drl_common.py_2_3 import (
+	izip as _izip,
+)
 
 from . import errors, sg_attr_names
 _sg_a = sg_attr_names
@@ -356,7 +357,7 @@ class AssignedTo(_bs.ItemsProcessorBase):
 					return
 
 			# add shapes one-by-one:
-			for shp, sgs in _i_zip(item_shapes, item_sgs_by_shape):
+			for shp, sgs in _izip(item_shapes, item_sgs_by_shape):
 				_add_shape(shp, len(sgs))
 
 		for it in items:
@@ -469,7 +470,7 @@ class AssignedTo(_bs.ItemsProcessorBase):
 					return shape_sgs[0]
 				return False
 			item = _err.WrongTypeError(item, _tt_geo, 'item').raise_if_needed()
-			for sg, assigned_to in _i_zip(possible_shading_groups, sg_assigned_to):
+			for sg, assigned_to in _izip(possible_shading_groups, sg_assigned_to):
 				if item in assigned_to:
 					return sg
 			return False

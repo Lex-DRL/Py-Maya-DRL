@@ -2,6 +2,9 @@ __author__ = 'DRL'
 
 from collections import defaultdict
 from pymel import core as pm
+from drl_common.py_2_3 import (
+	xrange as _xrange,
+)
 from drl.for_maya.ls import pymel as ls
 
 try:
@@ -81,8 +84,8 @@ def del_cv(items=None, selection_if_none=True):
 			# where N is degree
 			new_cvs_pos += new_cvs_pos[:degree]
 		new_knots = (
-			[-float(u) for u in xrange(degree - 1, 0, -1)] +  # [..., -2.0, -1.0], from degree
-			[float(u) for u in xrange(len(new_cvs_pos))]  # [0.0, 1.0, 2.0, ...], from CVs count
+			[-float(u) for u in _xrange(degree - 1, 0, -1)] +  # [..., -2.0, -1.0], from degree
+			[float(u) for u in _xrange(len(new_cvs_pos))]  # [0.0, 1.0, 2.0, ...], from CVs count
 		)
 
 		# the main curve re-creation

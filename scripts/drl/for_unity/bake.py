@@ -6,6 +6,7 @@ from drl_common.py_2_3 import (
 	str_h as _str_h,
 	t_strict_str as _str,
 	t_strict_unicode as _unicode,
+	xrange as _xrange,
 )
 from drl.for_maya import ls
 from pymel import core as pm
@@ -60,7 +61,7 @@ class BatchRender(object):
 		self.__set_end(value)
 
 	def render_range(self):
-		for i in xrange(self.start_frame, self.end_frame + 1):
+		for i in _xrange(self.start_frame, self.end_frame + 1):
 			pm.currentTime(i)
 			print('Rendering frame: ' + str(i))
 			pm.runtime.RedoPreviousRender()
@@ -868,7 +869,7 @@ class BakeSet(object):
 			writable=True,
 			keyable=True
 		)
-		for i in xrange(2):
+		for i in _xrange(2):
 			pm.addAttr(
 				node, parent=attr_nm, at='short',
 				ln=atr_names[i],
