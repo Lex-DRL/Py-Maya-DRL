@@ -309,7 +309,7 @@ def get_components_with_color(
 	if not items:
 		return []
 	r, g, b, a = __error_check_color_args(r, g, b, a)
-	print '\n'
+	print('\n')
 
 	def get_for_single_item(i, itm):
 		"""

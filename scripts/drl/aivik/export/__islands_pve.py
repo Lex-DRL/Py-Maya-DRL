@@ -291,18 +291,18 @@ class _Counter(object):
 	def start(self, f, f_name=''):
 		self.t = _tm()
 		f_name = f_name or repr(f)
-		print f_name + ':'
+		print(f_name + ':')
 		return f()
 
 	def mid(self, f, f_name=''):
 		c = _tm()
-		print c - self.t
+		print(c - self.t)
 		self.t = c
 		f_name = f_name or repr(f)
-		print '\n' + f_name + ':'
+		print('\n' + f_name + ':')
 		return f()
 
 	def end(self, f, f_name=''):
 		res = self.mid(f, f_name)
-		print _tm() - self.t
+		print(_tm() - self.t)
 		return res

@@ -35,7 +35,7 @@ Imported objects are named by filenames.
 					created[i] = cmds.listRelatives(created[i], p=True, f=True)[0] # get object themselves (transforms)
 					created[i] = cmds.rename(created[i], splitFile[0])
 					res.append(created[i])
-					print res[-1]
+					print(res[-1])
 	return res
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ Imported objects are named by filenames.
 					created[i] = cmds.listRelatives(created[i], p=True, f=True)[0] # get object themselves (transforms)
 					created[i] = cmds.rename(created[i], splitFile[0])
 					res.append(created[i])
-					print res[-1]
+					print(res[-1])
 	return res
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ Imported objects are named by filenames.
 					created[i] = cmds.listRelatives(created[i], p=True, f=True)[0] # get object themselves (transforms)
 					created[i] = cmds.rename(created[i], splitFile[0])
 					res.append(created[i])
-					print res[-1]
+					print(res[-1])
 	return res
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -222,5 +222,5 @@ It exports all the imported OBJs back, preserving all polygroups.
 									exportSelected=True
 				)
 				res.append(filepath)
-				print filepath
+				print(filepath)
 	return res

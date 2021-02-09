@@ -13,10 +13,10 @@ def thumb_switch(mode=2):
 	'''
 	def on():
 		cmds.renderThumbnailUpdate(True)
-		print 'Thumbnail ON'
+		print('Thumbnail ON')
 	def off():
 		cmds.renderThumbnailUpdate(False)
-		print 'Thumbnail OFF'
+		print('Thumbnail OFF')
 	def switch():
 		if cmds.renderThumbnailUpdate(q=1):
 			off()

@@ -151,11 +151,13 @@ def export_by_layer(
 	moved, err = perform_move_files_to_final_dir(exports, exportDir)
 
 	if err['dir']:
-		print '\n\n\n\tUnable to move the following files, because these paths are already taken by folders:'
-		for d in err['dir']: print d
+		print('\n\n\n\tUnable to move the following files, because these paths are already taken by folders:')
+		for d in err['dir']:
+			print(d)
 	if err['undel']:
-		print '\n\n\n\tUnable to replace the following files with the new ones:'
-		for u in err['undel']: print u
+		print('\n\n\n\tUnable to replace the following files with the new ones:')
+		for u in err['undel']:
+			print(u)
 	if err['dir'] or err['undel']:
 		msg = "\nSome exported files are failed to move to the destination directory. They're left in the following folder:\n" \
 					"%s" \

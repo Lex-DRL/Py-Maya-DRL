@@ -62,7 +62,7 @@ class BatchRender(object):
 	def render_range(self):
 		for i in xrange(self.start_frame, self.end_frame + 1):
 			pm.currentTime(i)
-			print 'Rendering frame: ' + str(i)
+			print('Rendering frame: ' + str(i))
 			pm.runtime.RedoPreviousRender()
 
 	@staticmethod
@@ -206,7 +206,7 @@ class Turtle(object):
 		attr.set(new_val)
 		fs.clean_path_for_folder(self.bake_dir_abs_path(), overwrite=1)
 
-		print 'Waiting for %s seconds before starting render...' % sleep_time
+		print('Waiting for %s seconds before starting render...' % sleep_time)
 		time.sleep(sleep_time)
 
 	@staticmethod
@@ -231,7 +231,7 @@ class Turtle(object):
 			fs.clean_path_for_file(dir_path, overwrite_folders=1, remove_file=1)
 		attr.set(new_val)
 
-		print 'Waiting for %s seconds after render completion...' % sleep_time
+		print('Waiting for %s seconds after render completion...' % sleep_time)
 		time.sleep(sleep_time)
 
 	def post_frame(self, del_exr=False):
@@ -239,7 +239,7 @@ class Turtle(object):
 		if not Turtle.is_bake():
 			return
 
-		print 'Waiting for %s seconds before post-processing render...' % sleep_time
+		print('Waiting for %s seconds before post-processing render...' % sleep_time)
 		time.sleep(sleep_time)
 
 		bake_dir = self.bake_dir_abs_path()
@@ -258,13 +258,13 @@ class Turtle(object):
 			)
 			if res_png:
 				if not res:
-					print '\n'
+					print('\n')
 				res.append(res_png)
-				print 'Processed {cur} of {total}: "{path}"'.format(
+				print('Processed {cur} of {total}: "{path}"'.format(
 					cur=1+i, total=len_f, path=res_png
-				)
+				))
 		if res:
-			print '\nFinished!\n\n'
+			print('\nFinished!\n\n')
 
 	@staticmethod
 	def clean_filename(filename, shapes_to='Building', extra_replacements=None):
@@ -352,7 +352,9 @@ class Turtle(object):
 		if move_to_folder_after_completion:
 			moved_path = os.path.join(move_to_folder_after_completion, filename).replace('\\', '/')
 
-			print "Moving texture to new location:\n\t{0}\n\t->{1}".format(out_png_path, moved_path)
+			print(
+				"Moving texture to new location:\n\t{0}\n\t->{1}".format(out_png_path, moved_path)
+			)
 			fs.clean_path_for_file(moved_path, overwrite_folders=1, remove_file=1)
 
 			attempt = 1
@@ -363,7 +365,7 @@ class Turtle(object):
 			err_res = IOError()
 
 			while not success and delta_time < max_delta:
-				print "Attempt: " + str(attempt)
+				print("Attempt: " + str(attempt))
 				next_attempt_time = dt.datetime.now()
 				delta_time = next_attempt_time - start_attempt_time
 				try:
@@ -377,7 +379,7 @@ class Turtle(object):
 
 			if success:
 				out_png_path = moved_path
-				print "Successfully moved"
+				print("Successfully moved")
 			else:
 				raise err_res
 		return out_png_path
@@ -1584,7 +1586,7 @@ class Sequence(object):
 	def render_all_bake_sets(turtle_node=None, dir_from_parent_group=True, frames=None):
 		from pprint import pprint as pp
 		bake_sets = Sequence.bake_sets()
-		print '\n\n\n\n\t\tSets to render:'
+		print('\n\n\n\n\t\tSets to render:')
 		pp(bake_sets)
 		for bs in bake_sets:
 			Sequence.render_bake_set(bs, turtle_node, dir_from_parent_group, frames, False)

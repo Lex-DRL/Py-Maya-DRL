@@ -470,7 +470,7 @@ class Splitter(object):
 			new_obj = self.split_object(o)
 			if not new_obj is None:
 				self.result += new_obj
-			# print 'Finished: %s - %d of %d, %.2f' % (o, i+1, len_objs, (i+1.0)*100/len_objs) + '%'
+			# print('Finished: %s - %d of %d, %.2f' % (o, i+1, len_objs, (i+1.0)*100/len_objs) + '%')
 		errored = self.__errored_big + self.__errored_mat
 		if errored:
 			cmds.select(errored, r=1)

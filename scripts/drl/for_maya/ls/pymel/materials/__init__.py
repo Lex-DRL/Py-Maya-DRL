@@ -55,7 +55,7 @@ def __sg_to_mat(
 			* None otherwise.
 	"""
 	def get_connected(attr_nm):
-		print sg.attr(attr_nm).inputs()
+		print(sg.attr(attr_nm).inputs())
 		return sg.attr(attr_nm).inputs()
 
 	connected = get_connected(mat_type)

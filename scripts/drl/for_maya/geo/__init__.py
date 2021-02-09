@@ -126,7 +126,7 @@ def freeze_pivot(
 		while ProgressWindow.is_active():
 			itm = items[i]
 			msg = '{0} / {1}: {2}'.format(i + 1, num, itm.name())
-			print msg
+			print(msg)
 			ProgressWindow.message = msg
 			res += _clean_single(itm)
 			i += 1

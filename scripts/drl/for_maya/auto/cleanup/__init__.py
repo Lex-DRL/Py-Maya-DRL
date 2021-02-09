@@ -189,25 +189,25 @@ def cleanup_all(
 	if isolate_sets:
 		res_n = del_isolate_sets()
 		if res_n:
-			print '\nDeleted <isolateSelect> sets:'
+			print('\nDeleted <isolateSelect> sets:')
 			pp(res_n)
 	if pasted:
 		res_n = rename_pasted()
 		res += res_n
 		if res_n:
-			print '\nRenamed "pasted" nodes:'
+			print('\nRenamed "pasted" nodes:')
 			pp(res_n)
 	if double_sided:
 		res_n = make_all_double_sided()
 		res += res_n
 		if res_n:
-			print '\nSet Double-sided attribute for:'
+			print('\nSet Double-sided attribute for:')
 			pp(res_n)
 	if rename_shapes:
 		res_n = rename_all_shapes()
 		res += res_n
 		if res_n:
-			print '\nRenamed shapes:'
+			print('\nRenamed shapes:')
 			pp(res_n)
 
 	if uv_sets_rename_first or uv_sets_remove_extra:
@@ -218,22 +218,22 @@ def cleanup_all(
 			res_n = cleaner.rename_first_set()
 			if res_n:
 				res += res_n
-				print '\nFirst UV-set renamed to "map1" for:'
+				print('\nFirst UV-set renamed to "map1" for:')
 				pp(res_n)
 		if uv_sets_remove_extra:
 			res_n = cleaner.remove_extra_sets()
 			if res_n:
 				res += [x[0] for x in res_n]
-				print '\nRemoved extra UV-sets:'
+				print('\nRemoved extra UV-sets:')
 				pp(res_n)
 
 	if debug_normals:
 		rl, created = create_debug_normals_layer_if_needed(switch_to_debug_lr)
 		if created:
-			print '\nCreated <debug layer> for testing normals:\n' + repr(rl)
+			print('\nCreated <debug layer> for testing normals:\n' + repr(rl))
 
 	if res:
 		pm.select(res, r=True)
 	else:
 		pm.select(cl=True)
-		print 'No problems detected. The meshes are ready to bake!'
+		print('No problems detected. The meshes are ready to bake!')

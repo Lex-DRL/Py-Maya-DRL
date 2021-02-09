@@ -10,7 +10,7 @@ res = obj.batchExp(path='E:/0-Projects/z-Slasher/Scenes/Zbrush/0-Level/Bridge/z-
 pprint.pprint(qqq)
 
 for w in www:
-	print w
+	print(w)
 
 
 import maya.cmds as cmds
