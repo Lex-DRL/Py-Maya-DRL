@@ -22,7 +22,7 @@ def items_list(items=None):
 		items = [items]
 	elif isinstance(items, dict):
 		res = list()
-		for k, v in items.iteritems():
+		for k, v in items.items():
 			res += items_list(v)
 		items = res
 	err.WrongTypeError(items, list, 'items', 'list of strings').raise_if_needed()

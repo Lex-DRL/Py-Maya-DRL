@@ -95,7 +95,7 @@ def dialog_str(title=None, msg=None, text=None, button=None, scrollable=False):
 			'dismissString': "cancel",
 			'scrollableField': bool(scrollable),
 			'style': 'text'
-		}.iteritems() if v
+		}.items() if v
 	}
 	if pm.promptDialog(**kwargs) != "OK":
 		return None

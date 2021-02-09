@@ -17,7 +17,7 @@ def perform_combine_by_material(objects=None, prefix='', postfix=''):
 	objs = ls.unique_sort(objs)
 	matObj = ls.objects_by_material(objects)
 	res = []
-	for mat, objs in matObj.iteritems():
+	for mat, objs in matObj.items():
 		if len(objs) < 2:
 			combined = fix.duplicate(objs[0], rr=1)
 			if cmds.listRelatives(combined, fullPath=1, allParents=1):
@@ -95,7 +95,7 @@ def perform_move_files_to_final_dir(exports={}, exportDir=''):
 		'undel': []
 	}
 	moved = list()
-	for bs, fl in exports.iteritems():
+	for bs, fl in exports.items():
 		nuFl = os.path.join(exportDir, bs + '.fbx')
 		nuFl = nuFl.replace('\\', '/')
 		if os.path.isdir(nuFl):

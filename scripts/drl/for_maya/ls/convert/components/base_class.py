@@ -214,7 +214,7 @@ class PolyCompConverter(__BaseProcessor):
 
 		kw_args = {
 			kw: True
-			for kw, v in keys_values.iteritems()
+			for kw, v in keys_values.items()
 			if v
 		}
 

@@ -207,7 +207,7 @@ def _patterns_in_template(template, patterns):
 	:return: The dictionary of patterns present in the template.
 	"""
 	return {
-		k: v for k, v in patterns.iteritems()
+		k: v for k, v in patterns.items()
 		if ('{' + k) in template
 	}
 
@@ -229,7 +229,7 @@ def _get_kwargs(getters_dict):
 	:type getters_dict: dict[str, () -> object]
 	:rtype: dict[str, object]
 	"""
-	return {k: f() for k, f in getters_dict.iteritems()}
+	return {k: f() for k, f in getters_dict.items()}
 
 # endregion
 
@@ -599,7 +599,7 @@ class Progress(object):
 		:rtype: tuple[str]
 		"""
 		return tuple(sorted(
-			self._format_patterns.iterkeys()
+			self._format_patterns.keys()
 		))
 
 	# endregion

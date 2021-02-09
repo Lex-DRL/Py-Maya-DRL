@@ -54,7 +54,7 @@ def group_by_shape(
 		cur_tuple[1].append(itm)
 
 	items_sorted = sorted(
-		items_sorted.itervalues(),
+		items_sorted.values(),
 		key=lambda x: x[0]
 	)  # type: _t.List[_t.Tuple[int, _t.List[_t_face]]]
 	items_sorted = [tpl[1] for tpl in items_sorted]  # type: _t.List[_t.List[_t_face]]
