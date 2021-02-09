@@ -2,9 +2,13 @@ __author__ = 'DRL'
 
 from maya import cmds
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
+
 
 _types = (int, float)
-_str_types = (str, unicode)
 
 
 class ProgressWindow(object):
@@ -79,7 +83,7 @@ class ProgressWindow(object):
 		@property
 		def title(self):
 			res = cmds.progressWindow(q=True, title=True)
-			assert isinstance(res, _str_types)
+			assert isinstance(res, _str_t)
 			return res
 
 		@title.setter
@@ -90,7 +94,7 @@ class ProgressWindow(object):
 		@property
 		def message(self):
 			res = cmds.progressWindow(q=True, status=True)
-			assert isinstance(res, _str_types)
+			assert isinstance(res, _str_t)
 			return res
 
 		@message.setter

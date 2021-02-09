@@ -7,13 +7,14 @@ from drl_common import utils
 from drl_common.py_2_3 import (
 	str_t as _str_t,
 	str_hint as _str_h,
-	typing as _t
+	typing as _t,
 )
 
 from drl.for_maya import py_node_types as _pnt
 _t_transform = _pnt.transform
 _t_shape_any = _pnt.shape.any
 _t_shape_poly = _pnt.shape.poly
+_t_int_or_str = tuple([int] + list(_str_t))
 
 
 class MultipleShapesError(RuntimeError):
@@ -271,7 +272,7 @@ def remove(objects=None, uv_sets=None, selection_if_none=True):
 		return []
 	if isinstance(uv_sets, float):
 		uv_sets = int(uv_sets)
-	if isinstance(uv_sets, (int, str, unicode)):
+	if isinstance(uv_sets, _t_int_or_str):
 		uv_sets = (uv_sets,)
 	if isinstance(uv_sets, list):
 		uv_sets = tuple(uv_sets)
@@ -331,7 +332,7 @@ def rename(items=None, uv_set=1, new_name='map1', selection_if_none=True):
 	"""
 	if isinstance(uv_set, float):
 		uv_set = int(uv_set)
-	uv_set = err.WrongTypeError(uv_set, (int, str, unicode), 'uv_set').raise_if_needed()
+	uv_set = err.WrongTypeError(uv_set, _t_int_or_str, 'uv_set').raise_if_needed()
 	new_name = err.NotStringError(new_name, new_name).raise_if_needed_or_empty()
 	shapes = ls.to_shapes(items, selection_if_none, geo_surface=True)
 	res = list()

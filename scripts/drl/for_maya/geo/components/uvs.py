@@ -3,6 +3,10 @@ __author__ = 'DRL'
 from pymel import core as pm
 from drl.for_maya.ls import pymel as ls
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 from drl.for_maya.ls.convert import components as comp
 from drl.for_maya import ui
 
@@ -36,7 +40,7 @@ def _perform_with_mesh_uvs(
 	for m in meshes:
 		assert isinstance(m, pm.nodetypes.Mesh)
 		cur_set = (
-			uv_set if uv_set and isinstance(uv_set, (str, unicode))
+			uv_set if uv_set and isinstance(uv_set, _str_t)
 			else m.getCurrentUVSetName()
 		)
 		new_u, new_v = m.getUVs(cur_set)

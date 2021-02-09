@@ -4,6 +4,14 @@ import warnings as wrn
 
 from maya import cmds
 
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
+
+_t_list_or_str = tuple(list(_str_t) + [list])
+
+
 def items_input(items=None, stacklevel_offset=0):
 	"""
 	Performs basic error-check for the input list of objects/components.
@@ -21,7 +29,7 @@ def items_input(items=None, stacklevel_offset=0):
 		msg = '\n<items> argument is set or tuple.\nConverting it to list to avoid further troubles.'
 		wrn.warn(msg, RuntimeWarning, stacklevel=2+stacklevel_offset)
 		items = list(items)
-	elif not(isinstance(items, (list, str, unicode))):
+	elif not(isinstance(items, _t_list_or_str)):
 		msg = '\nWrong data type for <items> argument.\nReturning nothing.'
 		wrn.warn(msg, RuntimeWarning, stacklevel=2+stacklevel_offset)
 		return None

@@ -3,11 +3,13 @@ __author__ = 'DRL'
 from maya import cmds
 
 from drl.for_maya import ui, info
-import drl_common.errors as err
+from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 import sys as __sys
 __self_module = __sys.modules[__name__]
-
-_str_types = (str, unicode)
 
 
 class DefaultSaveChangesDialog(object):
@@ -77,16 +79,16 @@ class DefaultSaveChangesDialog(object):
 
 			from os import path
 			folder, base_old_nm = path.split(file_name)
-			assert isinstance(folder, _str_types)
-			assert isinstance(base_old_nm, _str_types)
+			assert isinstance(folder, _str_t)
+			assert isinstance(base_old_nm, _str_t)
 			slash = file_name[:]
 			if folder:
 				slash = slash[len(folder):]
 			if base_old_nm:
 				slash = slash[:-len(base_old_nm)]
 			base_no_ext, ext = path.splitext(base_old_nm)
-			assert isinstance(base_old_nm, _str_types)
-			assert isinstance(ext, _str_types)
+			assert isinstance(base_old_nm, _str_t)
+			assert isinstance(ext, _str_t)
 			if ext.lower() in c.maya_ext:
 				ext = c.ple_ext
 			file_name = folder + slash + base_no_ext + ext
@@ -164,7 +166,7 @@ def name():
 	:return: <str> Scene path. Empty string if untitled scene.
 	"""
 	n = cmds.file(q=1, sceneName=1)
-	assert isinstance(n, _str_types)
+	assert isinstance(n, _str_t)
 	return n
 
 

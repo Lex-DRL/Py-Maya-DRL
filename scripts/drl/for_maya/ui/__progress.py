@@ -1,11 +1,22 @@
 __author__ = 'DRL'
 
+try:
+	# support type hints in Python 3:
+	# noinspection PyUnresolvedReferences
+	import typing as _t
+except ImportError:
+	pass
+
 from pymel.core import (
 	uitypes as ui,
-	windows as _w
+	windows as _w,
 )
 
-_str_t = (str, unicode)
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+	t_strict_unicode as _unicode,
+)
 
 
 class ProgressError(Exception):
@@ -151,11 +162,11 @@ class ProgressBarsCouple(object):
 	def __contains__(self, item):
 		return item in self.__both
 
-	def __get_str_repr(self, pattern, children_repr_f):
-		"""
-		:type pattern: str | unicode
-		:rtype: str | unicode
-		"""
+	def __get_str_repr(
+		self,
+		pattern,  # type: _str_h
+		children_repr_f,
+	):
 		return pattern.format(
 			n=self.__class__.__name__,
 			id=hex(id(self)),
@@ -173,7 +184,7 @@ class ProgressBarsCouple(object):
 		return self.__get_str_repr('{n}({m}, {w})', str)
 
 	def __unicode__(self):
-		return self.__get_str_repr(u'{n}({m}, {w})', unicode)
+		return self.__get_str_repr(u'{n}({m}, {w})', _unicode)
 
 # endregion
 
@@ -181,12 +192,12 @@ class ProgressBarsCouple(object):
 # region Functions for formatted template properties
 
 
-def _prepare_template_prop(val, default):
+def _prepare_template_prop(
+	val,  # type: _str_h
+	default,  # type: _str_h
+):
 	"""
 	Error-checks property value before setting it. Ensures it's a string.
-
-	:type val: str | unicode | None
-	:type default: str | unicode
 	"""
 	if val and isinstance(val, _str_t):
 		return val
@@ -197,13 +208,13 @@ def _prepare_template_prop(val, default):
 	return default
 
 
-def _patterns_in_template(template, patterns):
+def _patterns_in_template(
+	template,  # type: _str_h
+	patterns,  # type: dict[_str_h, _t.Callable]
+):
 	"""
 	Checks if the given template contains any of patterns for string formatting.
 
-	:type template: str | unicode
-	:type patterns: dict[str, () -> object]
-	:rtype: dict[str, () -> object]
 	:return: The dictionary of patterns present in the template.
 	"""
 	return {
@@ -212,16 +223,14 @@ def _patterns_in_template(template, patterns):
 	}
 
 
-def _format_pattern(template, **kwargs):
-	"""
-	:type template: str | unicode
-	:type kwargs: dict[str, object]
-	:rtype: str | unicode
-	"""
+def _format_pattern(
+	template,  # type: _str_h
+	**kwargs,
+):
 	try:
 		return template.format(**kwargs)
 	except UnicodeError:
-		return unicode(template).format(**kwargs)
+		return _unicode(template).format(**kwargs)
 
 
 def _get_kwargs(getters_dict):
@@ -607,14 +616,15 @@ class Progress(object):
 
 	# region property setters
 
-	def __set_message_template(self, val):
+	def __set_message_template(
+		self,
+		val,  # type: _t.Optional[_str_h]
+	):
 		"""
 		Setter for **message template**. It also sets up the proper getter.
 
 		I.e., the message formatting is performed only if
 		the template contains any of the replacement patterns.
-
-		:type val: str | unicode | None
 		"""
 		template = _prepare_template_prop(val, self._default_message_template)
 		self.__message_template = template
@@ -632,14 +642,15 @@ class Progress(object):
 			self.__get_message = lambda: self.__message_template
 			self.__message_changing = False
 
-	def __set_title_template(self, val):
+	def __set_title_template(
+		self,
+		val,  # type: _t.Optional[_str_h]
+	):
 		"""
 		Setter for **title template**. It also sets up the proper getter.
 
 		I.e., the message formatting is performed only if
 		the template contains any of the replacement patterns.
-
-		:type val: str | unicode | None
 		"""
 		template = _prepare_template_prop(val, self._default_title_template)
 		self.__title_template = template
@@ -710,11 +721,12 @@ class Progress(object):
 		return self.__message_template
 
 	@message_template.setter
-	def message_template(self, value):
+	def message_template(
+		self,
+		value,  # type: _t.Optional[_str_h]
+	):
 		"""
 		When **None** is provided, the template is reset to the default one.
-
-		:type value: str | unicode | None
 		"""
 		self.__set_message_template(value)
 		self._gen_update_f()
@@ -734,11 +746,12 @@ class Progress(object):
 		return self.__title_template
 
 	@title_template.setter
-	def title_template(self, value):
+	def title_template(
+		self,
+		value,  # type: _t.Optional[_str_h]
+	):
 		"""
 		When **None** is provided, the template is reset to the default one.
-
-		:type value: str | unicode | None
 		"""
 		self.__set_title_template(value)
 		self._gen_update_f()

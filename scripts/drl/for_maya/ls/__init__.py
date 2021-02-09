@@ -3,10 +3,17 @@ __author__ = 'DRL'
 import maya.cmds as cmds
 from ..input_warn import items_input as wrn_items
 
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from . import default_input
 from . import convert
 from . import pymel
+
+
+_t_str_or_list = tuple(list(_str_t) + [list])
 
 
 def unique_sort(objects=None, **ls_args):
@@ -98,7 +105,7 @@ def child_shapes(objects=None, allChildObjects=False):
 
 
 def SGs_to_materials(SGs=None):
-	if not isinstance(SGs, (str, unicode, list)):
+	if not isinstance(SGs, _t_str_or_list):
 		return None
 	if not SGs:
 		return None

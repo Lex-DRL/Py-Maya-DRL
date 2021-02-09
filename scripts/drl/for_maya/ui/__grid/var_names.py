@@ -1,6 +1,11 @@
 from collections import namedtuple
 from pymel import core as _pm
 
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
+
 
 # service namedTuple with all the the names of a grid property
 __VarNamesTuple = namedtuple(
@@ -63,7 +68,7 @@ class _VarNames(__VarNamesTuple):
 			except KeyError:
 				reset = True
 			else:
-				if issubclass(self.type, (str, unicode)) and not glob:
+				if issubclass(self.type, _str_t) and not glob:
 					reset = True
 				else:
 					res = glob

@@ -10,7 +10,10 @@ try:
 	import typing as _t
 except ImportError:
 	pass
-from drl_common.py_2_3 import str_t as _str_t, str_hint as _str_hint
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 _flatten_f = _part(_pm.ls, fl=1)
 
@@ -41,7 +44,7 @@ def __get_vf_id_multi_shape(vertex_face, dimension_id=0):
 		Where number after dot is an id of a vertex/face.
 	"""
 	vf_id = vertex_face.currentItemIndex()[dimension_id]
-	res = vertex_face.node().name() + '.' + str(vf_id)  # type: _str_hint
+	res = vertex_face.node().name() + '.' + str(vf_id)  # type: _str_h
 	return res
 
 

@@ -4,8 +4,10 @@ import os
 
 from maya import cmds
 import drl_common.errors as err
-
-_str_types = (str, unicode)
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 
 def get_maya_app_dir():
@@ -19,13 +21,13 @@ def get_maya_app_dir():
 	if not home:
 		home = os.path.expanduser("~")
 	home = os.path.join(home, 'maya').replace('\\', '/')
-	assert isinstance(home, _str_types)
+	assert isinstance(home, _str_t)
 	return home
 
 
 def get_project_dir():
 	res = cmds.workspace(q=True, rootDirectory=True)
-	assert isinstance(res, _str_types)
+	assert isinstance(res, _str_t)
 	return res
 
 

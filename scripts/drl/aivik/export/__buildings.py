@@ -6,6 +6,10 @@ import re
 
 from drl.for_maya.ls import pymel as ls
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from .__base_class import BaseExport
 
@@ -86,7 +90,8 @@ class Buildings(BaseExport):
 				return _kept_colors_name_starts_f
 
 			re_type = type(re.compile('qqq'))
-			if isinstance(regexps, (str, unicode, re_type)):
+			str_or_re_type = tuple(list(_str_t) + [re_type])
+			if isinstance(regexps, str_or_re_type):
 				regexps = (regexps,)
 
 			def _process_single(regex):

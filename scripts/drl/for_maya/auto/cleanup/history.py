@@ -3,6 +3,11 @@ __author__ = 'DRL'
 import sys as __sys
 from pymel import core as pm
 
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
+
 from drl.for_maya.ls import pymel as ls
 
 from drl.for_maya import py_node_types as _pnt
@@ -10,7 +15,6 @@ _t_transform = _pnt.transform
 _t_shape_any = _pnt.shape.any
 
 _this = __sys.modules[__name__]
-_str_types = (str, unicode)
 
 
 def __is_deformed(node):

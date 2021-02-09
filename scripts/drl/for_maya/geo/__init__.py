@@ -5,9 +5,14 @@ from pymel import core as pm
 from drl.for_maya.ls import pymel as ls
 from drl.for_maya.ui import ProgressWindow
 from drl_common import errors as err
+from drl_common.py_2_3 import (
+	str_t as _str_t,
+	str_h as _str_h,
+)
 
 from drl.for_maya import py_node_types as _pnt
 _t_transform = _pnt.transform
+_t_transform_or_str = tuple(list(_str_t) + [_t_transform])
 
 
 def freeze_transform(
@@ -88,7 +93,7 @@ def freeze_pivot(
 
 
 	def _clean_single(obj):
-		err.WrongTypeError(obj, (str, unicode, _t_transform), 'object').raise_if_needed()
+		err.WrongTypeError(obj, _t_transform_or_str, 'object').raise_if_needed()
 		pivot_pos = pm.xform(obj, q=1, worldSpace=1, rotatePivot=1)
 		offset = pivot_pos[:]
 		parent = ls.to_parent(obj, False)  # always returns list
