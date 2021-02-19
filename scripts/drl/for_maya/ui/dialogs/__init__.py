@@ -11,7 +11,7 @@ from drl_common import (
 	errors as err,
 	filesystem as fs,
 )
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
 	t_strict_str as _str,

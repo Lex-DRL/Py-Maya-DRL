@@ -6,7 +6,7 @@ from .. import default_input as _def
 from drl.for_maya import base_class as _bs
 from drl_common import utils as _utils
 from drl_common import errors as _err
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	izip as _izip,
 )
 

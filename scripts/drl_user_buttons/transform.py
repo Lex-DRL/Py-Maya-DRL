@@ -1,7 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
 
-from drl_common.py_2_3 import reload
+from drl_py23 import reload
 from drl.for_maya import transformations as _tr
 from drl.for_maya import geo as _g
 reload(_tr)

@@ -9,7 +9,7 @@ from drl.for_maya.geo.components import uv_sets
 from drl.for_maya import ui
 
 from drl_common import errors as err
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	xrange as _xrange,
 	izip as _izip,
 )
