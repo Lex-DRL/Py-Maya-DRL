@@ -16,6 +16,7 @@ from drl_common import (
 	filesystem as fs,
 	utils,
 )
+from drl_os.files import errors as _fl_errors
 from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
@@ -603,7 +604,7 @@ class BatchExporter(object):
 		nm = ls.short_item_name(gr)
 		path = self.__folder
 		if not path:
-			raise fs.errors.EmptyPath(path, 'FBX root folder is not specified')
+			raise _fl_errors.EmptyPath(path, 'FBX root folder is not specified')
 		path = fs.clean_path_for_folder(path, 2).rstrip('/')
 		self.__folder = path
 		path += '/%s.fbx' % nm
