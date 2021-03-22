@@ -4,7 +4,7 @@ import os
 
 from maya import cmds
 import drl_common.errors as err
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
 )

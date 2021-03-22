@@ -1,7 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as _pm
-from drl_common.py_2_3 import reload
+from drl_py23 import reload
 from drl.for_maya.geo.components import vertices as _vtx
 reload(_vtx)
 

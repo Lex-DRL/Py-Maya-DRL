@@ -1,9 +1,8 @@
 __author__ = 'Lex Darlog (DRL)'
 
-from drl_common.is_maya import is_maya
+from drl_interpreter import is_maya as _is_maya
 
-__maya = is_maya()
-if __maya:
+if _is_maya:
 	from maya import cmds
 
 from . import confirm_icon, confirm_align, file_mode
@@ -11,7 +10,7 @@ from drl_common import (
 	errors as err,
 	filesystem as fs,
 )
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
 	t_strict_str as _str,
@@ -127,7 +126,7 @@ def confirm(
 		* 2 and more - the corresponding extra button.
 			(2: extra1, 3: extra2, ...)
 	"""
-	if not __maya:
+	if not _is_maya:
 		return default_if_not_maya
 
 	kw_args = dict()
@@ -273,7 +272,7 @@ def file_chooser(
 			* <list of strings> if <modes> is file_mode.FILES_MULTIPLE
 			* single <string> in any other mode.
 	"""
-	if not __maya:
+	if not _is_maya:
 		return default_if_not_maya
 
 	def _error_check_file_filters(filters):

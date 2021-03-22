@@ -1,7 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
 from pymel import core as pm
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
 )

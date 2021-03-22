@@ -2,7 +2,7 @@ __author__ = 'Lex Darlog (DRL)'
 
 from collections import defaultdict
 from pymel import core as pm
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	xrange as _xrange,
 )
 from drl.for_maya.ls import pymel as ls

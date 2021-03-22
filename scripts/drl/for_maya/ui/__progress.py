@@ -12,7 +12,7 @@ from pymel.core import (
 	windows as _w,
 )
 
-from drl_common.py_2_3 import (
+from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
 	t_strict_unicode as _unicode,
@@ -225,7 +225,7 @@ def _patterns_in_template(
 
 def _format_pattern(
 	template,  # type: _str_h
-	**kwargs,
+	**kwargs
 ):
 	try:
 		return template.format(**kwargs)
@@ -287,8 +287,8 @@ class Progress(object):
 			),
 			'class': lambda: self.__class__.__name__
 		}
-		self.__message_patterns = self._format_patterns  # type: Dict[str, () -> object]
-		self.__title_patterns = self._format_patterns  # type: Dict[str, () -> object]
+		self.__message_patterns = self._format_patterns  # type: dict[str, _t.Callable[[], object]]
+		self.__title_patterns = self._format_patterns  # type: dict[str, _t.Callable[[], object]]
 		self._default_message_template = '{class} [{cur}/{max}]'
 		self._default_title_template = '{class}: {percent}%'
 		self.__message_changing = False
@@ -303,7 +303,7 @@ class Progress(object):
 		self._background_can_change = False
 
 		# annotation-update chooser:
-		self.__update_annotation = dict()  # type: Dict[bool, Callable[[ui.ProgressBar]]]
+		self.__update_annotation = dict()  # type: dict[bool, Callable[[ui.ProgressBar]]]
 		self.__update_annotation[True] = self.__update_status_in_main_bar
 		self.__update_annotation[False] = self.__update_message_in_window
 

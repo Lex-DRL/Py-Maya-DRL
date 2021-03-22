@@ -1,4 +1,4 @@
-from drl_common.py_2_3 import reload
+from drl_py23 import reload
 import drl_user_buttons as drl_btn
 drl_btn.cleanup.skip_shapes()
 
@@ -34,3 +34,9 @@ BakedToUVs().transfer()
 drl_btn.curves.del_cv()
 drl_btn.transform.reset_pivot()
 drl_btn.poly.separate(combine_parts=False)
+
+from drl_py23 import (
+	str_t as _str_t,
+	str_h as _str_h,
+	str_h_o as _str_h_o,
+)
