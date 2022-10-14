@@ -1,5 +1,6 @@
 __author__ = 'Lex Darlog (DRL)'
 
+from itertools import chain
 
 from pymel import core as pm
 from drl.for_maya.ls import pymel as ls
@@ -101,14 +102,14 @@ def freeze_pivot(
 			parent_pos = pm.xform(parent[0], q=1, worldSpace=1, translation=1)
 			offset = map(lambda pr, pv: pv - pr, parent_pos, pivot_pos)
 
-		if not any(
-			offset +  # lists concatenation:
+		if not any(chain(
+			offset,
 			map(
 				lambda piv, pos: piv - pos,
 				pivot_pos,
 				pm.xform(obj, q=1, worldSpace=1, translation=1)
 			)
-		):
+		)):
 			return []
 
 		neg_offset = [-x for x in offset]
