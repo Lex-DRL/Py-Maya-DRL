@@ -10,7 +10,7 @@ from drl_py23 import (
 from drl.for_maya.ls.convert import components as comp
 from drl.for_maya import ui
 
-from . import uv_sets
+from drl.for_maya.geo.components import uv_sets
 
 
 def _perform_with_mesh_uvs(

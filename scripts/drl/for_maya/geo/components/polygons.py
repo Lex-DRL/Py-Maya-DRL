@@ -10,7 +10,7 @@ from drl_py23 import (
 from drl.for_maya.ls import pymel as _ls
 from drl.for_maya.ls.convert import components as _conv_comp
 from drl.for_maya.auto.cleanup import history as _h
-from .. import freeze_transform as _freeze
+from drl.for_maya.geo import freeze_transform as _freeze
 from drl.for_maya.transformations import reset_pivot as _reset
 
 try:

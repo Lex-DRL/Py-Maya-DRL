@@ -22,8 +22,8 @@ from drl_py23 import (
 	str_h as _str_h,
 )
 
-from . import errors
-from . import messages as m
+from drl.for_maya.plugins.fbx import errors
+from drl.for_maya.plugins.fbx import messages as m
 
 from drl.for_maya import py_node_types as _pnt
 _t_transform = _pnt.transform

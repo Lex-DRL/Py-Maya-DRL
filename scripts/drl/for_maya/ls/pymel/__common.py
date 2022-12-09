@@ -4,7 +4,7 @@ __author__ = 'Lex Darlog (DRL)'
 import pymel.core as _pm
 from pymel.core import PyNode
 
-from . import default_input as _def
+from .default_input import handle_input as _handle_input
 
 from drl_common import (
 	errors as _err,
@@ -42,7 +42,7 @@ def to_objects_filter(items=None, selection_if_none=True, no_shapes=True):
 	:rtype: list[PyNode]
 	"""
 	all_objs = all_objects(no_shapes)
-	items = _def.handle_input(items, selection_if_none)
+	items = _handle_input(items, selection_if_none)
 	return [x for x in _pm.ls(items, fl=True) if x in all_objs]
 
 
@@ -82,7 +82,7 @@ def to_objects(
 	:return: Transforms or Shapes.
 	:rtype: list[PyNode]
 	"""
-	items = _def.handle_input(items, selection_if_none)
+	items = _handle_input(items, selection_if_none)
 	comp_to_node_f = (
 		(lambda c: c.node()) if component_to_shape
 		else lambda c: c.node().parent(0)
@@ -170,7 +170,7 @@ def all_parents(objects=None, selection_if_none=True, include_current_transforms
 		if True, objects(not shapes) from <objects> will be added to result
 	:rtype: list[PyNode]
 	"""
-	objects = _def.handle_input(objects, selection_if_none)
+	objects = _handle_input(objects, selection_if_none)
 	parents = _pm.listRelatives(objects, allParents=True)
 	if include_current_transforms:
 		parents += [x for x in objects(objects, selection_if_none) if not x in parents]
@@ -474,7 +474,7 @@ def is_shape(
 	# first, generate a function-checker with the given shape-type arguments:
 	checker = is_shape_checker_f(geo_surface, any_geo, light, camera, exact_type)
 
-	node = _def.handle_input(node, selection_if_none=False)[0]
+	node = _handle_input(node, selection_if_none=False)[0]
 	return checker(node)
 
 
@@ -526,7 +526,7 @@ def to_shapes(
 	:return: Shapes
 	:rtype: list[PyNode]
 	"""
-	items = _def.handle_input(items, selection_if_none)
+	items = _handle_input(items, selection_if_none)
 
 	# it's a function, not a variable:
 	is_right_shape = is_shape_checker_f(geo_surface, any_geo, light, camera, exact_type)
@@ -595,7 +595,7 @@ def un_flatten_components(items=None, selection_if_none=True):
 	"""
 	import itertools
 
-	items = _def.handle_input(items, selection_if_none)
+	items = _handle_input(items, selection_if_none)
 	if len(items) < 2:
 		return items
 
@@ -687,7 +687,7 @@ def sorted_items(items=None, selection_if_none=True, remove_duplicates=True):
 	:param remove_duplicates: when True (default), ensures each item appears only once in the result.
 	:rtype: list[PyNode]
 	"""
-	items = _def.handle_input(items, selection_if_none)
+	items = _handle_input(items, selection_if_none)
 	if not items:
 		return list()
 	if remove_duplicates:

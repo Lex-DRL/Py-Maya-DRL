@@ -2,7 +2,7 @@ __author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
 
-from ...input_warn import items_input as wrn_items
+from drl.for_maya.input_warn import items_input as wrn_items
 
 def to_edges(items=None, flatten=False, stacklevel_offset=0):
 	'''

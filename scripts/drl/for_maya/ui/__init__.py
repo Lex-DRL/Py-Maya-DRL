@@ -7,7 +7,6 @@ from drl_py23 import (
 	str_h as _str_h,
 )
 
-from . import dialogs
 from .__grid import Grid
 from .__progress import Progress
 from .__progress_window import ProgressWindow

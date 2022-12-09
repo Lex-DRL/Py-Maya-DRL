@@ -11,10 +11,10 @@ from drl_py23 import (
 	t_strict_str as _str,
 	t_strict_unicode as _unicode,
 )
-from ..for_maya import ls
-from ..for_maya.geo.components.old.vertices import calc_unityCount as calc_vert
-from ..for_maya import transformations as tr
-from ..for_maya import utils as mu
+from drl.for_maya import ls
+from drl.for_maya.geo.components.old.vertices import calc_unityCount as calc_vert
+from drl.for_maya import transformations as tr
+from drl.for_maya import utils as mu
 
 hrc = ls.convert.hierarchy
 no_sel = dict(selection_if_empty=False)

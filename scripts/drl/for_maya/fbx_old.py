@@ -8,7 +8,7 @@ from pymel import core as pm
 
 from drl_common.strings import str_t
 from drl.for_maya import ls
-from . import info as inf
+from drl.for_maya import info as inf
 
 
 class Preset(object):

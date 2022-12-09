@@ -3,11 +3,11 @@ __author__ = 'Lex Darlog (DRL)'
 import shutil as sh
 import warnings as wrn
 
-from .fbx_old import *
+from drl.for_maya.fbx_old import *
 
-from . import fix_default as fix
-from . import layers as lrs
-from . import ls
+from drl.for_maya import fix_default as fix
+from drl.for_maya import layers as lrs
+from drl.for_maya import ls
 
 from maya import cmds, mel
 
