@@ -1,7 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
 
-from . import var_names as _v
+from drl.for_maya.ui.__grid import var_names as _v
 
 
 # We need to create a metaclass to use static properties:

@@ -80,7 +80,7 @@ def uv_shells(
 		the opposite to flatten. Combines multiple MeshUV items to single range, if possible.
 	:return: <tuple of lists>: res[uvShell][UV]
 	"""
-	from ... import pymel
+	from drl.for_maya.ls import pymel
 	from drl_common import utils
 	progress_window = ui.ProgressWindow
 

@@ -6,7 +6,7 @@ import warnings as wrn
 
 import maya.cmds as cmds
 
-from . import ls
+from drl.for_maya import ls
 
 hrc = ls.convert.hierarchy
 lsd = ls.default_input

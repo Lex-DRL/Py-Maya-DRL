@@ -1,5 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
+import sys as _sys
+
 from pymel import core as pm
 from drl_common import errors as err
 from drl_py23 import (
@@ -7,10 +9,16 @@ from drl_py23 import (
 	str_h as _str_h,
 )
 
-from . import dialogs
 from .__grid import Grid
 from .__progress import Progress
-from .__progress_window import ProgressWindow
+
+_is_py2 = _sys.version_info[0] == 2
+
+# noinspection PyBroadException
+if _is_py2:
+	from .__progress_window_py2 import ProgressWindow
+else:
+	from .__progress_window_py3 import ProgressWindow
 
 
 class ResIdNotExist(RuntimeError):

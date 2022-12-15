@@ -10,7 +10,6 @@ from drl_py23 import (
 )
 from drl.for_maya.ls import pymel as ls
 
-from . import history, materials
 from .__uv_sets import UVSets, UVSetsRule
 from .__uvs import UVs
 

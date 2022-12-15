@@ -3,8 +3,8 @@ __author__ = 'Lex Darlog (DRL)'
 import warnings as wrn
 
 import maya.cmds as cmds
-from ... import layers as lrs
-from ... import ls
+from drl.for_maya import layers as lrs
+from drl.for_maya import ls
 
 def moveShells_toNormalSquare(objects=None):
 	if not type(objects) == type([]):
@@ -26,8 +26,8 @@ def atlas(objects=None, groupName='Atlased_UVs', numU = 4, numV = 4):
 	:param numV: number of cells per U
 	:return: list of atlased objects
 	'''
-	from ...utils import duplicate_to_world_group
-	from ...fix_default import select
+	from drl.for_maya.utils import duplicate_to_world_group
+	from drl.for_maya.fix_default import select
 	from math import floor
 
 	if not objects:

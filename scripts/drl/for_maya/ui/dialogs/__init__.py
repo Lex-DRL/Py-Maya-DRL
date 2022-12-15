@@ -5,7 +5,7 @@ from drl_interpreter import is_maya as _is_maya
 if _is_maya:
 	from maya import cmds
 
-from . import confirm_icon, confirm_align, file_mode
+from drl.for_maya.ui.dialogs import confirm_icon, confirm_align, file_mode
 from drl_common import (
 	errors as err,
 	filesystem as fs,

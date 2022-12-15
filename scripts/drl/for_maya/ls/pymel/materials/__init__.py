@@ -1,7 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
-from .. import __common as _ls
-from .. import default_input as _def
+from drl.for_maya.ls.pymel import __common as _ls
+from drl.for_maya.ls.pymel import default_input as _def
 
 from drl.for_maya import base_class as _bs
 from drl_common import utils as _utils
@@ -10,7 +10,7 @@ from drl_py23 import (
 	izip as _izip,
 )
 
-from . import errors, sg_attr_names
+from drl.for_maya.ls.pymel.materials import errors, sg_attr_names
 _sg_a = sg_attr_names
 
 import pymel.core as _pm

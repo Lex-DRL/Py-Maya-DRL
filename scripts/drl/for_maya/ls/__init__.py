@@ -1,16 +1,12 @@
 __author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
-from ..input_warn import items_input as wrn_items
+from drl.for_maya.input_warn import items_input as wrn_items
 
 from drl_py23 import (
 	str_t as _str_t,
 	str_h as _str_h,
 )
-
-from . import default_input
-from . import convert
-from . import pymel
 
 
 _t_str_or_list = tuple(list(_str_t) + [list])

@@ -5,7 +5,7 @@ import warnings as wrn
 from maya import cmds, mel
 from pymel import core as pm
 
-from . import channel_box as cb
+from drl.for_maya import channel_box as cb
 
 
 class OverridesFromChannelBox(object):

@@ -115,11 +115,13 @@ def handle_input(
 		except:
 			raise NotNodeError(element, "Can't create PyNode from element: {0}")
 
-	res = map(make_py_mel, _flatten_items_gen(items))
+	res_gen = map(make_py_mel, _flatten_items_gen(items))
 	# now we're guaranteed to have a list of PyNodes in items
 
 	if flatten:
-		res = pm.ls(res, fl=1)
+		res = pm.ls(res_gen, fl=1)
+	else:
+		res = list(res_gen)
 	return res
 
 

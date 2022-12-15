@@ -5,7 +5,7 @@ __author__ = 'Lex Darlog (DRL)'
 
 import maya.cmds as cmds
 from drl_common import errors as err
-from ..import default_input
+from drl.for_maya.ls.pymel import default_input
 
 
 def listRel_args(main_args, fullPath=True, **extra_args):

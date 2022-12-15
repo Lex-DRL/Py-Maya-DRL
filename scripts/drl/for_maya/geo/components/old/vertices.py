@@ -1,7 +1,7 @@
 __author__ = 'Lex Darlog (DRL)'
 
 from maya import cmds
-from ....input_warn import items_input as wrn_items
+from drl.for_maya.input_warn import items_input as wrn_items
 
 
 def to_vertices(items=None, flatten=False, stacklevel_offset=0):
@@ -32,7 +32,7 @@ def calc_unityCount(items=None, stacklevel_offset=0):
 	:param stacklevel_offset: used to define the level of warnings.
 	:return: number of vertices for the current selection
 	"""
-	from .. import edges as edg
+	from drl.for_maya.geo.components import edges as edg
 
 	items = wrn_items(items, stacklevel_offset=1+stacklevel_offset)
 	items = cmds.polyListComponentConversion(items, tf=1) # list of selected faces

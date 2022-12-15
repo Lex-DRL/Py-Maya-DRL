@@ -11,115 +11,121 @@ from drl_py23 import (
 _types = (int, float)
 
 
-class ProgressWindow(object):
-	class __meta(type):
+class _ProgressWindowMeta(type):
+	"""
+	Meta-subclass required to provide static properties.
+	"""
+
+	@property
+	def progress(cls):
+		res = cmds.progressWindow(q=True, progress=True)
+		assert isinstance(res, _types)
+		return res
+
+	@progress.setter
+	def progress(cls, value):
+		err.WrongTypeError(value, _types, 'progress value').raise_if_needed()
+		assert isinstance(value, _types)
+		cmds.progressWindow(e=True, progress=value)
+		if value > cls.max or value < cls.min:
+			cls.end()
+
+	@property
+	def min(cls):
+		res = cmds.progressWindow(q=True, min=True)
+		assert isinstance(res, _types)
+		return res
+
+	@min.setter
+	def min(cls, value):
+		err.WrongTypeError(value, _types, 'min value').raise_if_needed()
+		cmds.progressWindow(e=True, min=value)
+		if value > cls.max:
+			cls.max = value
+		if value > cls.progress:
+			cls.progress = value
+
+	@property
+	def max(cls):
+		res = cmds.progressWindow(q=True, max=True)
+		assert isinstance(res, _types)
+		return res
+
+	@max.setter
+	def max(cls, value):
+		err.WrongTypeError(value, _types, 'max value').raise_if_needed()
+		cmds.progressWindow(e=True, max=value)
+		if value < cls.min:
+			cls.min = value
+		if value < cls.progress:
+			cls.progress = value
+
+	@property
+	def interruptable(cls):
 		"""
-		Meta-subclass required to provide static properties.
+		Returns true if the progress window should respond
+		to attempts to cancel the operation.
+
+		The cancel button is disabled if this is set to true.
 		"""
+		res = cmds.progressWindow(q=True, isInterruptable=True)
+		assert isinstance(res, bool)
+		return res
 
-		@property
-		def progress(self):
-			res = cmds.progressWindow(q=True, progress=True)
-			assert isinstance(res, _types)
-			return res
+	@interruptable.setter
+	def interruptable(cls, value):
+		if isinstance(value, int):
+			value = bool(value)
+		err.WrongTypeError(value, bool, 'is-interruptable value').raise_if_needed()
+		cmds.progressWindow(e=True, isInterruptable=value)
 
-		@progress.setter
-		def progress(self, value):
-			err.WrongTypeError(value, _types, 'progress value').raise_if_needed()
-			assert isinstance(value, _types)
-			cmds.progressWindow(e=True, progress=value)
-			if value > self.max or value < self.min:
-				ProgressWindow.end()
+	@property
+	def title(cls):
+		res = cmds.progressWindow(q=True, title=True)
+		assert isinstance(res, _str_t)
+		return res
 
-		@property
-		def min(self):
-			res = cmds.progressWindow(q=True, min=True)
-			assert isinstance(res, _types)
-			return res
+	@title.setter
+	def title(cls, value):
+		err.NotStringError(value, 'title name').raise_if_needed()
+		cmds.progressWindow(e=True, title=value)
 
-		@min.setter
-		def min(self, value):
-			err.WrongTypeError(value, _types, 'min value').raise_if_needed()
-			cmds.progressWindow(e=True, min=value)
-			if value > self.max:
-				self.max = value
-			if value > self.progress:
-				self.progress = value
+	@property
+	def message(cls):
+		res = cmds.progressWindow(q=True, status=True)
+		assert isinstance(res, _str_t)
+		return res
 
-		@property
-		def max(self):
-			res = cmds.progressWindow(q=True, max=True)
-			assert isinstance(res, _types)
-			return res
+	@message.setter
+	def message(cls, value):
+		err.NotStringError(value, 'status message').raise_if_needed()
+		cmds.progressWindow(e=True, status=value)
 
-		@max.setter
-		def max(self, value):
-			err.WrongTypeError(value, _types, 'max value').raise_if_needed()
-			cmds.progressWindow(e=True, max=value)
-			if value < self.min:
-				self.min = value
-			if value < self.progress:
-				self.progress = value
+	def end(cls):
+		"""
+		Terminates the progress window.
+		"""
+		cmds.progressWindow(endProgress=True)
+		progress = cls.progress
+		assert isinstance(progress, _types)
+		max_v = cls.max
+		assert isinstance(max_v, _types)
+		cls.progress = max_v
 
-		@property
-		def interruptable(self):
-			"""
-			Returns true if the progress window should respond
-			to attempts to cancel the operation.
-
-			The cancel button is disabled if this is set to true.
-			"""
-			res = cmds.progressWindow(q=True, isInterruptable=True)
-			assert isinstance(res, bool)
-			return res
-
-		@interruptable.setter
-		def interruptable(self, value):
-			if isinstance(value, int):
-				value = bool(value)
-			err.WrongTypeError(value, bool, 'is-interruptable value').raise_if_needed()
-			cmds.progressWindow(e=True, isInterruptable=value)
-
-		@property
-		def title(self):
-			res = cmds.progressWindow(q=True, title=True)
-			assert isinstance(res, _str_t)
-			return res
-
-		@title.setter
-		def title(self, value):
-			err.NotStringError(value, 'title name').raise_if_needed()
-			cmds.progressWindow(e=True, title=value)
-
-		@property
-		def message(self):
-			res = cmds.progressWindow(q=True, status=True)
-			assert isinstance(res, _str_t)
-			return res
-
-		@message.setter
-		def message(self, value):
-			err.NotStringError(value, 'status message').raise_if_needed()
-			cmds.progressWindow(e=True, status=value)
-
-	__metaclass__ = __meta
-
-	def __init__(
-		self,
+	def start(
+		cls,
 		message='', title='Progress',
 		interruptable=True,
 		min=0, max=100, start_value=0
 	):
-		super(ProgressWindow, self).__init__()
-		self.__class__.end()
+		cls.end()
 		cmds.progressWindow(
 			title=title, status=message,
 			isInterruptable=interruptable,
 			min=min, max=max, progress=start_value
 		)
 
-	@staticmethod
-	def is_cancelled():
+	def is_cancelled(cls):
 		"""
 		Returns true if the user has tried to cancel the operation.
 		Returns false otherwise.
@@ -127,11 +133,10 @@ class ProgressWindow(object):
 		res = cmds.progressWindow(q=True, isCancelled=True)
 		assert isinstance(res, bool)
 		if res:
-			ProgressWindow.end()
+			cls.end()
 		return res
 
-	@staticmethod
-	def is_active():
+	def is_active(cls):
 		"""
 		This is supposed to be used as the condition for <while> loop.
 		Returns true if the progress still didn't reach the end.
@@ -139,38 +144,25 @@ class ProgressWindow(object):
 
 		:return: bool
 		"""
-		going = ProgressWindow.progress < ProgressWindow.max and not ProgressWindow.is_cancelled()
+		going = cls.progress < cls.max and not cls.is_cancelled()
 		if not going:
-			ProgressWindow.end()
+			cls.end()
 		return going
 
-	@staticmethod
-	def increment(amount=1):
+	def increment(cls, amount=1):
 		"""
 		Increments the <progress> value by the amount specified.
 		"""
 		err.WrongTypeError(amount, _types, 'amount').raise_if_needed()
 		assert isinstance(amount, _types)
 		cmds.progressWindow(e=True, step=amount)
-		progress = ProgressWindow.progress
+		progress = cls.progress
 		assert isinstance(progress, _types)
-		if progress >= ProgressWindow.max:
-			ProgressWindow.end()
+		if progress >= cls.max:
+			cls.end()
 
-	@staticmethod
-	def end():
-		"""
-		Terminates the progress window.
-		"""
-		cmds.progressWindow(endProgress=True)
-		progress = ProgressWindow.progress
-		assert isinstance(progress, _types)
-		max_v = ProgressWindow.max
-		assert isinstance(max_v, _types)
-		ProgressWindow.progress = max_v
-
-	@staticmethod
 	def do_with_each(
+		cls,
 		items, do_with_each_f,
 		progress_title='Performing task...', progress_message='Progress: {0} / {1}',
 		progress_message_formatter_f=None
@@ -258,13 +250,13 @@ class ProgressWindow(object):
 		formatter_f = _error_check_formatter_f(progress_message_formatter_f)
 
 		res = list()
-		pw = ProgressWindow
-		pw(formatter_f(progress_message, 0, num), progress_title, max=num)
+		pw = cls
+		cls.start(formatter_f(progress_message, 0, num), progress_title, max=num)
 		i = 0
-		while pw.is_active():
-			pw.message = formatter_f(progress_message, i + 1, num)
+		while cls.is_active():
+			cls.message = formatter_f(progress_message, i + 1, num)
 			do_with_each_f(items[i], i, res)
 			i += 1
-			pw.increment()
+			cls.increment()
 
 		return res

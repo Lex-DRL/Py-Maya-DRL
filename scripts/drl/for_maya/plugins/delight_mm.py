@@ -120,9 +120,9 @@ def connectBakePass(parent='', child='', forEachFrame=True):
 
 
 def marking_menu():
-	from ..marking_menus import remove_temp
-	from ..utils import get_modifiers
-	from ..shading import thumb_switch
+	from drl.for_maya.marking_menus import remove_temp
+	from drl.for_maya.utils import get_modifiers
+	from drl.for_maya.shading import thumb_switch
 
 	remove_temp(right_now=True)
 	modifiers = get_modifiers()
